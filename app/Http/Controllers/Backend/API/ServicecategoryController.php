@@ -20,6 +20,14 @@ class ServicecategoryController extends Controller
      * @return \Illuminate\Http\Response
      */
 
+     public function __construct(){
+        $this->ServiceCategory = new \App\Servicecategory();
+     }
+
+    public function GetAllCategories(Request $request){
+       return $this->get_all_servicecategory($request);
+    }
+
     public function provider_sort(Request $request){      
           //pagination
                 $paging['perpage']  = 0;
@@ -515,11 +523,11 @@ class ServicecategoryController extends Controller
     }
     public function get_all_servicecategory(Request $request)
     {
-
-      // $servicecategories = Servicecategory::query();
+	  // $servicecategories = Servicecategory::query();
       $servicecategories = Servicecategory::select('id','uuid','name','description','created_at','updated_at','deleted_at')->where('active', 1)->orderby('position','ASC');
-      $servicecategories = $servicecategories->paginate(10);
-      return (new ServicecategoryCollection($servicecategories));
+      $servicecategories = $servicecategories->paginate(10)->toArray();
+	  return $servicecategories['data'];
+     // return (new ServicecategoryCollection($servicecategories));
     }
 
     public function postcode_search(Request $request)

@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::namespace('Backend\API')->prefix('v1/public')->group(function () {
 
-	 Route::get('plans', 'PlansController@get_all_plan')->name('api.plan.get_all_plan');
+	 //Route::get('plans', 'PlansController@get_all_plan')->name('api.plan.get_all_plan');
 	 
 	 Route::get('providersort', 'ServicecategoryController@provider_sort');
 

@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Backend\API;
 
 use App\Postcode;
 use Illuminate\Http\Request;
-use Shahnewaz\Redprint\Traits\CanUpload;
+//use Shahnewaz\Redprint\Traits\CanUpload;
 use App\Http\Requests\Backend\PostcodeRequest;
 use App\Http\Resources\PostcodeCollection;
 use App\Http\Resources\Postcode as PostcodeResource;
@@ -12,7 +12,7 @@ use App\Http\Controllers\Controller;
 
 class PostcodesController extends Controller
 {
-    use CanUpload;
+   // use CanUpload;
     /**
      * Display a listing of the resource.
      *
@@ -27,7 +27,7 @@ class PostcodesController extends Controller
         }
         
 		if ($request->has('post_code')) {
-			$postcodes = $postcodes->where('post_code', 'LIKE', '%'.$request->get('post_code').'%');
+			$postcodes = $postcodes->where('postcode', 'LIKE', '%'.$request->get('post_code').'%');
 		}
 		if ($request->has('subrub')) {
 			$postcodes = $postcodes->where('subrub', 'LIKE', '%'.$request->get('subrub').'%');

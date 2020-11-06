@@ -44,10 +44,32 @@ use Illuminate\Support\Facades\Route;
 
 // Route::get('catagoriessearch', 'ServicecategoriesController@catagories_search')->middleware('auth_client');
 
-// Route::get('servicecategories', 'ServicecategoriesController@index')->name('api.servicecategory.index');
+//Route::get('servicecategories', 'ServicecategoriesController@index')->name('api.servicecategory.index');
 
 // Route::get('plans', 'PlansController@get_all_plan')->name('api.plan.index');
 // });
+
+Route::namespace('Backend\API')->prefix('v1/public')->group(function () {
+    Route::get('postcodes', 'PostcodesController@index')->name('api.postcode.index');
+  
+    Route::get('getallservicecategories', 'ServicecategoryController@GetAllCategories')->name('getallservicecategories');
+	
+	Route::get('plans', 'PlansController@get_all_plan')->name('api.plan.get_all_plan');
+	
+	
+
+});
+
+Route::namespace('Backend\API')->prefix('v1/customer')->group(function () {
+	Route::get('getallprovider', 'CustomerusersController@getallprovider')->name('api.Customeruser.getallprovider');//->middleware(['scope:customer']);
+	
+     Route::get('getallservices', 'ServiceController@index')->name('api.Service.index');//->middleware(['scope:customer']);
+     Route::get('getaddress', 'UseraddressController@getaddress')->name('api.Useraddress.getaddress');
+	
+});
+
+
+
 
 // for passport
 Route::group([
@@ -77,16 +99,16 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
 
     //rakesh api
 
-     Route::get('alternate_date/{booking_uuid}', 'BookingController@get_alternate_date')->name('customer_get_alternate_date')->middleware(['scope:customer']);
+    Route::get('alternate_date/{booking_uuid}', 'BookingController@get_alternate_date')->name('customer_get_alternate_date')->middleware(['scope:customer']);
     Route::post('add_alternate_date', 'BookingController@add_alternate_date')->name('add_alternate_date')->middleware(['scope:customer']);
     Route::delete('delete_alternate_date/{uuid}', 'BookingController@delete_alternate_date')->name('delete_alternate_date')->middleware(['scope:customer']);
     Route::patch('edit_alternate_date/{uuid}', 'BookingController@edit_alternate_date')->name('edit_alternate_date')->middleware(['scope:customer']);
 
     Route::get('promocode_discount', 'BookingController@promocode_discount')->name('promocode_discount')->middleware(['scope:customer']);
     Route::post('add_booking', 'BookingController@add_booking')->name('add_booking')->middleware(['scope:customer']);
-     Route::post('add_multipal_question', 'BookingquestionsController@add_multipal_question')->name('add_multipal_question')->middleware(['scope:customer']);
-     Route::post('add_multipal_service', 'BookingserviceController@add_multipal_service')->name('add_multipal_service')->middleware(['scope:customer']);
-     Route::get('getcleanardata/{uuid}', 'UserreviewController@getcleanardata')->name('api.Userreview.getcleanardata')->middleware(['scope:customer']);
+    Route::post('add_multipal_question', 'BookingquestionsController@add_multipal_question')->name('add_multipal_question')->middleware(['scope:customer']);
+    Route::post('add_multipal_service', 'BookingserviceController@add_multipal_service')->name('add_multipal_service')->middleware(['scope:customer']);
+    Route::get('getcleanardata/{uuid}', 'UserreviewController@getcleanardata')->name('api.Userreview.getcleanardata')->middleware(['scope:customer']);
 
 
     Route::get('getallusers', 'CustomerusersController@index')->name('api.Customeruser.index')->middleware(['scope:customer']);
@@ -102,7 +124,7 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
 
     Route::patch('card_updatedata', 'CustomermetadataController@index')->name('api.Customermetadata.index')->middleware(['scope:customer']);
 
-    Route::get('getallservices', 'ServiceController@index')->name('api.Service.index')->middleware(['scope:customer']);
+    //Route::get('getallservices', 'ServiceController@index')->name('api.Service.index')->middleware(['scope:customer']);
 
     Route::post('addservices/{uuid}', 'ServiceController@addservices')->name('api.Service.addservices')->middleware(['scope:customer']);
 
@@ -112,7 +134,7 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
 
     Route::post('addaddress', 'UseraddressController@addaddress')->name('api.Useraddress.addaddress')->middleware(['scope:customer']);
 
-    Route::get('getaddress', 'UseraddressController@getaddress')->name('api.Useraddress.getaddress')->middleware(['scope:customer']);
+    
 
     Route::patch('editaddress/{uuid}', 'UseraddressController@editaddress')->name('api.Useraddress.editaddress')->middleware(['scope:customer']);
 
@@ -150,7 +172,9 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
     Route::get('getrejectedbookingdetails', 'BookingController@getrejectedbookingdetails')->name('api.Booking.getrejectedbookingdetails')->middleware(['scope:customer']);
 
     Route::get('getalterbookdata/{uuid}', 'BookingController@getalterbookdata')->name('api.Booking.getalterbookdata')->middleware(['scope:customer']);
-    Route::get('getallprovider', 'CustomerusersController@getallprovider')->name('api.Customeruser.getallprovider')->middleware(['scope:customer']);
+	
+   // Route::get('getallprovider', 'CustomerusersController@getallprovider')->name('api.Customeruser.getallprovider')->middleware(['scope:customer']);
+	
     Route::patch('customer_edit_booking/{uuid}', 'BookingController@customer_edit_booking')->name('api.Booking.customer_edit_booking')->middleware(['scope:customer']);
     Route::post('customer_add_agency', 'BookingController@customer_add_agency')->name('customer_add_agency')->middleware(['scope:customer']);
     Route::patch('change_announcement_status/{uuid}', 'AnnoucementController@change_announcement_status')->name('api.AnnoucementController.change_announcement_status')->middleware(['scope:customer']);
@@ -263,6 +287,7 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
 
  });
 
+ 
  Route::middleware(['auth:api', 'role:public'])->namespace('Backend\API')->prefix('v1/public')->group(function () {
     // Customeruser Route
     Route::get('getallusers', 'CustomerusersController@index')->name('api.Customeruser.index')->middleware(['scope:public']);
@@ -450,7 +475,7 @@ Route::middleware(['auth:api'])->namespace('Backend\API')->prefix('v1/backend')-
 
 
     // Plan Route
-    // Route::get('plans', 'PlansController@get_all_plan')->name('api.plan.get_all_plan');
+    
     Route::get('users/{users_uuid}/plans/{plans_uuid}', 'PlansController@get')->name('api.plan.get');
 
     Route::post('users/{users_uuid}/plans', 'PlansController@add_plan')->name('api.plan.add_plan');
@@ -464,7 +489,7 @@ Route::middleware(['auth:api'])->namespace('Backend\API')->prefix('v1/backend')-
 
 
     // Postcode Route
-    Route::get('postcodes', 'PostcodesController@index')->name('api.postcode.index');
+    
     Route::get('/postcodes/{postcode}', 'PostcodesController@form')->name('api.postcode.form');
     Route::post('/postcodes/save', 'PostcodesController@post')->name('api.postcode.save');
     Route::post('/postcodes/{postcode}/delete', 'PostcodesController@delete')->name('api.postcode.delete');

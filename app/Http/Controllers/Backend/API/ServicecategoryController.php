@@ -525,8 +525,8 @@ class ServicecategoryController extends Controller
     {
 	  // $servicecategories = Servicecategory::query();
       $servicecategories = Servicecategory::select('id','uuid','name','description','created_at','updated_at','deleted_at')->where('active', 1)->orderby('position','ASC');
-      $servicecategories = $servicecategories->paginate(10)->toArray();
-	  return $servicecategories['data'];
+
+	  return $servicecategories->get()->toArray();
      // return (new ServicecategoryCollection($servicecategories));
     }
 

@@ -85,16 +85,18 @@ class ServicequestionController extends Controller
         // $Service = $Service->where('uuid', 'LIKE', '%'.$uuid);
         // $Service = $Service->paginate(20);
         // $Service = new ServiceCollection($Service);
-        $Service = DB::table('services')->where('uuid', $uuid )->orwhere('name', $uuid)->get();
-        $service_id = $Service[0]->id;
+        //$Service = DB::table('services')->where('uuid', $uuid )->orwhere('name', $uuid)->get();
+        //$service_id = $Service[0]->id;
+		
+		//dd( $Service);
         
         // $Servicequestion = Servicequestion::query();
         
 		if ($uuid) {
             // $Servicequestion = $Servicequestion->where('service_id', 'LIKE', '%'.$service_id);
-            $Servicequestion = DB::table('service_questions')->where('service_id', $service_id)->get();
+            $Servicequestion = DB::table('service_questions')->where('service_id', $uuid)->get();
 		}
-        // print_r($Servicequestion);exit;
+        
 		
         // $Servicequestion = $Servicequestion->paginate(20);
         // $Servicequestion = new ServicequestionCollection($Servicequestion);

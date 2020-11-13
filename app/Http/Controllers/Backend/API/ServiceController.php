@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\Validator;
 use Auth;
 use Hash;
 use DB;
+use Input;
+use Response;
 
 class ServiceController extends Controller
 {
@@ -41,6 +43,23 @@ class ServiceController extends Controller
                                 AND provider_service_maps.provider_id='$provider_id'");
                             
         return response()->json(['data' => $users],200);
+
+    }
+    //---get total service price calculation //
+
+
+    public function geserviceprice(Request $request){
+       
+        $id = $request->get('serviceid');
+        $services = Service::where('id',$id)->where('active',1)->get()->toArray();
+        $price = $services[0]['service_cost'];
+        $time = $request->get('timeslot');
+        if($services[0]['service_type']=='hourly'){
+            $totalprice = $time*$price;
+        }else{
+            $totalprice = $price;
+        }
+        return Response::json(['totalprice'=>$totalprice]);
 
     }
     public function index(Request $request)
@@ -80,6 +99,8 @@ class ServiceController extends Controller
         $services = $services->paginate(20);
         return (new ServiceCollection($services));
     }
+
+
 
     /**
      * Store a newly created resource in storage.

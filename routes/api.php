@@ -60,12 +60,14 @@ Route::namespace('Backend\API')->prefix('v1/public')->group(function () {
 
 });
 
-Route::namespace('Backend\API')->prefix('v1/customer')->group(function () {
-	Route::get('getallprovider', 'CustomerusersController@getallprovider')->name('api.Customeruser.getallprovider');//->middleware(['scope:customer']);
+Route::namespace('Backend\API')->prefix('v1/customer')->group(function(){
+    Route::get('getallprovider', 'CustomerusersController@getallprovider')->name('api.Customeruser.getallprovider');//->middleware(['scope:customer']);
 	
-     Route::get('getallservices', 'ServiceController@index')->name('api.Service.index');//->middleware(['scope:customer']);
-     Route::get('getaddress', 'UseraddressController@getaddress')->name('api.Useraddress.getaddress');
-	
+    Route::get('getallservices', 'ServiceController@index')->name('api.Service.index');//->middleware(['scope:customer']);
+    Route::get('getaddress', 'UseraddressController@getaddress')->name('api.Useraddress.getaddress');
+	 
+	  Route::get('getservicequestions/{uuid}', 'ServicequestionController@getservicequestions')->name('api.Servicequestion.getservicequestions');
+    Route::get('geserviceprice', 'ServiceController@geserviceprice')->name('geserviceprice');
 });
 
 
@@ -128,7 +130,7 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
 
     Route::post('addservices/{uuid}', 'ServiceController@addservices')->name('api.Service.addservices')->middleware(['scope:customer']);
 
-    Route::get('getservicequestions/{uuid}', 'ServicequestionController@getservicequestions')->name('api.Servicequestion.getservicequestions')->middleware(['scope:customer']);
+  //  Route::get('getservicequestions/{uuid}', 'ServicequestionController@getservicequestions')->name('api.Servicequestion.getservicequestions')->middleware(['scope:customer']);
 
     Route::patch('editservices/{uuid}', 'ServiceController@editservices')->name('api.Service.editservices')->middleware(['scope:customer']);
 

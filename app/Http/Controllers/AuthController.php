@@ -242,8 +242,9 @@ Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
                 $Customermetadata = Customermetadata::where('user_id', $user->id)->first();
                 // dd($Customermetadata);
 
-                $json['userdata'] = array(
+                $json['userdata'] =
                     [
+                        'id' => $user->id,
                         'uuid' => $user->uuid,
                         'first_name' => $user->first_name,
                         'last_name' => $user->last_name,
@@ -255,8 +256,7 @@ Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
                         'updated_at' => $user->updated_at,
                         'deleted_at' => $user->deleted_at,
                         'customer_stripe_id' => $Customermetadata->user_stripe_customer_id
-                    ]
-                );
+                    ];
     
                 $response->setContent(json_encode($json));
     

@@ -54,7 +54,7 @@ class ServiceController extends Controller
         $services = Service::where('id',$id)->where('active',1)->get()->toArray();
         $price = $services[0]['service_cost'];
         $time = $request->get('timeslot');
-        if($services[0]['service_type']=='hourly'){
+        if($services[0]['service_type']=='hourly'){ 
             $totalprice = $time*$price;
         }else{
             $totalprice = $price;

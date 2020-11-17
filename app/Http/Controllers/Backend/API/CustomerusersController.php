@@ -59,7 +59,7 @@ class CustomerusersController extends Controller
             $Customerusers = $Customerusers->where('fcm_token', 'LIKE', '%'.$request->get('fcm_token').'%');
         }
         if ($request->has('id')) {
-            $Customerusers = $Customerusers->where('id', 'LIKE', '%'.$request->get('id'));
+            $Customerusers = $Customerusers->where('id', '=', $request->get('id'));
         }
         if ($request->has('user_uuid')) {
             $Customerusers = $Customerusers->where('user_uuid', 'LIKE', '%'.$request->get('user_uuid').'%');

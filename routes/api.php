@@ -64,7 +64,7 @@ Route::namespace('Backend\API')->prefix('v1/customer')->group(function(){
     Route::get('getallprovider', 'CustomerusersController@getallprovider')->name('api.Customeruser.getallprovider');//->middleware(['scope:customer']);
 	
     Route::get('getallservices', 'ServiceController@index')->name('api.Service.index');//->middleware(['scope:customer']);
-    Route::get('getaddress', 'UseraddressController@getaddress')->name('api.Useraddress.getaddress');
+    Route::get('getaddress', 'UseraddressController@getaddress')->name('api.Useraddress.getaddress')->middleware('auth:api');
 	 
 	  Route::get('getservicequestions/{uuid}', 'ServicequestionController@getservicequestions')->name('api.Servicequestion.getservicequestions');
     Route::get('geserviceprice', 'ServiceController@geserviceprice')->name('geserviceprice');

@@ -51,16 +51,64 @@ class ServiceController extends Controller
     public function geserviceprice(Request $request){
        
         $id = $request->get('serviceid');
-        $services = Service::where('id',$id)->where('active',1)->get()->toArray();
-        $price = $services[0]['service_cost'];
-        $time = $request->get('timeslot');
-        if($services[0]['service_type']=='hourly'){ 
-            $totalprice = $time*$price;
-        }else{
-            $totalprice = $price;
-        }
-        return Response::json(['totalprice'=>$totalprice]);
+        $servicetime = $request->get('servicetime');
+        $totaltime = 0;
+        if(is_array($id)){
+            $services = Service::whereIn('id',$id)->where('active',1)->get()->toArray();
+            $totalprice = 0;
+            foreach($services as $k=>$v){
+                $price = $v['service_cost'];
+                $time = $servicetime[$v['id']];
+                $totaltime += $time;
 
+                if($v['service_type']=='hourly'){ 
+                    $total = $time*$price;
+                }else{
+                    $total = $price;
+                }
+                $totalprice += $total;
+            }
+        }else{
+            $services = Service::where('id',$id)->where('active',1)->get()->toArray();
+            $price = $services[0]['service_cost'];
+            $time = $request->get('timeslot');
+            if($services[0]['service_type']=='hourly'){ 
+                $totalprice = $time*$price;
+            }else{
+                $totalprice = $price;
+            }
+            $totaltime = $time;
+        }
+        $result['total_cost']=$totalprice;
+        $result['total_time']=$totaltime;
+        /*if($request->has('promocode') && $request->has('categoryid')){
+            $total_amount = $totalprice;
+            $promocode = $request->get('promocode');
+            $categoryid = $request->get('categoryid');
+             $sql = DB::select("SELECT * FROM promocodes WHERE name='$promocode' and category_id=$categoryid limit 0,1");
+         
+             if(!empty($sql)){
+               // foreach ($sql as $row){
+
+                    $promocode_discount=$sql[0]->discount;
+                    $discount_type = $sql[0]->discount_type;
+               // }
+                if( $discount_type=='flat'){
+                    $discount_amount=$total_amount-$promocode_discount;
+                }else{
+                    $discount_amount=$total_amount-($total_amount*$promocode_discount)/100;
+                }
+                $result['discount']=$promocode_discount;
+                $result['final_cost']=$discount_amount;
+               
+             }
+        
+        }*/
+        if(is_array($id)){
+            return $result;
+        }else{
+            return Response::json($result);
+        }
     }
     public function index(Request $request)
     {

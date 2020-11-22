@@ -224,7 +224,7 @@ class UseraddressController extends Controller
         $useraddresses = Useraddress::query();
         
 		if ($user_id){
-			$useraddresses = $useraddresses->where('user_id', 'LIKE', '%'.$user_id);
+			$useraddresses = $useraddresses->where('user_id', '=', $user_id);
 		}
 		
         $useraddresses = $useraddresses->paginate(20);

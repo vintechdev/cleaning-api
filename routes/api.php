@@ -51,10 +51,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::namespace('Backend\API')->prefix('v1/public')->group(function () {
     Route::get('postcodes', 'PostcodesController@index')->name('api.postcode.index');
-  
     Route::get('getallservicecategories', 'ServicecategoryController@GetAllCategories')->name('getallservicecategories');
-	
-	Route::get('plans', 'PlansController@get_all_plan')->name('api.plan.get_all_plan');
+	  Route::get('plans', 'PlansController@get_all_plan')->name('api.plan.get_all_plan');
 	
 	
 
@@ -62,12 +60,10 @@ Route::namespace('Backend\API')->prefix('v1/public')->group(function () {
 
 Route::namespace('Backend\API')->prefix('v1/customer')->group(function(){
     Route::get('getallprovider', 'CustomerusersController@getallprovider')->name('api.Customeruser.getallprovider');//->middleware(['scope:customer']);
-	
-    Route::get('getallservices', 'ServiceController@index')->name('api.Service.index');//->middleware(['scope:customer']);
+	  Route::get('getallservices', 'ServiceController@index')->name('api.Service.index');//->middleware(['scope:customer']);
     Route::get('getaddress', 'UseraddressController@getaddress')->name('api.Useraddress.getaddress')->middleware('auth:api');
-	 
 	  Route::get('getservicequestions/{uuid}', 'ServicequestionController@getservicequestions')->name('api.Servicequestion.getservicequestions');
-    Route::get('geserviceprice', 'ServiceController@geserviceprice')->name('geserviceprice');
+    Route::any('geserviceprice', 'ServiceController@geserviceprice')->name('geserviceprice');
 });
 
 
@@ -106,7 +102,7 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
     Route::delete('delete_alternate_date/{uuid}', 'BookingController@delete_alternate_date')->name('delete_alternate_date')->middleware(['scope:customer']);
     Route::patch('edit_alternate_date/{uuid}', 'BookingController@edit_alternate_date')->name('edit_alternate_date')->middleware(['scope:customer']);
 
-    Route::get('promocode_discount', 'BookingController@promocode_discount')->name('promocode_discount')->middleware(['scope:customer']);
+    Route::post('promocode_discount', 'BookingController@promocode_discount')->name('promocode_discount')->middleware(['scope:customer']);
     Route::post('add_booking', 'BookingController@add_booking')->name('add_booking')->middleware(['scope:customer']);
     Route::post('add_multipal_question', 'BookingquestionsController@add_multipal_question')->name('add_multipal_question')->middleware(['scope:customer']);
     Route::post('add_multipal_service', 'BookingserviceController@add_multipal_service')->name('add_multipal_service')->middleware(['scope:customer']);

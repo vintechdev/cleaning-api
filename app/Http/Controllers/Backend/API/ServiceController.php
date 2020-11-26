@@ -144,7 +144,7 @@ class ServiceController extends Controller
 		if ($request->has('service_cost')) {
 			$services = $services->where('service_cost', 'LIKE', '%'.$request->get('service_cost').'%');
 		}
-        $services = $services->paginate(20);
+        $services = $services->paginate(150);
         return (new ServiceCollection($services));
     }
 

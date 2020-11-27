@@ -40,6 +40,7 @@ class CreateOauthClientsTable extends Migration
      */
     public function up()
     {
+        if(!Schema::hasTable('oauth_clients')){
         $this->schema->create('oauth_clients', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->unsignedBigInteger('user_id')->nullable()->index();
@@ -52,6 +53,7 @@ class CreateOauthClientsTable extends Migration
             $table->boolean('revoked');
             $table->timestamps();
         });
+    }
     }
 
     /**

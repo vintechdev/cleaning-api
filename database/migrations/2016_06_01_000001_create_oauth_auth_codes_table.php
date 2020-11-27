@@ -30,6 +30,7 @@ class CreateOauthAuthCodesTable extends Migration
      */
     public function up()
     {
+        if(!Schema::hasTable('oauth_auth_codes')){
         $this->schema->create('oauth_auth_codes', function (Blueprint $table) {
             $table->string('id', 100)->primary();
             $table->unsignedBigInteger('user_id')->index();
@@ -38,6 +39,7 @@ class CreateOauthAuthCodesTable extends Migration
             $table->boolean('revoked');
             $table->dateTime('expires_at')->nullable();
         });
+    }
     }
 
     /**

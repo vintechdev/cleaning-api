@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Backend\API;
 
+use App\Service;
 use App\Booking;
 use App\Bookingaddress;
 use App\Bookingquestion;
@@ -20,6 +21,7 @@ use Illuminate\Support\Facades\Validator;
 use Auth;
 use Hash;
 use DB;
+use Input;
 
 class BookingController extends Controller
 {
@@ -135,26 +137,59 @@ class BookingController extends Controller
     public function promocode_discount(Request $request)
     {
 
-        $total_amount = $request->total_amount;
+        $id = $request->get('serviceid');
+        $servicetime = $request->get('servicetime');
+        if(is_array($id)){
+            $services = Service::whereIn('id',$id)->where('active',1)->get()->toArray();
+            $totalprice = 0;
+            foreach($services as $k=>$v){
+                $price = $v['service_cost'];
+                $time = $servicetime[$v['id']];
+
+                if($v['service_type']=='hourly'){ 
+                    $total = $time*$price;
+                }else{
+                    $total = $price;
+                }
+                $totalprice += $total;
+            }
+        }else{
+            $services = Service::where('id',$id)->where('active',1)->get()->toArray();
+            $price = $services[0]['service_cost'];
+            $time = $request->get('timeslot');
+            if($services[0]['service_type']=='hourly'){ 
+                $totalprice = $time*$price;
+            }else{
+                $totalprice = $price;
+            }
+        }
+        
+
+        $total_amount = $totalprice;
         $promocode = $request->promocode;
+        $categoryid = $request->servicecategory;
         $result=array();
-        $sql = DB::select("SELECT * FROM promocodes WHERE name='$promocode'");
+        $sql = DB::select("SELECT * FROM promocodes WHERE name='$promocode' and category_id='$categoryid' limit 0,1");
          if(!empty($sql)){
                 foreach ($sql as $row){
 
                     $promocode_discount=$row->discount;
-
+                    $discount_type = $row->discount_type;
                 }
+                if( $discount_type=='flat'){
+                    $discount_amount=$total_amount-$promocode_discount;
+                }else{
                     $discount_amount=$total_amount-($total_amount*$promocode_discount)/100;
+                }
+                   
                     $result['total_cost']=$total_amount;
                     $result['discount']=$promocode_discount;
                     $result['final_cost']=$discount_amount;
 
             return response()->json(['data' => $result], 200);
 
-         }
-         else{
-            return response()->json(['data' => 'Promocode not valid'],201);
+         }else{
+            return response()->json(['data' => 'Promocode is not valid'],201);
          }
 
 
@@ -213,16 +248,129 @@ class BookingController extends Controller
      public function add_booking(Request $request)
     {
 
-
-        $booking = $request->booking;
-
+        //$bkng = $
+      
+        $service = $request->service;
+        $bookings = $request->bookings;
+        $question = $request->question;
+        $provider = $request->provider;
+    //   echo "<pre>";print_r($request->bookings);exit;
  
-        if(! empty($booking))
+        if(count($bookings)>0)
         {
           //  $booking=array('booking' => $booking);
           //  $booking=json_encode($booking);
          //  print_r(json_encode($booking));exit;
-            foreach($booking as $key => $bookings)
+
+         
+
+         //----------New changes ----------------//
+         $booking = new Booking;
+         $user_id=auth('api')->user()->id;
+         $booking->user_id = $user_id;
+         $booking->booking_status_id = 1;
+         // $booking->description = ($bookings['description'])?$bookings['description']:'';
+         $booking->is_recurring =(isset($bookings['is_recurring']))?$bookings['is_recurring']:0;
+         $booking->parent_event_id = '';//$bookings['parent_event_id'];
+         $booking->booking_date = $bookings['booking_date'];
+         $booking->booking_time = $bookings['booking_time'];
+         $booking->booking_end_time = $bookings['booking_end_time'];
+         $booking->booking_postcode = $bookings['booking_postcode'];
+         $booking->booking_provider_type = $bookings['booking_provider_type'];
+         $booking->plan_type = $bookings['plan_type'];
+         $booking->promocode = $bookings['promocode'];
+         $booking->total_cost = $bookings['total_cost'];
+         $booking->discount = $bookings['discount'];
+         $booking->final_cost = $bookings['final_cost'];
+         $booking->final_hours = $bookings['final_hours'];
+         $booking->is_flexible = $bookings['is_flexible'];
+
+         if($booking->save()){
+            $last_insert_id=DB::getPdo()->lastInsertId();
+            $bookingaddress = new Bookingaddress;
+            $bookingaddress->booking_id = $last_insert_id;
+            $bookingaddress->address_line1 = $bookings['address_line1'];
+            $bookingaddress->address_line2 = $bookings['address_line2'];
+            $bookingaddress->subrub = $bookings['subrub'];
+            $bookingaddress->state = $bookings['state'];
+            $bookingaddress->postcode = $bookings['postcode'];
+            $bookingaddress->save();
+
+          /*   $customermetadata = new Customermetadata;
+            $customermetadata->user_id = $user_id;
+            $customermetadata->status = $bookings['status'];
+            $customermetadata->card_number = $bookings['card_number'];
+            $customermetadata->card_name = $bookings['card_name'];
+            $customermetadata->user_card_type = $bookings['user_card_type'];
+            $customermetadata->card_cvv = $bookings['card_cvv'];
+            $customermetadata->expiry_month = $bookings['expiry_month'];
+            $customermetadata->expiry_year = $bookings['expiry_year'];
+            //$customermetadata->user_card_expiry = '2025-05-26';
+            $customermetadata->user_card_last_four = $bookings['user_card_last_four'];
+            $customermetadata->user_stripe_customer_id = $bookings['user_stripe_customer_id'];
+            $customermetadata->save(); */
+
+            $customermetadata = new Customermetadata;
+            $customermetadata->user_id = $user_id;
+            $customermetadata->status = 'active';
+            $customermetadata->card_number = '444444444444';
+            $customermetadata->card_name = 'test';
+            $customermetadata->user_card_type = 'visa';
+            $customermetadata->card_cvv = '123';
+            $customermetadata->expiry_month = '12';
+            $customermetadata->expiry_year = '2022';
+            //$customermetadata->user_card_expiry = '2025-05-26';
+            $customermetadata->user_card_last_four = '1234';
+            $customermetadata->user_stripe_customer_id = '123456789';
+            $customermetadata->save();
+
+
+            if(! empty($provider))
+                {
+                    foreach($provider as $key => $provider)
+                    {
+                        $bookingrequestprovider = new Bookingrequestprovider;
+                        $bookingrequestprovider->booking_id = $last_insert_id;
+                        $bookingrequestprovider->provider_user_id = $provider['provider_user_id'];
+                        $bookingrequestprovider->status = $provider['booking_request_providers_status'];
+                        $bookingrequestprovider->provider_comment = $provider['provider_comment'];
+                        $bookingrequestprovider->visible_to_enduser = $provider['visible_to_enduser'];
+                        $bookingrequestprovider->save();
+
+                    }
+                }
+
+                if(count($service)>0){
+                    foreach($service as $key => $serv){
+                        $bookingservice = new Bookingservice;
+                        $bookingservice->booking_id = $last_insert_id;
+                        $bookingservice->service_id = $serv['service_id'];
+                        $bookingservice->initial_number_of_hours = $serv['initial_number_of_hours'];
+                        $bookingservice->initial_service_cost = $serv['initial_service_cost'];
+                        $bookingservice->final_number_of_hours = $serv['final_number_of_hours'];
+                        $bookingservice->final_service_cost = $serv['final_service_cost'];
+                        $bookingservice->save();
+                    }
+                }
+
+                if(! empty($question)){
+                    foreach($question as $key => $quest){
+                        if($quest['answer']!=null){
+                            $bookingquestion = new Bookingquestion;
+                            $bookingquestion->booking_id = $last_insert_id;
+                            $bookingquestion->service_question_id = $quest['service_question_id'];
+                            $bookingquestion->answer = $quest['answer'];
+                            $bookingquestion->save();
+                        }
+                    }
+                }
+               
+
+
+         }
+
+         //------------------------------------------//
+            /*foreach($booking as $key => $bookings)
             {
 
                 $booking = new Booking;
@@ -266,8 +414,7 @@ class BookingController extends Controller
                     //$customermetadata->user_card_expiry = '2025-05-26';
                     $customermetadata->user_card_last_four = $bookings['user_card_last_four'];
                     $customermetadata->user_stripe_customer_id = $bookings['user_stripe_customer_id'];
-
-                     $customermetadata->save();
+                    $customermetadata->save();
 
                     //add multipal provider
                      
@@ -322,16 +469,15 @@ class BookingController extends Controller
                         }
                 }
 
-            }
-             $User->sendApiEmailVerificationNotification();
-        $success['message'] = 'Please confirm yourself by clicking on verify user button sent to you on your email';
+            }*/
+            //$User->sendApiEmailVerificationNotification();
+            $success['message'] = 'Please confirm yourself by clicking on verify user button sent to you on your email';
             $responseCode = $request->get('id') ? 200 : 201;
             return response()->json(['saved' => true], $responseCode);
         }
         else{
-
-
-            return response()->json(['saved' => false], 404);
+           
+            return response()->json(['saved' => false]);
         }
     }
 

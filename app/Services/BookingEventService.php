@@ -1,11 +1,12 @@
 <?php
 
-namespace App;
+namespace App\Services;
 
 use App\Dto\BookingEventDto;
+use App\Event;
 use App\Exceptions\Booking\Factory\RecurringPatternFactoryException;
 use App\Factory\Booking\RecurringPatternFactory;
-use App\Services\EventService;
+use App\Plan;
 
 class BookingEventService
 {

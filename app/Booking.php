@@ -15,4 +15,9 @@ class Booking extends Model
     protected $table = 'bookings';
     use SoftDeletes;
     protected $fillable = ['id'];
+
+    public function event()
+    {
+        return $this->hasOne(Event::class);
+    }
 }

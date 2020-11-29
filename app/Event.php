@@ -25,6 +25,6 @@ class Event extends Model
 
     public function recurringPattern()
     {
-        $this->hasOne(RecurringPattern::class);
+        return $this->hasOne(RecurringPattern::class);
     }
 }

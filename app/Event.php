@@ -3,6 +3,7 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -12,6 +13,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Event extends Model
 {
     use SoftDeletes;
+
+    public $timestamps = false;
 
     /**
      * @var string
@@ -23,8 +26,11 @@ class Event extends Model
      */
     protected $fillable = ['id'];
 
-    public function recurringPattern()
+    /**
+     * @return HasOne
+     */
+    public function recurringPattern(): HasOne
     {
-        return $this->hasOne(RecurringPattern::class);
+        $this->hasOne(RecurringPattern::class);
     }
 }

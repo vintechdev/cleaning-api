@@ -2,7 +2,9 @@
 
 namespace App;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Emadadly\LaravelUuid\Uuids;
 use Laravel\Passport\HasApiTokens;
@@ -16,8 +18,19 @@ class Booking extends Model
     use SoftDeletes;
     protected $fillable = ['id'];
 
-    public function event()
+    /**
+     * @return BelongsTo
+     */
+    public function event(): BelongsTo
     {
-        return $this->hasOne(Event::class);
+        return $this->belongsTo(Event::class);
+    }
+
+    /**
+     * @return Carbon
+     */
+    public function getStartDate(): Carbon
+    {
+        return Carbon::createFromFormat('Y-m-d H:i', $this->booking_date . ' ' . $this->booking_time);
     }
 }

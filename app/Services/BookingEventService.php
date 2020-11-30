@@ -2,12 +2,18 @@
 
 namespace App\Services;
 
-use App\Dto\BookingEventDto;
+use App\Booking;
 use App\Event;
 use App\Exceptions\Booking\Factory\RecurringPatternFactoryException;
 use App\Factory\Booking\RecurringPatternFactory;
 use App\Plan;
+use App\RecurringPattern;
+use App\Traits\RecurringPatternTrait;
 
+/**
+ * Class BookingEventService
+ * @package App\Services
+ */
 class BookingEventService
 {
     /**
@@ -34,34 +40,45 @@ class BookingEventService
     }
 
     /**
-     * @param BookingEventDto $bookingEventDto
+     * @param Booking $booking
      * @return Event
      */
-    public function createBookingEvent(BookingEventDto $bookingEventDto): Event
+    public function createBookingEvent(Booking $booking): Event
     {
         $event = new Event();
-        $event->startDate = $bookingEventDto->getStartDate();
-        $this->setRecurringPatternFromPlan($event, $bookingEventDto->getPlanId());
-        return $this->eventService->createEvent($event);
+        $event->start_date = $booking->getStartDate();
+        $event = $this->eventService->createEvent($event);
+        $booking->event()->associate($event)->save();
+
+        try {
+            /** @var RecurringPatternTrait $pattern */
+            $pattern = $this->getRecurringPatternFromPlan($event, $booking->plan_type);
+        } catch (RecurringPatternFactoryException $exception) {
+            return $event;
+        }
+
+        // TODO: Move the logic below to a repository
+        $pattern->save();
+        $recurringPattern = $pattern
+            ->recurringPattern()
+            ->make();
+        $recurringPattern->separation_count = $pattern->getSeparationCount();
+        $recurringPattern->event()->associate($event)->save();
+
+        return $event;
     }
 
     /**
      * @param Event $event
      * @param int $planId
-     * @return bool
+     * @return RecurringPattern
      */
-    public function setRecurringPatternFromPlan(Event $event, int $planId): bool
+    private function getRecurringPatternFromPlan(Event $event, int $planId): RecurringPattern
     {
         if (!Plan::isValidPlan($planId)) {
             throw new \RuntimeException('Invalid plan id received');
         }
 
-        try {
-            $event->recurringPattern = $this->recurringPatternFactory->create($planId, $event);
-        } catch (RecurringPatternFactoryException $exception) {
-            // Don't do anything
-        }
-
-        return true;
+        return $this->recurringPatternFactory->create($planId, $event);
     }
 }

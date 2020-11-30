@@ -3,6 +3,7 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -12,6 +13,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class RecurringPattern extends Model
 {
     use SoftDeletes;
+
+    public $timestamps = false;
 
     /**
      * @var string
@@ -29,5 +32,13 @@ class RecurringPattern extends Model
     public function recurringPatternable()
     {
         return $this->morphTo();
+    }
+
+    /**
+     * @return BelongsTo
+     */
+    public function event(): BelongsTo
+    {
+        return $this->belongsTo(Event::class);
     }
 }

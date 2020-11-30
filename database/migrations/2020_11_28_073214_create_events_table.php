@@ -24,8 +24,8 @@ class CreateEventsTable extends Migration
         Schema::create('recurring_patterns', function (Blueprint $table) {
             $table->id()->unsigned()->autoIncrement();
             $table->integer('event_id')->unsigned();
-            $table->string('recurring_patternable_type')->nullable(false);
-            $table->integer('recurring_patternable_id')->unsigned();
+            $table->string('recurringpatternable_type')->nullable(false);
+            $table->integer('recurringpatternable_id')->unsigned();
             $table->integer('separation_count')->default(1);
             $table->timestamp('created')->default(DB::raw('CURRENT_TIMESTAMP'));
 
@@ -33,17 +33,17 @@ class CreateEventsTable extends Migration
             $table->index('event_id', 'event_id_idx');
         });
 
-        Schema::create('daily_recurring_pattern', function (Blueprint $table) {
+        Schema::create('daily_recurring_patterns', function (Blueprint $table) {
             $table->id()->unsigned()->autoIncrement();
             $table->integer('hour_of_day')->nullable(true);
         });
 
-        Schema::create('weekly_recurring_pattern', function (Blueprint $table) {
+        Schema::create('weekly_recurring_patterns', function (Blueprint $table) {
             $table->id()->unsigned()->autoIncrement();
             $table->integer('day_of_week')->nullable(true);
         });
 
-        Schema::create('monthly_recurring_pattern', function (Blueprint $table) {
+        Schema::create('monthly_recurring_patterns', function (Blueprint $table) {
             $table->id()->unsigned()->autoIncrement();
             $table->integer('day_of_month')->nullable(true);
         });

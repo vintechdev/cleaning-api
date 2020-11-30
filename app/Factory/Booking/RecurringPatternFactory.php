@@ -25,23 +25,23 @@ class RecurringPatternFactory
     public function create(int $planId, Event $event): RecurringPattern
     {
         /** @var Carbon $startDate */
-        $startDate = $event->startDate;
+        $startDate = $event->start_date;
 
         switch ($planId) {
             case Plan::WEEKLY:
                 $recurringPattern = new WeeklyRecurringPattern();
-                $recurringPattern->dayOfWeek = $startDate->dayOfWeek;
-                $recurringPattern->separationCount = 1;
+                $recurringPattern->day_of_week = $startDate->dayOfWeek;
+                $recurringPattern->setSeparationCount(1);
                 break;
             case Plan::BIWEEKLY:
                 $recurringPattern = new WeeklyRecurringPattern();
-                $recurringPattern->dayOfWeek = $startDate->dayOfWeek;
-                $recurringPattern->separationCount = 2;
+                $recurringPattern->day_of_week = $startDate->dayOfWeek;
+                $recurringPattern->setSeparationCount(2);
                 break;
             case Plan::MONTHLY:
                 $recurringPattern = new MonthlyRecurringPattern();
-                $recurringPattern->dayOfMonth = $startDate->format('d');
-                $recurringPattern->separationCount = 1;
+                $recurringPattern->day_of_week = $startDate->format('d');
+                $recurringPattern->setSeparationCount(1);
                 break;
             default:
                 throw new RecurringPatternFactoryException('Recurring pattern does not exist for the plan');

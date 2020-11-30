@@ -3,7 +3,9 @@
 namespace App;
 
 use App\Interfaces\RecurringDateInterface;
+use App\Traits\RecurringPatternTrait;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 /**
  * Class MonthlyRecurringPattern
@@ -11,15 +13,17 @@ use Carbon\Carbon;
  */
 class MonthlyRecurringPattern extends RecurringPattern implements RecurringDateInterface
 {
+    use RecurringPatternTrait;
+
     /**
      * @var string
      */
     protected $table = 'monthly_recurring_patterns';
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\MorphOne
+     * @return MorphOne
      */
-    public function recurringPattern()
+    public function recurringPattern(): MorphOne
     {
         return $this->morphOne(RecurringPattern::class, 'recurringPatternable');
     }

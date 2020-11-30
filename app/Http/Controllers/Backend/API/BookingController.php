@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Backend\API;
 
+use App\Events\BookingCreated;
 use App\Service;
 use App\Booking;
 use App\Bookingaddress;
@@ -364,8 +365,9 @@ class BookingController extends Controller
                         }
                     }
                 }
-               
 
+                // dispatch booking created event
+                event(new BookingCreated($booking));
 
          }
 

@@ -132,16 +132,16 @@ class UseraddressController extends Controller
         $user = Auth::user();
         $user_id = $user->id;
         
-        $types = DB::table('user_addresses')->where('user_id', $user_id)->pluck('type')->toArray();
+       // $types = DB::table('user_addresses')->where('user_id', $user_id)->pluck('type')->toArray();
         // print_r($types);exit;
 
-        if (in_array($type, $types))
+       /*  if (in_array($type, $types))
         {
             return response()->json(['message' => 'Type '.$type.' already exist with this user! Please use other type.']);
             
         }
         else
-        {
+        { */
             $Useraddress = Useraddress::firstOrNew(['id' => $request->get('id')]);
             $Useraddress->id = $request->get('id');
             $Useraddress->uuid = $request->get('uuid');
@@ -157,7 +157,7 @@ class UseraddressController extends Controller
 
             $responseCode = $request->get('id') ? 200 : 201;
             return response()->json(['saved' => true], $responseCode);
-        }
+        //}
     }
 
     //for update address by uuid

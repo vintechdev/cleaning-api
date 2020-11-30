@@ -20,9 +20,9 @@ class PlansController extends Controller
      */
     public function get_all_plan(Request $request)
     {
-        $plans = Plan::query();
-        $plans = $plans->paginate(10);
-        return (new PlanCollection($plans));
+        $plans = Plan::select()->orderby('sequence','asc')->get()->toarray();
+        //$plans = $plans->paginate(10);
+        return json_encode(['data'=>$plans]);
     }
     public function get(Request $request,$users_uuid,$plans_uuid)
     {

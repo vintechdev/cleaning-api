@@ -8,6 +8,7 @@ use App\Bookingaddress;
 use App\Bookingquestion;
 use App\Bookingservice;
 use App\Customermetadata;
+use App\Useraddress;
 use App\Payment;
 use App\Bookingchange;
 use App\OnceBookingAlternateDate;
@@ -254,7 +255,7 @@ class BookingController extends Controller
         $bookings = $request->bookings;
         $question = $request->question;
         $provider = $request->provider;
-    //   echo "<pre>";print_r($request->bookings);exit;
+      // echo "<pre>";print_r($request->bookings);exit;
  
         if(count($bookings)>0)
         {
@@ -287,14 +288,20 @@ class BookingController extends Controller
 
          if($booking->save()){
             $last_insert_id=DB::getPdo()->lastInsertId();
-            $bookingaddress = new Bookingaddress;
-            $bookingaddress->booking_id = $last_insert_id;
-            $bookingaddress->address_line1 = $bookings['address_line1'];
-            $bookingaddress->address_line2 = $bookings['address_line2'];
-            $bookingaddress->subrub = $bookings['subrub'];
-            $bookingaddress->state = $bookings['state'];
-            $bookingaddress->postcode = $bookings['postcode'];
-            $bookingaddress->save();
+          
+          
+            $bookingdetails =  Useraddress::where('id',$bookings['addressid'])->get()->toarray();
+            if(count($bookingdetails)>0){
+                $bookingdetails = $bookingdetails[0];
+                $bookingaddress = new Bookingaddress;
+                $bookingaddress->booking_id = $last_insert_id;
+                $bookingaddress->address_line1 = $bookingdetails['address_line1'];
+                $bookingaddress->address_line2 = $bookingdetails['address_line2'];
+                $bookingaddress->subrub = $bookingdetails['subrub'];
+                $bookingaddress->state = $bookingdetails['state'];
+                $bookingaddress->postcode = $bookingdetails['postcode'];
+                $bookingaddress->save();
+            }
 
           /*   $customermetadata = new Customermetadata;
             $customermetadata->user_id = $user_id;

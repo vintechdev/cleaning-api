@@ -24,6 +24,7 @@ use Auth;
 use Hash;
 use DB;
 use Input;
+use App\Services\TotalCostCalculation;
 
 class BookingController extends Controller
 {
@@ -135,65 +136,20 @@ class BookingController extends Controller
         return response()->json(['saved' => $OnceBookingAlternateDate], $responseCode);
     }
 
-
     public function promocode_discount(Request $request)
+    { 
+        
+        $result = app(TotalCostCalculation::class)->PromoCodeDiscount($request);
+        return response()->json($result);
+
+    }
+
+    public function promocode_discount2(Request $request)
     {
 
-        $id = $request->get('serviceid');
-        $servicetime = $request->get('servicetime');
-        if(is_array($id)){
-            $services = Service::whereIn('id',$id)->where('active',1)->get()->toArray();
-            $totalprice = 0;
-            foreach($services as $k=>$v){
-                $price = $v['service_cost'];
-                $time = $servicetime[$v['id']];
-
-                if($v['service_type']=='hourly'){ 
-                    $total = $time*$price;
-                }else{
-                    $total = $price;
-                }
-                $totalprice += $total;
-            }
-        }else{
-            $services = Service::where('id',$id)->where('active',1)->get()->toArray();
-            $price = $services[0]['service_cost'];
-            $time = $request->get('timeslot');
-            if($services[0]['service_type']=='hourly'){ 
-                $totalprice = $time*$price;
-            }else{
-                $totalprice = $price;
-            }
-        }
+       
         
-
-        $total_amount = $totalprice;
-        $promocode = $request->promocode;
-        $categoryid = $request->servicecategory;
-        $result=array();
-        $sql = DB::select("SELECT * FROM promocodes WHERE name='$promocode' and category_id='$categoryid' limit 0,1");
-         if(!empty($sql)){
-                foreach ($sql as $row){
-
-                    $promocode_discount=$row->discount;
-                    $discount_type = $row->discount_type;
-                }
-                if( $discount_type=='flat'){
-                    $discount_amount=$total_amount-$promocode_discount;
-                }else{
-                    $discount_amount=$total_amount-($total_amount*$promocode_discount)/100;
-                }
-                   
-                    $result['total_cost']=$total_amount;
-                    $result['discount']=$promocode_discount;
-                    $result['final_cost']=$discount_amount;
-
-            return response()->json(['data' => $result], 200);
-
-         }else{
-            return response()->json(['data' => 'Promocode is not valid'],201);
-         }
-
+         return response()->json();
 
     }
     public function index($uuid,$uuid1)

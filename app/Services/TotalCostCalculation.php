@@ -16,45 +16,50 @@ class TotalCostCalculation{
             $provider_id = explode(',',$provider_id);
             $totaltime=0;
             if(is_array($servideid)){
-            foreach($provider_id as $pid){
+                foreach($provider_id as $pid){
 
-                $pdr = $this->providerservicemap->GetServicePriceofProvider($servideid,$pid);
-                $totalserviceprice =0;
-                foreach($pdr as $v){
-                    if($v['service_type']=='hourly'){
-                        $time = (array_key_exists($v['service_id'],$servicetime))?$servicetime[$v['service_id']]:0;
-                        $totalserviceprice += ($time*$v['amount']);
-                        if($time==0){
+                    $pdr = $this->providerservicemap->GetServicePriceofProvider($servideid,$pid);
+                    $totalserviceprice =0;
+                    foreach($pdr as $v){
+                        if($v['service_type']=='hourly'){
+                            $time = (array_key_exists($v['service_id'],$servicetime))?$servicetime[$v['service_id']]:0;
+                            $totalserviceprice += ($time*$v['amount']);
+                            if($time==0){
+                                $totalserviceprice += $v['amount'];
+                            }
+                        // echo $v['service_id'].'==>'.$v['provider_id'].'==>'.$totalserviceprice.'<br>';
+                            $totaltime += $time;
+                        }else{
                             $totalserviceprice += $v['amount'];
                         }
-                       // echo $v['service_id'].'==>'.$v['provider_id'].'==>'.$totalserviceprice.'<br>';
-                        $totaltime += $time;
-                    }else{
-                        $totalserviceprice += $v['amount'];
+                        $priceperprovider[$pid] = $totalserviceprice;
                     }
-                    $priceperprovider[$pid] = $totalserviceprice;
                 }
-            }
-            arsort($priceperprovider);
-            $max = max($priceperprovider); // $max == 7
-            $key = array_keys($priceperprovider, $max); 
-            $totalprice = $max;
-            $result['highvalproviderid'] = $key[0];
-        }else{
-            $services = $this->providerservicemap->GetServicePrice($servideid);
-            dd($services);
-            $price = $services[0]['service_cost'];
-            $time = $servicetime;
-            if($services[0]['service_type']=='hourly'){ 
-                $totalprice = $time*$price;
+                arsort($priceperprovider);
+                $max = max($priceperprovider); // $max == 7
+                $key = array_keys($priceperprovider, $max); 
+                $totalprice = $max;
+                $result['highvalproviderid'] = $key[0];
+                $result['total_cost']=$totalprice;
+                $result['total_time']=$totaltime;
+                return $result;
             }else{
-                $totalprice = $price;
+                $services = $this->providerservicemap->GetServicePrice($servideid);
+            //    dd($services);
+                $price = $services[0]['service_cost'];
+                $time = $servicetime;
+                if($services[0]['service_type']=='hourly'){ 
+                    $totalprice = $time*$price;
+                }else{
+                    $totalprice = $price;
+                }
+                $totaltime = $time;
+                $result['total_cost']=$totalprice;
+                $result['total_time']=$totaltime;
+                return $result;
             }
-            $totaltime = $time;
-        }
-            $result['total_cost']=$totalprice;
-            $result['total_time']=$totaltime;
-            return $result;
+            
+         //   return $result;
     }
 
     public function PromoCodeDiscount(Request $request){

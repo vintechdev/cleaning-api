@@ -95,6 +95,8 @@ Route::middleware(['auth:api', 'role:admin'])->namespace('Backend\API')->prefix(
 Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->prefix('v1/customer')->group(function () {
     // Customeruser Route
 
+    
+    Route::get('getbookingdetails', 'BookingController@getbookingdetails')->name('getbookingdetails')->middleware(['scope:customer']);
     //rakesh api
 
     Route::get('alternate_date/{booking_uuid}', 'BookingController@get_alternate_date')->name('customer_get_alternate_date')->middleware(['scope:customer']);
@@ -150,12 +152,13 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
 
     Route::get('getpastbookingdetails', 'BookingController@getpastbookingdetails')->name('api.Booking.getpastbookingdetails')->middleware(['scope:customer']);
     Route::patch('cancelbooking/{uuid}', 'BookingController@cancelbooking')->name('api.Booking.cancelbooking')->middleware(['scope:customer']);
-      Route::post('cancelbooking/{uuid}', 'BookingController@cancelbooking')->name('api.Booking.cancelbooking')->middleware(['scope:customer']);
+    Route::post('cancelbooking/{uuid}', 'BookingController@cancelbooking')->name('api.Booking.cancelbooking')->middleware(['scope:customer']);
     Route::get('getpaymenthistory', 'PaymentController@getpaymenthistory')->name('api.Payment.getpaymenthistory')->middleware(['scope:customer']);
 
     Route::get('getpaymentsettings', 'CustomermetadataController@getpaymentsettings')->name('api.Customermetadata.getpaymentsettings')->middleware(['scope:customer']);
 
-    Route::get('getuserreviewdata/{uuid}', 'UserreviewController@getuserreviewdata')->name('api.Userreview.getuserreviewdata')->middleware(['scope:customer']);
+    Route::get('getuserreviewdata/{uuid}',
+     'UserreviewController@getuserreviewdata')->name('api.Userreview.getuserreviewdata')->middleware(['scope:customer']);
 
     Route::post('addproviderreview/{uuid}', 'UserreviewController@addproviderreview')->name('api.Userreview.addproviderreview')->middleware(['scope:customer']);
 

@@ -20,6 +20,8 @@ use App\Http\Resources\BookingCollection;
 use App\Http\Resources\Booking as BookingResource;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
+use App\Repository\BookingServiceRepository;
+use App\Repository\BookingReqestProviderRepository;
 use Auth;
 use Hash;
 use DB;
@@ -633,6 +635,33 @@ class BookingController extends Controller
         // print_r($users);exit;
 
         return response()->json(['data' => $data]);
+
+    }
+
+    public function getbookingdetails(Request $request){
+        $user = Auth::user();
+        $user_id = $user->id;
+        $id = $request->id;
+        // print_r($user_id);exit;
+
+        $data = DB::table('bookings')
+            ->join('booking_status', 'bookings.booking_status_id', '=', 'booking_status.id')
+            ->join('booking_request_providers', 'bookings.id', '=', 'booking_request_providers.booking_id')
+			->join('users', 'booking_request_providers.provider_user_id', '=', 'users.id')
+            ->join('booking_services', 'bookings.id', '=', 'booking_services.booking_id')
+            ->join('services', 'booking_services.service_id', '=', 'services.id')
+            ->select('bookings.*', 'booking_status.status as booking_status','users.first_name as provider_first_name','users.last_name as provider_last_name', 'users.profilepic as provider_profilepic', 'services.name as service_name', 'booking_services.final_number_of_hours', 'booking_services.final_service_cost','users.mobile_number as provider_mobile_number','users.email')
+          //  ->where('user_id', $user_id)
+            ->where('bookings.id', $id)
+       //     ->where('booking_request_providers.status', 'accepted')
+            ->get();
+        // print_r($users);exit;
+
+        $services = app(BookingServiceRepository::class)->getServiceDetails($id);
+        $providers = app(BookingReqestProviderRepository::class)->getBookingProvidersDetails($id);
+        
+     //  dd($providers);
+        return response()->json(['data' => $data,'services'=>$services,'providers'=>$providers]);
 
     }
 

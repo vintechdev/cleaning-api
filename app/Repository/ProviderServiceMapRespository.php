@@ -18,8 +18,10 @@ class ProviderServiceMapRespository{
         }
         public function GetServicePrice($serviceid){
         //  echo $serviceid;exit;
+        //DB::enableQueryLog();
             $services = Service::where('id',$serviceid)->where('active',1)->get()->toArray();
-           // dd($services);
+          //  dd($services);
+          // dd(DB::getQueryLog());
             return $services;
         }
         public function CheckPromocode($promocode,$categoryid){

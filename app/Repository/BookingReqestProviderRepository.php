@@ -7,7 +7,6 @@ use App\Bookingrequestprovider;
 class BookingReqestProviderRepository{
 
     public function getBookingProvidersCount($bookingid){
-
           $result = Bookingrequestprovider:: select(DB::raw('sum(booking_request_providers.status = "pending") as pending_count'),DB::raw('sum(booking_request_providers.status = "accepted") as accepted_count'))->where('booking_request_providers.booking_id',$bookingid)->get()->toArray();
           return $result;
 

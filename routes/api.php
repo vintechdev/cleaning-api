@@ -91,7 +91,7 @@ Route::middleware(['auth:api', 'role:admin'])->namespace('Backend\API')->prefix(
     Route::get('getsettings', 'SettingController@getsettings')->name('api.Setting.getsettings')->middleware(['scope:admin']);
 
 });
-
+Route::post('getdashboard', 'HomeController@dashboard')->name('api.home.getdashboard')->middleware(['auth:api']);
 Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->prefix('v1/customer')->group(function () {
     // Customeruser Route
 
@@ -138,7 +138,7 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
 
     Route::patch('editaddress/{uuid}', 'UseraddressController@editaddress')->name('api.Useraddress.editaddress')->middleware(['scope:customer']);
 
-    Route::get('getdashboard', 'AnnoucementController@getdashboard')->name('api.Annoucement.getdashboard')->middleware(['scope:customer']);
+   
 
     Route::get('getnotifications', 'NotificationController@getnotifications')->name('api.Notification.getnotifications')->middleware(['scope:customer']);
 

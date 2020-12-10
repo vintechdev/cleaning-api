@@ -27,12 +27,10 @@ class StripeService
      * StripeService constructor.
      * @param StripeUserMetadataRepository $metadataRepository
      */
-    public function __construct(StripeUserMetadataRepository $metadataRepository)
+    public function __construct(StripeUserMetadataRepository $metadataRepository, string $apiSecret)
     {
         $this->metadataRepo = $metadataRepository;
-        //TODO: Fetch the api key
-        $apiKey = 'sk_test_irG4PS8EjWtDmQ5omaelo8hy';
-        Stripe::setApiKey($apiKey);
+        Stripe::setApiKey($apiSecret);
     }
 
     /**

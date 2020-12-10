@@ -46,7 +46,7 @@ class PaymentsController extends Controller
             return response()->json(['message' => 'Something went wrong. Please contact administrator.'], 500);
         }
 
-        return response()->json(['client_secret' => $id, 'publishable_key' => 'pk_test_qNZ7qrkvDZXJdEUXxHnVVxeg'], 201);
+        return response()->json(['client_secret' => $id, 'publishable_key' => \Config::get('payment.STRIPE_KEY')], 201);
     }
 
     /**
@@ -71,7 +71,7 @@ class PaymentsController extends Controller
                 ->createSession($request->get('success_url'), $request->get('cancel_url'), auth()->user()->id);
 
             return response()->json([
-                'session_id' => $sessionId, 'publishable_key' => 'pk_test_qNZ7qrkvDZXJdEUXxHnVVxeg'
+                'session_id' => $sessionId, 'publishable_key' => \Config::get('payment.STRIPE_KEY')
             ], 200);
         } catch (ApiErrorException $exception) {
             $message = $exception->getMessage();

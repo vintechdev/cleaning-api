@@ -144,7 +144,6 @@ class CustomerusersController extends Controller
                    // ->whereTime('provider_working_hours.end_time', '>=', $request->get('end_time'));
             }
         }
-        dd( $users->get());
         return response()->json(['data' => $users->get()]);
     }
     

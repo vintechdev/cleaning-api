@@ -47,12 +47,13 @@ class BookingEventService
     {
         $event = new Event();
         $event->start_date = $booking->getStartDate();
+        $event->end_date = $booking->getEndDate();
         $event = $this->eventService->createEvent($event);
         $booking->event()->associate($event)->save();
 
         try {
             /** @var RecurringPatternTrait $pattern */
-            $pattern = $this->getRecurringPatternFromPlan($event, $booking->plan_type);
+            $pattern = $this->getRecurringPatternFromPlan($event, $booking);
         } catch (RecurringPatternFactoryException $exception) {
             return $event;
         }
@@ -70,15 +71,15 @@ class BookingEventService
 
     /**
      * @param Event $event
-     * @param int $planId
+     * @param Booking $booking
      * @return RecurringPattern
      */
-    private function getRecurringPatternFromPlan(Event $event, int $planId): RecurringPattern
+    private function getRecurringPatternFromPlan(Event $event, Booking $booking): RecurringPattern
     {
-        if (!Plan::isValidPlan($planId)) {
+        if (!Plan::isValidPlan($booking->getPlanType())) {
             throw new \RuntimeException('Invalid plan id received');
         }
 
-        return $this->recurringPatternFactory->create($planId, $event);
+        return $this->recurringPatternFactory->create($booking->getPlanType(), $event);
     }
 }

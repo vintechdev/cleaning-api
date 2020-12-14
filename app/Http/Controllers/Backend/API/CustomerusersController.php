@@ -112,7 +112,7 @@ class CustomerusersController extends Controller
         }
 
         $users
-            ->select('users.*', 'role_user.role_id as roleid')
+            ->select('users.*')
             ->where('role_id', 2);
 
             if ($request->has('providertype')) {
@@ -144,6 +144,7 @@ class CustomerusersController extends Controller
                    // ->whereTime('provider_working_hours.end_time', '>=', $request->get('end_time'));
             }
         }
+        $users->groupBy('users.id');
         return response()->json(['data' => $users->get()]);
     }
     

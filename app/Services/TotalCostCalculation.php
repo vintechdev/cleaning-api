@@ -13,17 +13,28 @@ class TotalCostCalculation{
     public function GetHighestTotalPrice($servideid,$provider_id,$servicetime){
             $priceperprovider  =[];
             $result=[];
+            $servicewiseprice = [];
             $provider_id = explode(',',$provider_id);
             $totaltime=0;
+            $is_default_service_id ='';
+            $provider_service_price = [];
+            $provider_service_cost_with_time = [];
             if(is_array($servideid)){
+                    
                 foreach($provider_id as $pid){
-
+                    $serpr = [];
+                    $sertotprice = [];
                     $pdr = $this->providerservicemap->GetServicePriceofProvider($servideid,$pid);
                     $totalserviceprice =0;
                     foreach($pdr as $v){
+                        if($v['is_default_service']==1){$is_default_service_id=$v['service_id'];}
                         if($v['service_type']=='hourly'){
+                            
                             $time = (array_key_exists($v['service_id'],$servicetime))?$servicetime[$v['service_id']]:0;
-                            $totalserviceprice += ($time*$v['amount']);
+
+                            $cost = ($time*$v['amount']);
+                            $sertotprice[$v['service_id']]=$cost;
+                            $totalserviceprice +=  $cost;
                             if($time==0){
                                 $totalserviceprice += $v['amount'];
                             }
@@ -31,15 +42,38 @@ class TotalCostCalculation{
                             $totaltime += $time;
                         }else{
                             $totalserviceprice += $v['amount'];
+                            $sertotprice[$v['service_id']]=$v['amount'];
                         }
+                        
+                        $serpr[$v['service_id']]=$v['amount'];
+                        $servicewiseprice[$v['service_id']][]= array($pid=>$v['amount']);
+                        
                         $priceperprovider[$pid] = $totalserviceprice;
                     }
+                   // $servicewiseprice[$v['service_id']][]= ;
+                   $provider_service_price[$pid]= $serpr;
+                   $provider_service_cost_with_time[$pid]= $sertotprice;
                 }
+                $totaltime = array_sum($servicetime);
                 arsort($priceperprovider);
                 $max = max($priceperprovider); // $max == 7
-                $key = array_keys($priceperprovider, $max); 
+
+                //check highest price provider
+              
+               $highestcount = count(array_keys($priceperprovider, $max));
+               if($highestcount>1) {
+                   //if same price offers by >2 providers check default service price;
+                   $keys = array_keys($arr, $max );
+                   $high_def_ser_price_provider_id = $this->GetHighestDefServicePriceProvider($keys,$servicewiseprice[$is_default_service_id]);
+                }else{
+                    $key = array_keys($priceperprovider, $max); 
+                    $high_def_ser_price_provider_id = $key[0];
+                }
+              
                 $totalprice = $max;
-                $result['highvalproviderid'] = $key[0];
+                $result['highvalproviderid'] = $high_def_ser_price_provider_id;
+                $result['provider_wise_service_price'] = $provider_service_price;
+                $result['provider_service_cost_with_time'] = $provider_service_cost_with_time;
                 $result['total_cost']=$totalprice;
                 $result['total_time']=$totaltime;
                 return $result;
@@ -60,6 +94,19 @@ class TotalCostCalculation{
             }
             
          //   return $result;
+    }
+
+    public function GetHighestDefServicePriceProvider($keys,$servicewiseprice)
+    {
+        $defserprice = [];
+        //dd($servicewiseprice);
+        foreach($servicewiseprice as $key=>$val){
+               $firstKey = array_key_first($val);
+               $defserprice[$firstKey]=$val[$firstKey];
+        }
+        $maxprice = max($defserprice);
+        $key = array_keys($defserprice, $maxprice); 
+        return $key[0];
     }
 
     public function PromoCodeDiscount(Request $request){

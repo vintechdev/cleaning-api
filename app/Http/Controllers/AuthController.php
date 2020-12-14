@@ -12,6 +12,8 @@ use App\RoleUser;
 use App\Customermetadata;
 use Route;
 use DB;
+
+use Facade\FlareClient\Http\Response;
 use Illuminate\Support\Facades\Hash;
 // for email verify
 use Stripe;
@@ -50,13 +52,14 @@ class AuthController extends Controller
     // }
     public function register(Request $request)
     {
-        $request->validate([ 
-            'first_name' => 'required',
-            'email' => 'required|string|email|unique:users',
-            'password' => 'required',
-            'mobile_number' => 'required|numeric'
-        ]);
+      //  dd($request->all());
+      $count = User::where(['email' => $request->get('email')])->count();
+      if($count>0){
+            return response()->json(['error'=>'Email already Exists. Please try again with another Email.']);
+      }else{
 
+     
+      try { 
         // $User = new Register();
         $User = User::firstOrNew(['id' => $request->get('id')]);
         $User->id = $request->get('id');
@@ -77,6 +80,10 @@ class AuthController extends Controller
         // dd($roles);
         $User->save();
         $success['saved'] = true;
+    } catch(\Illuminate\Database\QueryException $ex){ 
+        dd($ex->getMessage()); 
+        // Note any method of class PDOException can be called on $ex.
+      }
         // $stripeCustomer = $User->createAsStripeCustomer();
         // if($stripeCustomer->id){
         //     $success['stripe'] = 'Customer created into stripe account successfully.';
@@ -103,17 +110,17 @@ class AuthController extends Controller
 //         $stripe = new \Stripe\StripeClient(
 //   'sk_test_tVIWBNGg2HuiCv7zfMr3Tiit'
 // );
-Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
+/* Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
 
   $account = Stripe\Account::create([
     'country' => 'US',
     'type' => 'custom',
     'requested_capabilities' => ['card_payments', 'transfers'],
-  ]);
+  ]); */
         
        // print_r($lastinsertid);exit;
         // for email verify
-        $User->sendApiEmailVerificationNotification();
+       // $User->sendApiEmailVerificationNotification();
         $success['message'] = 'Please confirm yourself by clicking on verify user button sent to you on your email';
         
         foreach($roles as $r){
@@ -134,12 +141,12 @@ Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
                 $user_id = $User->id;
                 //$stripeCustomer = $User->createAsStripeCustomer();
                 $Customermetadata = new Customermetadata();
-                $stripeCustomer = $Customermetadata->createAsStripeCustomer($options, $user_id);
+                /* $stripeCustomer = $Customermetadata->createAsStripeCustomer($options, $user_id);
                 if($stripeCustomer->id){
                     $success['stripe'] = 'Customer created into stripe account successfully.';
                 } else{
                     $success['stripe'] = 'Failed to create customer into stripe account.';
-                }
+                } */
             }
 
             if($r == 'provider'){
@@ -161,6 +168,7 @@ Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
     
         $responseCode = $request->get('id') ? 200 : 201;
         return response()->json(['success' => $success], $responseCode);
+    }
     }
   
     /**

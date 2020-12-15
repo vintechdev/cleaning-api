@@ -112,52 +112,22 @@ class UseraddressController extends Controller
     //for add address
     public function addaddress(Request $request)
     {
-
-        $validator = Validator::make($request->all(), [
-            'type' => 'required',
-            'address_line1' => 'required',
-            'address_line2' => 'required',
-            'subrub' => 'required',
-            'state' => 'required',
-            'postcode' => 'required|numeric'
-        ]);
-        
-        if($validator->fails()){
-            $message = $validator->messages()->all();
-            return response()->json(['message' => $message], 401);
-        }
-
-        $type = $request->get('type');
-
         $user = Auth::user();
         $user_id = $user->id;
+        $Useraddress = Useraddress::firstOrNew(['id' => $request->get('id')]);
+        $Useraddress->id = $request->get('id');
+        $Useraddress->uuid = $request->get('uuid');
+        $Useraddress->user_id = $user_id;
+        $Useraddress->type = 'home';//$request->get('type');
+        $Useraddress->address_line1 = $request->get('address_line1');
+        $Useraddress->address_line2 = $request->get('address_line2');
+        $Useraddress->subrub = $request->get('subrub');
+        $Useraddress->state = $request->get('state');
+        $Useraddress->postcode = $request->get('postcode');
+        $Useraddress->save();
+        $responseCode = $request->get('id') ? 200 : 201;
+        return response()->json(['saved' => true], $responseCode);
         
-       // $types = DB::table('user_addresses')->where('user_id', $user_id)->pluck('type')->toArray();
-        // print_r($types);exit;
-
-       /*  if (in_array($type, $types))
-        {
-            return response()->json(['message' => 'Type '.$type.' already exist with this user! Please use other type.']);
-            
-        }
-        else
-        { */
-            $Useraddress = Useraddress::firstOrNew(['id' => $request->get('id')]);
-            $Useraddress->id = $request->get('id');
-            $Useraddress->uuid = $request->get('uuid');
-            $Useraddress->user_id = $user_id;
-            $Useraddress->type = $request->get('type');
-            $Useraddress->address_line1 = $request->get('address_line1');
-            $Useraddress->address_line2 = $request->get('address_line2');
-            $Useraddress->subrub = $request->get('subrub');
-            $Useraddress->state = $request->get('state');
-
-            $Useraddress->postcode = $request->get('postcode');
-            $Useraddress->save();
-
-            $responseCode = $request->get('id') ? 200 : 201;
-            return response()->json(['saved' => true], $responseCode);
-        //}
     }
 
     //for update address by uuid

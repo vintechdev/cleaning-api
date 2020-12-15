@@ -55,7 +55,6 @@ class ServiceController extends Controller
         $providerid = $request->get('providerid');
         $servicetime = (is_array($id))?$request->get('servicetime'):$request->get('gettimeslot');
         $result = app(TotalCostCalculation::class)->GetHighestTotalPrice($id,$providerid,$servicetime);
-       // dd($result);
         return Response::json($result);
         
     }

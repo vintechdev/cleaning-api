@@ -27,6 +27,7 @@ use Hash;
 use DB;
 use Input;
 use App\Services\TotalCostCalculation;
+use App\Repository\Eloquent\StripeUserMetadataRepository;
 
 class BookingController extends Controller
 {
@@ -205,11 +206,16 @@ class BookingController extends Controller
     }
 
 
-     public function add_booking(Request $request)
+     public function add_booking(Request $request,StripeUserMetadataRepository $striepusermetadata)
     {
 
-        //$bkng = $
-      
+        $user_id=auth('api')->user()->id;
+        $usercard = $striepusermetadata->findByUserId($user_id);
+
+        if (is_null($usercard) || is_null($usercard->stripe_payment_method_id)){
+            return response()->json(['saved' => false],402);
+        }
+
         $service = $request->service;
         $bookings = $request->bookings;
         $question = $request->question;
@@ -226,7 +232,7 @@ class BookingController extends Controller
 
          //----------New changes ----------------//
          $booking = new Booking;
-         $user_id=auth('api')->user()->id;
+        
          $booking->user_id = $user_id;
          $booking->booking_status_id = 1;
          // $booking->description = ($bookings['description'])?$bookings['description']:'';
@@ -262,33 +268,7 @@ class BookingController extends Controller
                 $bookingaddress->save();
             }
 
-          /*   $customermetadata = new Customermetadata;
-            $customermetadata->user_id = $user_id;
-            $customermetadata->status = $bookings['status'];
-            $customermetadata->card_number = $bookings['card_number'];
-            $customermetadata->card_name = $bookings['card_name'];
-            $customermetadata->user_card_type = $bookings['user_card_type'];
-            $customermetadata->card_cvv = $bookings['card_cvv'];
-            $customermetadata->expiry_month = $bookings['expiry_month'];
-            $customermetadata->expiry_year = $bookings['expiry_year'];
-            //$customermetadata->user_card_expiry = '2025-05-26';
-            $customermetadata->user_card_last_four = $bookings['user_card_last_four'];
-            $customermetadata->user_stripe_customer_id = $bookings['user_stripe_customer_id'];
-            $customermetadata->save(); */
-
-            $customermetadata = new Customermetadata;
-            $customermetadata->user_id = $user_id;
-            $customermetadata->status = 'active';
-            $customermetadata->card_number = '444444444444';
-            $customermetadata->card_name = 'test';
-            $customermetadata->user_card_type = 'visa';
-            $customermetadata->card_cvv = '123';
-            $customermetadata->expiry_month = '12';
-            $customermetadata->expiry_year = '2022';
-            //$customermetadata->user_card_expiry = '2025-05-26';
-            $customermetadata->user_card_last_four = '1234';
-            $customermetadata->user_stripe_customer_id = '123456789';
-            $customermetadata->save();
+         
 
 
             if(! empty($provider))
@@ -336,111 +316,11 @@ class BookingController extends Controller
 
          }
 
-         //------------------------------------------//
-            /*foreach($booking as $key => $bookings)
-            {
-
-                $booking = new Booking;
-                $user_id=auth('api')->user()->id;
-                $booking->user_id = $user_id;
-                $booking->booking_status_id = 1;
-                $booking->description = $bookings['description'];
-                $booking->is_recurring =$bookings['is_recurring'];
-                $booking->parent_event_id = $bookings['parent_event_id'];
-                $booking->booking_date = $bookings['booking_date'];
-                $booking->booking_time = $bookings['booking_time'];
-                $booking->booking_end_time = $bookings['booking_end_time'];
-                $booking->booking_postcode = $bookings['booking_postcode'];
-                $booking->booking_provider_type = $bookings['booking_provider_type'];
-                $booking->plan_type = $bookings['plan_type'];
-                $booking->promocode = $bookings['promocode'];
-                $booking->total_cost = $bookings['total_cost'];
-                $booking->discount = $bookings['discount'];
-                $booking->final_cost = $bookings['final_cost'];
-                $booking->is_flexible = $bookings['is_flexible'];
-                if($booking->save()){
-                    $last_insert_id=DB::getPdo()->lastInsertId();
-                    $bookingaddress = new Bookingaddress;
-                    $bookingaddress->booking_id = $last_insert_id;
-                    $bookingaddress->address_line1 = $bookings['address_line1'];
-                    $bookingaddress->address_line2 = $bookings['address_line2'];
-                    $bookingaddress->subrub = $bookings['subrub'];
-                    $bookingaddress->state = $bookings['state'];
-                    $bookingaddress->postcode = $bookings['postcode'];
-                    $bookingaddress->save();
-
-                    $customermetadata = new Customermetadata;
-                    $customermetadata->user_id = $user_id;
-                    $customermetadata->status = $bookings['status'];
-                    $customermetadata->card_number = $bookings['card_number'];
-                    $customermetadata->card_name = $bookings['card_name'];
-                    $customermetadata->user_card_type = $bookings['user_card_type'];
-                    $customermetadata->card_cvv = $bookings['card_cvv'];
-                    $customermetadata->expiry_month = $bookings['expiry_month'];
-                    $customermetadata->expiry_year = $bookings['expiry_year'];
-                    //$customermetadata->user_card_expiry = '2025-05-26';
-                    $customermetadata->user_card_last_four = $bookings['user_card_last_four'];
-                    $customermetadata->user_stripe_customer_id = $bookings['user_stripe_customer_id'];
-                    $customermetadata->save();
-
-                    //add multipal provider
-                     
-                        $record = $request->provider;
-                        if(! empty($record))
-                        {
-                            foreach($record as $key => $provider)
-                            {
-                                $bookingrequestprovider = new Bookingrequestprovider;
-                                $bookingrequestprovider->booking_id = $last_insert_id;
-                                $bookingrequestprovider->provider_user_id = $provider['provider_user_id'];
-                                $bookingrequestprovider->status = $provider['booking_request_providers_status'];
-                                $bookingrequestprovider->provider_comment = $provider['provider_comment'];
-                                $bookingrequestprovider->visible_to_enduser = $provider['visible_to_enduser'];
-                                $bookingrequestprovider->save();
-
-                            }
-                        }
-
-                        //add multipal booking service and question
-                        $record = $request->service;
-
-                        if(! empty($record))
-                        {
-                            foreach($record as $key => $service)
-                            {
-                            $bookingservice = new Bookingservice;
-                            $bookingservice->booking_id = $last_insert_id;
-                            $bookingservice->service_id = $service['service_id'];
-                            $bookingservice->initial_number_of_hours = $service['initial_number_of_hours'];
-                            $bookingservice->initial_service_cost = $service['initial_service_cost'];
-                            $bookingservice->final_number_of_hours = $service['final_number_of_hours'];
-                            $bookingservice->final_service_cost = $service['final_service_cost'];
-                                $record = $service['question'];
-
-                                if(! empty($record))
-                                {
-                                    foreach($record as $key => $question)
-                                    {
-                                    $bookingquestion = new Bookingquestion;
-                                    $bookingquestion->booking_id = $last_insert_id;
-                                    $bookingquestion->service_question_id = $question['service_question_id'];
-                                    $bookingquestion->answer = $question['answer'];
-                                    $bookingquestion->save();
-
-                                    }
-                                }
-                                $bookingservice->save();
-
-                            }
-
-                        }
-                }
-
-            }*/
+         
             //$User->sendApiEmailVerificationNotification();
             $success['message'] = 'Please confirm yourself by clicking on verify user button sent to you on your email';
             $responseCode = $request->get('id') ? 200 : 201;
-            return response()->json(['saved' => true], $responseCode);
+            return response()->json(['saved' => true,'bookingdetailid'=> $last_insert_id], $responseCode);
         }
         else{
            

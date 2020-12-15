@@ -51,18 +51,16 @@ class MonthlyRecurringPattern extends Model implements RecurringDateInterface
             return $startDateTime;
         }
 
-        $months = $date->diff($startDateTime)->m;
+        $months = $date->diffInMonths($startDateTime);
         $separationCount = $this->getRecurringPattern()->getSeparationCount();
         if ($months < $separationCount) {
             return $this->getNextRecurringDate($startDateTime);
         }
 
-        $monthsToAdd = floor($months);
+        $monthsToAdd = floor($months) - (floor($months) % $separationCount);
         $startDateTime->modify('+' . $monthsToAdd . ' months');
 
-        return floor($months) !== $months ?
-            $this->getNextRecurringDate($startDateTime) :
-            $startDateTime;
+        return $this->getNextRecurringDate($startDateTime);
     }
 
     /**

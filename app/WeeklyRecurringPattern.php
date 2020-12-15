@@ -51,19 +51,17 @@ class WeeklyRecurringPattern extends Model implements RecurringDateInterface
             return $startDateTime;
         }
 
-        $totalDays = $date->diff($startDateTime)->d;
+        $totalDays = $date->diffInDays($startDateTime);
         $weeks = $totalDays/7;
         $separationCount = $this->getRecurringPattern()->getSeparationCount();
         if ($weeks < $separationCount) {
             return $this->getNextRecurringDate($startDateTime);
         }
 
-        $weeksToAdd = floor($weeks);
+        $weeksToAdd = floor($weeks) - (floor($weeks) % $separationCount);
         $startDateTime->modify('+' . $weeksToAdd . ' weeks');
 
-        return floor($weeks) !== $weeks ?
-            $this->getNextRecurringDate($startDateTime) :
-            $startDateTime;
+        return $this->getNextRecurringDate($startDateTime);
     }
 
     /**

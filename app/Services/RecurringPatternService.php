@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Event;
 use App\Interfaces\RecurringDateInterface;
 use App\Repository\Eloquent\RecurringPatternRepository;
-use App\WeeklyRecurringPattern;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -37,17 +36,43 @@ class RecurringPatternService
      */
     public function getRecurringDateTimes(Event $event, int $limit = 10, int $offset = 1)
     {
-        $event = Event::find(35);
         /** @var Collection $recurringPattern */
         $recurringPatterns = $this->recurringPatternRepository->findByEvent($event);
 
         /** @var RecurringDateInterface $recurringPatternable */
         $recurringPatternable = $recurringPatterns->first()->recurringPatternable;
 
+        $dates = [];
         $date = $recurringPatternable->getDateByOffset($offset);
-        $dates = [$date];
+        $dates[] = clone $date;
 
         for ($i = 1; $i < $limit; $i++) {
+            $date = $recurringPatternable->getNextValidDateRelativeTo($date);
+            $dates[] = clone $date;
+        }
+
+        return $dates;
+    }
+
+    /**
+     * Returns all recurring date after $relativeDate
+     * @param Carbon $relativeDate
+     * @param Event $event
+     * @param int $limit
+     * @return array
+     */
+    public function getRecurringDateTimesPostDateTime(Carbon $relativeDate, Event $event, $limit = 10)
+    {
+        /** @var Collection $recurringPattern */
+        $recurringPatterns = $this->recurringPatternRepository->findByEvent($event);
+
+        /** @var RecurringDateInterface $recurringPatternable */
+        $recurringPatternable = $recurringPatterns->first()->recurringPatternable;
+
+        $dates = [];
+
+        $date = $relativeDate;
+        for ($i = 0; $i < $limit; $i++) {
             $date = $recurringPatternable->getNextValidDateRelativeTo($date);
             $dates[] = clone $date;
         }

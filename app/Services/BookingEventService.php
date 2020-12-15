@@ -10,6 +10,7 @@ use App\Interfaces\RecurringDateInterface;
 use App\Plan;
 use App\RecurringPattern;
 use App\Traits\RecurringPatternTrait;
+use Carbon\Carbon;
 
 /**
  * Class BookingEventService
@@ -29,7 +30,7 @@ class BookingEventService
     /**
      * @var RecurringPatternService
      */
-    private $service;
+    private $recurringPatternService;
 
     /**
      * BookingEventService constructor.
@@ -43,7 +44,7 @@ class BookingEventService
     ) {
         $this->recurringPatternFactory = $recurringPatternFactory;
         $this->eventService = $eventService;
-        $this->service = $service;
+        $this->recurringPatternService = $service;
     }
 
     /**
@@ -75,6 +76,57 @@ class BookingEventService
         $recurringPattern->setSeparationCountFromPlan($booking->getPlanType());
         $recurringPattern->event()->associate($event)->save();
         return $event;
+    }
+
+    /**
+     * @param Booking $booking
+     * @param Carbon|null $fromDateTime
+     * @param int $limit
+     * @return array
+     */
+    public function listBookingDates(Booking $booking, Carbon $fromDateTime = null, int $limit = 10): array
+    {
+        if (is_null($fromDateTime)) {
+            $fromDateTime = Carbon::now();
+        }
+
+        if ($booking->getPlanType() === Plan::ONCEOFF) {
+            $dates = $this->getOnceOffBookingDate($booking, $fromDateTime);
+        } else {
+            $dates = $this
+                ->recurringPatternService
+                ->getRecurringDateTimesPostDateTime($fromDateTime, $booking->event, $limit);
+        }
+
+        $returnDates = [];
+        /** @var Carbon $date */
+        foreach ($dates as $date) {
+            $from = $date->format('d-m-Y H:i:s');
+            $to = Booking::getFinalBookingDateTime($date, $booking->getFinalHours());
+            if ($to) {
+                $to = $to->format('d-m-Y H:i:s');
+            }
+            $returnDates[] = ['from' => $from, 'to' => $to];
+        }
+
+        return $returnDates;
+    }
+
+    /**
+     * @param Booking $booking
+     * @param Carbon|null $fromDateTime
+     * @return array|Carbon[]
+     */
+    private function getOnceOffBookingDate(Booking $booking, Carbon $fromDateTime = null): array
+    {
+        /** @var Carbon $date */
+        $date = $booking->event->start_date;
+
+        if (!$date || $fromDateTime->greaterThan($date)) {
+            return [];
+        }
+
+        return [$date];
     }
 
     /**

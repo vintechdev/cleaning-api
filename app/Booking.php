@@ -41,11 +41,7 @@ class Booking extends Model
     {
         if ($this->getPlanType() == Plan::ONCEOFF && $this->getFinalHours()) {
             $dateTime = clone $this->getStartDate();
-            $decimalHours = $this->getFinalHours();
-            $hours = floor($decimalHours);
-            $mins = round(($decimalHours - $hours) * 60);
-            $timeInMinutes = ($hours * 60) + $mins;
-            return $dateTime->addMinutes($timeInMinutes);
+            return self::getFinalBookingDateTime($dateTime, $this->getFinalHours());
         }
 
         return  null;
@@ -88,5 +84,18 @@ class Booking extends Model
     {
         $this->final_hours = $finalHours;
         return $this;
+    }
+
+    /**
+     * @param Carbon $dateTime
+     * @param float $finalHours
+     * @return Carbon
+     */
+    public static function getFinalBookingDateTime(Carbon $dateTime, float $finalHours): Carbon
+    {
+        $hours = floor($finalHours);
+        $mins = round(($finalHours - $hours) * 60);
+        $timeInMinutes = ($hours * 60) + $mins;
+        return $dateTime->addMinutes($timeInMinutes);
     }
 }

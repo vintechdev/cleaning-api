@@ -32,10 +32,12 @@ class RecurringPatternFactory
             case Plan::WEEKLY:
                 $recurringPattern = new WeeklyRecurringPattern();
                 $recurringPattern->day_of_week = $startDate->dayOfWeek;
+                $recurringPattern->setSeparationCount(1);
                 break;
             case Plan::BIWEEKLY:
                 $recurringPattern = new WeeklyRecurringPattern();
                 $recurringPattern->day_of_week = $startDate->dayOfWeek;
+                $recurringPattern->setSeparationCount(2);
                 break;
             case Plan::MONTHLY:
                 $recurringPattern = new MonthlyRecurringPattern();

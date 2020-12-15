@@ -27,6 +27,7 @@ use Hash;
 use DB;
 use Input;
 use App\Services\TotalCostCalculation;
+use App\Repository\Eloquent\StripeUserMetadataRepository;
 
 class BookingController extends Controller
 {
@@ -205,11 +206,16 @@ class BookingController extends Controller
     }
 
 
-     public function add_booking(Request $request)
+     public function add_booking(Request $request,StripeUserMetadataRepository $striepusermetadata)
     {
 
-        //$bkng = $
-      
+        $user_id=auth('api')->user()->id;
+        $usercard = $striepusermetadata->findByUserId($user_id);
+
+        if (is_null($usercard) || is_null($usercard->stripe_payment_method_id)){
+            return response()->json(['saved' => false],402);
+        }
+
         $service = $request->service;
         $bookings = $request->bookings;
         $question = $request->question;
@@ -226,7 +232,7 @@ class BookingController extends Controller
 
          //----------New changes ----------------//
          $booking = new Booking;
-         $user_id=auth('api')->user()->id;
+        
          $booking->user_id = $user_id;
          $booking->booking_status_id = 1;
          // $booking->description = ($bookings['description'])?$bookings['description']:'';
@@ -262,33 +268,7 @@ class BookingController extends Controller
                 $bookingaddress->save();
             }
 
-          /*   $customermetadata = new Customermetadata;
-            $customermetadata->user_id = $user_id;
-            $customermetadata->status = $bookings['status'];
-            $customermetadata->card_number = $bookings['card_number'];
-            $customermetadata->card_name = $bookings['card_name'];
-            $customermetadata->user_card_type = $bookings['user_card_type'];
-            $customermetadata->card_cvv = $bookings['card_cvv'];
-            $customermetadata->expiry_month = $bookings['expiry_month'];
-            $customermetadata->expiry_year = $bookings['expiry_year'];
-            //$customermetadata->user_card_expiry = '2025-05-26';
-            $customermetadata->user_card_last_four = $bookings['user_card_last_four'];
-            $customermetadata->user_stripe_customer_id = $bookings['user_stripe_customer_id'];
-            $customermetadata->save(); */
-
-            $customermetadata = new Customermetadata;
-            $customermetadata->user_id = $user_id;
-            $customermetadata->status = 'active';
-            $customermetadata->card_number = '444444444444';
-            $customermetadata->card_name = 'test';
-            $customermetadata->user_card_type = 'visa';
-            $customermetadata->card_cvv = '123';
-            $customermetadata->expiry_month = '12';
-            $customermetadata->expiry_year = '2022';
-            //$customermetadata->user_card_expiry = '2025-05-26';
-            $customermetadata->user_card_last_four = '1234';
-            $customermetadata->user_stripe_customer_id = '123456789';
-            $customermetadata->save();
+         
 
 
             if(! empty($provider))

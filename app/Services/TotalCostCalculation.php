@@ -63,7 +63,7 @@ class TotalCostCalculation{
                $highestcount = count(array_keys($priceperprovider, $max));
                if($highestcount>1) {
                    //if same price offers by >2 providers check default service price;
-                   $keys = array_keys($arr, $max );
+                   $keys = array_keys($priceperprovider, $max );
                    $high_def_ser_price_provider_id = $this->GetHighestDefServicePriceProvider($keys,$servicewiseprice[$is_default_service_id]);
                 }else{
                     $key = array_keys($priceperprovider, $max); 

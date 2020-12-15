@@ -6,6 +6,7 @@ use App\Booking;
 use App\Event;
 use App\Exceptions\Booking\Factory\RecurringPatternFactoryException;
 use App\Factory\Booking\RecurringPatternFactory;
+use App\Interfaces\RecurringDateInterface;
 use App\Plan;
 use App\RecurringPattern;
 use App\Traits\RecurringPatternTrait;
@@ -25,6 +26,10 @@ class BookingEventService
      * @var EventService
      */
     private $eventService;
+    /**
+     * @var RecurringPatternService
+     */
+    private $service;
 
     /**
      * BookingEventService constructor.
@@ -33,10 +38,12 @@ class BookingEventService
      */
     public function __construct(
         RecurringPatternFactory $recurringPatternFactory,
-        EventService $eventService
+        EventService $eventService,
+        RecurringPatternService $service
     ) {
         $this->recurringPatternFactory = $recurringPatternFactory;
         $this->eventService = $eventService;
+        $this->service = $service;
     }
 
     /**
@@ -60,12 +67,13 @@ class BookingEventService
 
         // TODO: Move the logic below to a repository
         $pattern->save();
+
+        /** @var RecurringPattern $recurringPattern */
         $recurringPattern = $pattern
             ->recurringPattern()
             ->make();
-        $recurringPattern->separation_count = $pattern->getSeparationCount();
+        $recurringPattern->setSeparationCountFromPlan($booking->getPlanType());
         $recurringPattern->event()->associate($event)->save();
-
         return $event;
     }
 
@@ -74,7 +82,7 @@ class BookingEventService
      * @param Booking $booking
      * @return RecurringPattern
      */
-    private function getRecurringPatternFromPlan(Event $event, Booking $booking): RecurringPattern
+    private function getRecurringPatternFromPlan(Event $event, Booking $booking): RecurringDateInterface
     {
         if (!Plan::isValidPlan($booking->getPlanType())) {
             throw new \RuntimeException('Invalid plan id received');

@@ -3,6 +3,7 @@
 namespace App\Traits;
 
 use App\RecurringPattern;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 /**
@@ -13,23 +14,35 @@ trait RecurringPatternTrait
 {
     private $separationCount;
 
+    /**
+     * @return MorphOne
+     */
     abstract public function recurringPattern(): MorphOne;
 
     /**
-     * @param int $separationCount
-     * @return $this
+     * @return string
      */
-    public function setSeparationCount(int $separationCount): RecurringPattern
+    abstract protected function getDateModifier(): string;
+
+    /**
+     * @return RecurringPattern
+     */
+    public function getRecurringPattern(): RecurringPattern
     {
-        $this->separationCount = $separationCount;
-        return $this;
+        return $this->recurringPattern;
     }
 
     /**
-     * @return int
+     * Returns the date on the offset passed
+     * If the dates are 10-10-2020, 12-10-2020 and 14-10-2020 and the offset is 2 it will
+     * return 12-10-2020
+     * @param $offset
+     * @return Carbon
      */
-    public function getSeparationCount(): int
+    public function getDateByOffset(int $offset): Carbon
     {
-        return $this->separationCount;
+        $separation = $this->getRecurringPattern()->getSeparationCount() * ($offset - 1);
+        $startDate = $this->getRecurringPattern()->getEvent()->getStartDateTime();
+        return  $startDate->modify('+' . $separation . ' ' . $this->getDateModifier());
     }
 }

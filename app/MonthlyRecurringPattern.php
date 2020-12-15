@@ -5,15 +5,18 @@ namespace App;
 use App\Interfaces\RecurringDateInterface;
 use App\Traits\RecurringPatternTrait;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 /**
  * Class MonthlyRecurringPattern
  * @package App
  */
-class MonthlyRecurringPattern extends RecurringPattern implements RecurringDateInterface
+class MonthlyRecurringPattern extends Model implements RecurringDateInterface
 {
     use RecurringPatternTrait;
+
+    public $timestamps = false;
 
     /**
      * @var string
@@ -23,13 +26,50 @@ class MonthlyRecurringPattern extends RecurringPattern implements RecurringDateI
     /**
      * @return MorphOne
      */
-    public function recurringPattern(): MorphOne
+    public function recurringPattern()
     {
-        return $this->morphOne(RecurringPattern::class, 'recurringPatternable');
+        return $this->morphOne(RecurringPattern::class, 'recurringpatternable');
     }
 
+    /**
+     * @param Carbon $date
+     * @return Carbon
+     */
     public function getNextRecurringDate(Carbon $date): Carbon
     {
-        // TODO: Implement getNextRecurringDate() method.
+        return $date->modify('+' . $this->getRecurringPattern()->getSeparationCount() . ' months');
+    }
+
+    /**
+     * @param Carbon $date
+     * @return Carbon
+     */
+    public function getNextValidDateRelativeTo(Carbon $date): Carbon
+    {
+        $startDateTime = $this->getRecurringPattern()->getEvent()->getStartDateTime();
+        if ($startDateTime->greaterThan($date)) {
+            return $startDateTime;
+        }
+
+        $months = $date->diff($startDateTime)->m;
+        $separationCount = $this->getRecurringPattern()->getSeparationCount();
+        if ($months < $separationCount) {
+            return $this->getNextRecurringDate($startDateTime);
+        }
+
+        $monthsToAdd = floor($months);
+        $startDateTime->modify('+' . $monthsToAdd . ' months');
+
+        return floor($months) !== $months ?
+            $this->getNextRecurringDate($startDateTime) :
+            $startDateTime;
+    }
+
+    /**
+     * @return string
+     */
+    protected function getDateModifier(): string
+    {
+        return 'months';
     }
 }

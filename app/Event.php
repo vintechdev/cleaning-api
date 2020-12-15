@@ -2,6 +2,7 @@
 
 namespace App;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -12,8 +13,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class Event extends Model
 {
-    use SoftDeletes;
-
     public $timestamps = false;
 
     /**
@@ -22,15 +21,26 @@ class Event extends Model
     protected $table = 'events';
 
     /**
-     * @var string[]
+     * @return int
      */
-    protected $fillable = ['id'];
+    public function getId(): int
+    {
+        return $this->id;
+    }
+
+    /**
+     * @return Carbon
+     */
+    public function getStartDateTime(): Carbon
+    {
+        return Carbon::createFromFormat('Y-m-d H:i:s', $this->start_date);
+    }
 
     /**
      * @return HasOne
      */
-    public function recurringPattern(): HasOne
+    public function recurringPattern()
     {
-        $this->hasOne(RecurringPattern::class);
+        $this->hasOne(RecurringPattern::class, 'event_id', 'id');
     }
 }

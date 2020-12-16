@@ -125,11 +125,7 @@ class CustomerusersController extends Controller
         if ($request->has('servicecategory')) {
             $users->where('service_categories.id', $request->get('servicecategory'));
         }
-
-        
-        if ($request->has('serviceid')) {
-            $users->whereIn('provider_service_maps.service_id', explode(',',$request->get('serviceid')));
-        }
+     
         if ($request->has('postcode')) {
             $users->where('postcodes.postcode', $request->get('postcode'));
         }
@@ -139,12 +135,16 @@ class CustomerusersController extends Controller
             }
 
             if ($request->has('start_time') && $request->has('end_time')) {
-                $users
-                    ->whereTime('provider_working_hours.start_time', '<=', $request->get('start_time'));
+                $users->whereTime('provider_working_hours.start_time', '<=', $request->get('start_time'));
                    // ->whereTime('provider_working_hours.end_time', '>=', $request->get('end_time'));
             }
         }
-        $users->groupBy('users.id');
+        if ($request->has('serviceid')) {
+            $servicearr =  explode(',',$request->get('serviceid'));
+            $users->whereIn('provider_service_maps.service_id',explode(',',$request->get('serviceid')));
+            $users->groupBy('users.id')->havingRaw("count(provider_service_maps.provider_id)=".count( $servicearr));
+        }
+       
         return response()->json(['data' => $users->get()]);
     }
     

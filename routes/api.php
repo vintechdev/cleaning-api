@@ -155,8 +155,10 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
     Route::get('getfuturebookingdetails', 'BookingController@getfuturebookingdetails')->name('api.Booking.getfuturebookingdetails')->middleware(['scope:customer']);
 
     Route::get('getpastbookingdetails', 'BookingController@getpastbookingdetails')->name('api.Booking.getpastbookingdetails')->middleware(['scope:customer']);
-    Route::patch('cancelbooking/{uuid}', 'BookingController@cancelbooking')->name('api.Booking.cancelbooking')->middleware(['scope:customer']);
-    Route::post('cancelbooking/{uuid}', 'BookingController@cancelbooking')->name('api.Booking.cancelbooking')->middleware(['scope:customer']);
+   
+    Route::patch('cancelbooking', 'BookingController@cancelbooking')->name('api.Booking.cancelbooking')->middleware(['scope:customer']);
+    Route::post('cancelbooking', 'BookingController@cancelbooking')->name('api.Booking.cancelbooking')->middleware(['scope:customer']);
+
     Route::get('getpaymenthistory', 'PaymentController@getpaymenthistory')->name('api.Payment.getpaymenthistory')->middleware(['scope:customer']);
 
     Route::get('getpaymentsettings', 'CustomermetadataController@getpaymentsettings')->name('api.Customermetadata.getpaymentsettings')->middleware(['scope:customer']);

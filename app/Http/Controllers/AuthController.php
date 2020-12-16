@@ -173,7 +173,7 @@ class AuthController extends Controller
   
     /**
      * Login user and create token
-     *
+     *n
      * @param  [string] email
      * @param  [string] password
      * @param  [boolean] remember_me

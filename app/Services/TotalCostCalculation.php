@@ -38,7 +38,7 @@ class TotalCostCalculation{
                             if($time==0){
                                 $totalserviceprice += $v['amount'];
                             }
-                        // echo $v['service_id'].'==>'.$v['provider_id'].'==>'.$totalserviceprice.'<br>';
+                        
                             $totaltime += $time;
                         }else{
                             $totalserviceprice += $v['amount'];
@@ -50,13 +50,13 @@ class TotalCostCalculation{
                         
                         $priceperprovider[$pid] = $totalserviceprice;
                     }
-                   // $servicewiseprice[$v['service_id']][]= ;
+                  
                    $provider_service_price[$pid]= $serpr;
                    $provider_service_cost_with_time[$pid]= $sertotprice;
                 }
                 $totaltime = array_sum($servicetime);
                 arsort($priceperprovider);
-                $max = max($priceperprovider); // $max == 7
+                $max = max($priceperprovider); 
 
                 //check highest price provider
               
@@ -79,7 +79,7 @@ class TotalCostCalculation{
                 return $result;
             }else{
                 $services = $this->providerservicemap->GetServicePrice($servideid);
-            //    dd($services);
+           
                 $price = $services[0]['service_cost'];
                 $time = $servicetime;
                 if($services[0]['service_type']=='hourly'){ 
@@ -93,7 +93,7 @@ class TotalCostCalculation{
                 return $result;
             }
             
-         //   return $result;
+      
     }
 
     public function GetHighestDefServicePriceProvider($keys,$servicewiseprice)

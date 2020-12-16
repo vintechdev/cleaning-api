@@ -28,6 +28,7 @@ use DB;
 use Input;
 use App\Services\TotalCostCalculation;
 use App\Repository\Eloquent\StripeUserMetadataRepository;
+use App\Repository\ProviderBadgeReviewRepository;
 
 class BookingController extends Controller
 {
@@ -544,7 +545,16 @@ class BookingController extends Controller
         }else{
             $providers = app(BookingReqestProviderRepository::class)->getBookingPendingProvidersDetails($id);
         }
-        
+
+        if(count($providers)>0){
+            foreach($providers as $key=>$val){
+                $providers[$key]['badges'] = app(ProviderBadgeReviewRepository::class)->getBadgeDetails($val['provider_user_id']);
+                $providers[$key]['review'] = app(ProviderBadgeReviewRepository::class)->getReviewDetails($val['provider_user_id']);
+                $providers[$key]['avgrate'] = app(ProviderBadgeReviewRepository::class)->getAvgRating($val['provider_user_id']);
+            
+            }
+
+        }
       // dd($data);
         return response()->json(['data' => $data,'services'=>$services,'providers'=>$providers,'providerscount'=>$providerscount]);
 
@@ -747,7 +757,9 @@ class BookingController extends Controller
                 $Booking->booking_status_id = '5';
                 $Booking->save();
 
-                $success['message'] = 'Booking cancelled successfully.';
+                $cancelbooking = app(BookingReqestProviderRepository::class)->CancelBooking($booking_id);
+               
+               // $success['message'] = 'Booking cancelled successfully.';
                 $success['cancelled_booking_uuid'] = $lastinserteduuid;
 
                 return response()->json(['success' => $success,'message' => 'Booking cancelled successfully.']);

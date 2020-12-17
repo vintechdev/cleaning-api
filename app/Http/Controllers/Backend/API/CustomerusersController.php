@@ -93,20 +93,26 @@ class CustomerusersController extends Controller
         $users = DB::table('users')
             ->join('role_user', 'users.id', '=', 'role_user.user_id');
 
-        if ($request->has('servicecategory')) {
+        if ($request->has('servicecategory') || $request->has('serviceid')) {
             $users
                 ->join('provider_service_maps', 'users.id', '=', 'provider_service_maps.provider_id')
                 ->join('services', 'provider_service_maps.service_id', '=', 'services.id')
                 ->join('service_categories', 'services.category_id', '=', 'service_categories.id');
         }
 
+        if ($request->has('postcode')) {
+            $users
+            ->join('provider_postcode_maps', 'users.id', '=', 'provider_postcode_maps.provider_id')
+            ->join('postcodes', 'provider_postcode_maps.postcode_id', '=', 'postcodes.id');
+
+        }
         if ($request->has('day') || ($request->has('start_time') && $request->has('end_time'))) {
             $users
                 ->join('provider_working_hours', 'users.id', '=', 'provider_working_hours.provider_id');
         }
 
         $users
-            ->select('users.*', 'role_user.role_id as roleid')
+            ->select('users.*')
             ->where('role_id', 2);
 
             if ($request->has('providertype')) {
@@ -119,19 +125,26 @@ class CustomerusersController extends Controller
         if ($request->has('servicecategory')) {
             $users->where('service_categories.id', $request->get('servicecategory'));
         }
-
-        if ($request->has('day') || ($request->has('start_time') && $request->has('end_time'))) {
+     
+        if ($request->has('postcode')) {
+            $users->where('postcodes.postcode', $request->get('postcode'));
+        }
+        if ($request->has('day') || ($request->has('start_time') )) {//&& $request->has('end_time')
             if ($request->get('day')) {
                 $users->where('provider_working_hours.working_days', 'LIKE', '%' . $request->get('day') . '%');
             }
 
             if ($request->has('start_time') && $request->has('end_time')) {
-                $users
-                    ->whereTime('provider_working_hours.start_time', '<=', $request->get('start_time'))
-                    ->whereTime('provider_working_hours.end_time', '>=', $request->get('end_time'));
+                $users->whereTime('provider_working_hours.start_time', '<=', $request->get('start_time'));
+                   // ->whereTime('provider_working_hours.end_time', '>=', $request->get('end_time'));
             }
         }
-
+        if ($request->has('serviceid')) {
+            $servicearr =  explode(',',$request->get('serviceid'));
+            $users->whereIn('provider_service_maps.service_id',explode(',',$request->get('serviceid')));
+            $users->groupBy('users.id')->havingRaw("count(provider_service_maps.provider_id)=".count( $servicearr));
+        }
+       
         return response()->json(['data' => $users->get()]);
     }
     

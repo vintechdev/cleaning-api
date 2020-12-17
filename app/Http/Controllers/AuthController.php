@@ -165,7 +165,7 @@ Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
   
     /**
      * Login user and create token
-     *
+     *n
      * @param  [string] email
      * @param  [string] password
      * @param  [boolean] remember_me

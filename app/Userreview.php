@@ -12,7 +12,7 @@ class Userreview extends Model
 {
     use HasApiTokens, Notifiable;
     use Uuids;
-    protected $table = 'userreviews';
+    protected $table = 'user_reviews';
     use SoftDeletes;
     protected $fillable = ['id'];
 }

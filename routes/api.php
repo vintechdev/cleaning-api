@@ -95,10 +95,12 @@ Route::middleware(['auth:api', 'role:admin'])->namespace('Backend\API')->prefix(
     Route::get('getsettings', 'SettingController@getsettings')->name('api.Setting.getsettings')->middleware(['scope:admin']);
 
 });
-
+Route::post('getdashboard', 'HomeController@dashboard')->name('api.home.getdashboard')->middleware(['auth:api']);
 Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->prefix('v1/customer')->group(function () {
     // Customeruser Route
 
+    
+    Route::get('getbookingdetails', 'BookingController@getbookingdetails')->name('getbookingdetails')->middleware(['scope:customer']);
     //rakesh api
 
     Route::get('alternate_date/{booking_uuid}', 'BookingController@get_alternate_date')->name('customer_get_alternate_date')->middleware(['scope:customer']);
@@ -140,7 +142,7 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
 
     Route::patch('editaddress/{uuid}', 'UseraddressController@editaddress')->name('api.Useraddress.editaddress')->middleware(['scope:customer']);
 
-    Route::get('getdashboard', 'AnnoucementController@getdashboard')->name('api.Annoucement.getdashboard')->middleware(['scope:customer']);
+   
 
     Route::get('getnotifications', 'NotificationController@getnotifications')->name('api.Notification.getnotifications')->middleware(['scope:customer']);
 
@@ -153,13 +155,16 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
     Route::get('getfuturebookingdetails', 'BookingController@getfuturebookingdetails')->name('api.Booking.getfuturebookingdetails')->middleware(['scope:customer']);
 
     Route::get('getpastbookingdetails', 'BookingController@getpastbookingdetails')->name('api.Booking.getpastbookingdetails')->middleware(['scope:customer']);
-    Route::patch('cancelbooking/{uuid}', 'BookingController@cancelbooking')->name('api.Booking.cancelbooking')->middleware(['scope:customer']);
-      Route::post('cancelbooking/{uuid}', 'BookingController@cancelbooking')->name('api.Booking.cancelbooking')->middleware(['scope:customer']);
+   
+    Route::patch('cancelbooking', 'BookingController@cancelbooking')->name('api.Booking.cancelbooking')->middleware(['scope:customer']);
+    Route::post('cancelbooking', 'BookingController@cancelbooking')->name('api.Booking.cancelbooking')->middleware(['scope:customer']);
+
     Route::get('getpaymenthistory', 'PaymentController@getpaymenthistory')->name('api.Payment.getpaymenthistory')->middleware(['scope:customer']);
 
     Route::get('getpaymentsettings', 'CustomermetadataController@getpaymentsettings')->name('api.Customermetadata.getpaymentsettings')->middleware(['scope:customer']);
 
-    Route::get('getuserreviewdata/{uuid}', 'UserreviewController@getuserreviewdata')->name('api.Userreview.getuserreviewdata')->middleware(['scope:customer']);
+    Route::get('getuserreviewdata/{uuid}',
+     'UserreviewController@getuserreviewdata')->name('api.Userreview.getuserreviewdata')->middleware(['scope:customer']);
 
     Route::post('addproviderreview/{uuid}', 'UserreviewController@addproviderreview')->name('api.Userreview.addproviderreview')->middleware(['scope:customer']);
 

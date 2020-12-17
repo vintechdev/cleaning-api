@@ -4,6 +4,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
+use Config;
 class PasswordResetRequest extends Notification implements ShouldQueue
 {
     use Queueable;
@@ -37,8 +38,9 @@ class PasswordResetRequest extends Notification implements ShouldQueue
      */
      public function toMail($notifiable)
      {
-        dd($notifiable);
-        $url = url('forgotpassword/'.$this->token);// url('/api/password/find/'.$this->token);
+        //dd($notifiable);
+        $url = Config::get('const.FRONT_URL').'verifytoken/'.$this->token;// url('/api/password/find/'.$this->token);
+   
         return (new MailMessage)
             ->line('You are receiving this email because we received a password reset request for your account.')
             ->action('Reset Password', url($url))

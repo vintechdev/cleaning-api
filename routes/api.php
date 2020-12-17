@@ -91,6 +91,13 @@ Route::group([
 Route::get('email/verify/{id}', 'VerificationApiController@verify')->name('verificationapi.verify');
 Route::get('email/resend', 'VerificationApiController@resend')->name('verificationapi.resend');
 
+Route::namespace('Auth')->prefix('auth')->group(function(){
+    Route::post('forgetpassword', 'ResetPasswordController@forgetpassword')->name('forgetpassword');
+    Route::post('verifytoken', 'ResetPasswordController@verifytoken');
+    Route::post('reset', 'ResetPasswordController@reset');
+//forgot password
+    });
+
 Route::middleware(['auth:api', 'role:admin'])->namespace('Backend\API')->prefix('v1/admin')->group(function () {
    // Admin Route
    Route::post('addpaymentsettings', 'SettingController@addpaymentsettings')->name('api.Setting.addpaymentsettings')->middleware(['scope:admin']);

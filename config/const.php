@@ -1,6 +1,7 @@
 <?php 
 return [
     'currency' => '$',
+    'FRONT_URL'=>'http://localhost/cleaningmarketplace/user-portal/public/',
     'MAIL_MAILER'=>'smtp',
     'MAIL_HOST'=>'mail.spinelcreed.com',
     'MAIL_PORT'=>26,

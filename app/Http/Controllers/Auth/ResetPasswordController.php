@@ -35,9 +35,11 @@ class ResetPasswordController extends Controller
     protected $redirectTo = RouteServiceProvider::HOME;
     public function forgetpassword(Request $request)
     {
+        
         $request->validate([
             'email' => 'required|string|email',
         ]);
+        
         $user = User::where('email', $request->email)->first();
        
         if (!$user)
@@ -54,11 +56,12 @@ class ResetPasswordController extends Controller
              ]
         );
        
-        if ($user && $passwordReset)
-            $user->notify(
-                new PasswordResetRequest($passwordReset->token)
-            );
-        return response()->json(['error'=>0,
+        if ($user && $passwordReset){
+          
+        }
+      //     $res =  $user->notify(new PasswordResetRequest($passwordReset->token));
+        //    dd($res);
+         return response()->json(['error'=>0,
             'message' => 'We have e-mailed your password reset link!'
         ]);
     }
@@ -115,7 +118,7 @@ class ResetPasswordController extends Controller
             return response()->json([
                 'message' => 'This password reset token is invalid.'
             ], 404);
-            
+
         $user = User::where('email', $passwordReset->email)->first();
         if (!$user)
             return response()->json([

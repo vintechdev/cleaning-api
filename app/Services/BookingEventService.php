@@ -106,6 +106,12 @@ class BookingEventService
         return $this->formatReturnDates($booking, $dates);
     }
 
+    /**
+     * @param Booking $booking
+     * @param Carbon $fromDate
+     * @param Carbon $toDate
+     * @return array
+     */
     public function listBookingDatesBetween(Booking $booking, Carbon $fromDate, Carbon $toDate): array
     {
         if ($booking->getPlanType() === Plan::ONCEOFF) {

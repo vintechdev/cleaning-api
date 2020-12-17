@@ -114,8 +114,11 @@ class RecurringPatternService
         $date = $fromDate;
         $dates = [];
 
-        while ($toDate->greaterThan($date)) {
+        while (true) {
             $date = $recurringPatternable->getNextValidDateRelativeTo($date);
+            if (!$toDate->greaterThan($date)) {
+                break;
+            }
             $dates[] = clone $date;
         }
 

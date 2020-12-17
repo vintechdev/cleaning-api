@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Backend\API;
 
 use App\Booking;
-use App\Services\Bookings\BookingManager;
+use App\Services\Bookings\BookingJobsManager;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Validator;
@@ -17,10 +17,10 @@ class BookingJobsController extends Controller
 {
     /**
      * @param Request $request
-     * @param BookingManager $bookingManager
+     * @param BookingJobsManager $bookingManager
      * @return \Illuminate\Http\JsonResponse
      */
-    public function listAllJobs(Request $request, BookingManager $bookingManager)
+    public function listAllJobs(Request $request, BookingJobsManager $bookingManager)
     {
         $validator = Validator::make(
             $request->all(),

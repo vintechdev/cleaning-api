@@ -11,7 +11,7 @@ use Carbon\Carbon;
  * Class BookingManager
  * @package App\Services\Bookings
  */
-class BookingManager
+class BookingJobsManager
 {
     /**
      * @var BookingEventService

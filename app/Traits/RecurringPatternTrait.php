@@ -46,13 +46,19 @@ trait RecurringPatternTrait
      * Returns the date on the offset passed
      * If the dates are 10-10-2020, 12-10-2020 and 14-10-2020 and the offset is 2 it will
      * return 12-10-2020
-     * @param $offset
+     * @param int $offset
+     * @param Carbon $relativeDate
      * @return Carbon
      */
-    public function getDateByOffset(int $offset): Carbon
+    public function getDateByOffset(int $offset, Carbon $relativeDate = null): Carbon
     {
         $separation = $this->getRecurringPattern()->getSeparationCount() * ($offset - 1);
-        $startDate = $this->getRecurringPattern()->getEvent()->getStartDateTime();
+        if ($relativeDate) {
+            $startDate = $this->getNextValidDateRelativeTo($relativeDate);
+        } else {
+            $startDate = $this->getRecurringPattern()->getEvent()->getStartDateTime();
+        }
+
         return  $startDate->modify('+' . $separation . ' ' . $this->getDateModifier());
     }
 }

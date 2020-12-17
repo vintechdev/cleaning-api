@@ -74,7 +74,8 @@ Route::namespace('Backend\API')->prefix('v1/payments')->group(function(){
 });
 
 Route::middleware(['auth:api'])->namespace('Backend\API')->prefix('v1/bookings')->group(function() {
-    Route::get('/times', 'BookingTimesController@listBookingTimes')->name('api.bookings.times');
+    Route::get('/{bookingId}/times', 'BookingTimesController@listBookingTimesByBookingId')->name('api.bookings.times');
+    Route::get('/jobs', 'BookingJobsController@listAllJobs');
 });
 
 // for passport

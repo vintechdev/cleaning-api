@@ -59,12 +59,17 @@ class RecurringPatternService
      * @param Carbon $relativeDate
      * @param Event $event
      * @param int $limit
+     * @param int $offset
      * @return array
      */
-    public function getRecurringDateTimesPostDateTime(Carbon $relativeDate, Event $event, $limit = 10)
+    public function getRecurringDateTimesPostDateTime(Carbon $relativeDate, Event $event, $limit = 10, int $offset = 1): array
     {
         /** @var Collection $recurringPattern */
         $recurringPatterns = $this->recurringPatternRepository->findByEvent($event);
+
+        if (!$recurringPatterns->count()) {
+            return [];
+        }
 
         /** @var RecurringDateInterface $recurringPatternable */
         $recurringPatternable = $recurringPatterns->first()->recurringPatternable;
@@ -72,7 +77,44 @@ class RecurringPatternService
         $dates = [];
 
         $date = $relativeDate;
-        for ($i = 0; $i < $limit; $i++) {
+
+        $j = 0;
+        if ($offset > 1) {
+            $date = $recurringPatternable->getDateByOffset($offset, $relativeDate);
+            $dates[] = $date;
+            $j++;
+        }
+
+        for ($i = $j; $i < $limit; $i++) {
+            $date = $recurringPatternable->getNextValidDateRelativeTo($date);
+            $dates[] = clone $date;
+        }
+
+        return $dates;
+    }
+
+    /**
+     * @param Carbon $fromDate
+     * @param Carbon $toDate
+     * @param Event $event
+     * @return array
+     */
+    public function getRecurringDateTimeBetween(Carbon $fromDate, Carbon $toDate, Event $event): array
+    {
+        /** @var Collection $recurringPattern */
+        $recurringPatterns = $this->recurringPatternRepository->findByEvent($event);
+
+        if (!$recurringPatterns->count()) {
+            return [];
+        }
+
+        /** @var RecurringDateInterface $recurringPatternable */
+        $recurringPatternable = $recurringPatterns->first()->recurringPatternable;
+
+        $date = $fromDate;
+        $dates = [];
+
+        while ($toDate->greaterThan($date)) {
             $date = $recurringPatternable->getNextValidDateRelativeTo($date);
             $dates[] = clone $date;
         }

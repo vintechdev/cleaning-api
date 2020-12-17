@@ -3,6 +3,7 @@
 namespace App;
 
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -24,6 +25,11 @@ class Booking extends Model
     public function event(): BelongsTo
     {
         return $this->belongsTo(Event::class);
+    }
+
+    public function getEvent(): Event
+    {
+        return $this->event;
     }
 
     /**
@@ -97,5 +103,14 @@ class Booking extends Model
         $mins = round(($finalHours - $hours) * 60);
         $timeInMinutes = ($hours * 60) + $mins;
         return $dateTime->addMinutes($timeInMinutes);
+    }
+
+    /**
+     * @param int $userId
+     * @return Builder|null
+     */
+    public static function findByUserId(int $userId): ?Builder
+    {
+        return self::where(['user_id' => $userId]);
     }
 }

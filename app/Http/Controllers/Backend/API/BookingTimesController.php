@@ -20,14 +20,14 @@ class BookingTimesController extends Controller
      * @param BookingEventService $bookingEventService
      * @return \Illuminate\Http\JsonResponse
      */
-    public function listBookingTimes(Request $request, BookingEventService $bookingEventService)
+    public function listBookingTimesByBookingId(Request $request, int $bookingId, BookingEventService $bookingEventService)
     {
         $validator = Validator::make(
             $request->all(),
             [
-                'booking_id' => 'int|required',
                 'from' => 'string',
-                'limit' => 'int'
+                'limit' => 'int',
+                'offset' => 'int'
             ]
         );
 
@@ -35,8 +35,6 @@ class BookingTimesController extends Controller
             $message = $validator->messages()->all();
             return response()->json(['message' => $message], 400);
         }
-
-        $bookingId = $request->get('booking_id');
 
         /** @var Booking $booking */
         $booking = Booking::find($bookingId);
@@ -47,6 +45,7 @@ class BookingTimesController extends Controller
         }
 
         $limit = $request->has('limit') ? $request->get('limit') : 10;
+        $offset = $request->has('offset') ? $request->get('offset') : 1;
 
         $dates = $bookingEventService
             ->listBookingDates(
@@ -54,7 +53,8 @@ class BookingTimesController extends Controller
                 $request->has('from') ?
                     Carbon::createFromFormat('d-m-Y H:i:s', $request->get('from')) :
                     null,
-                $limit
+                $limit,
+                $offset
             );
 
         $response = [
@@ -65,10 +65,12 @@ class BookingTimesController extends Controller
             $response['times'] = $dates;
 
             if (isset($dates[$limit - 1])) {
-                $finalDates = $dates[$limit - 1];
-                $response['next_url'] = action('Backend\API\BookingTimesController@listBookingTimes') .
-                    '?booking_id=' . $bookingId . '&limit=' . $limit . '&from=' . $finalDates['from'];
+                $response['next_url'] = action('Backend\API\BookingTimesController@listBookingTimesByBookingId', ['bookingId' => $bookingId]) .
+                    '?limit=' . $limit . '&offset=' . ($offset + $limit);
             }
+
+            $response['previous_url'] = action('Backend\API\BookingTimesController@listBookingTimesByBookingId', ['bookingId' => $bookingId]) .
+                '?limit=' . $limit . '&offset=' . ($offset - $limit);
         }
 
         return response()->json($response, 200);

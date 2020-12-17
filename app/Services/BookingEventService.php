@@ -82,10 +82,15 @@ class BookingEventService
      * @param Booking $booking
      * @param Carbon|null $fromDateTime
      * @param int $limit
+     * @param int $offset
      * @return array
      */
-    public function listBookingDates(Booking $booking, Carbon $fromDateTime = null, int $limit = 10): array
-    {
+    public function listBookingDates(
+        Booking $booking,
+        Carbon $fromDateTime = null,
+        int $limit = 10,
+        int $offset = 1
+    ): array {
         if (is_null($fromDateTime)) {
             $fromDateTime = Carbon::now();
         }
@@ -95,9 +100,30 @@ class BookingEventService
         } else {
             $dates = $this
                 ->recurringPatternService
-                ->getRecurringDateTimesPostDateTime($fromDateTime, $booking->event, $limit);
+                ->getRecurringDateTimesPostDateTime($fromDateTime, $booking->getEvent(), $limit, $offset);
         }
 
+        return $this->formatReturnDates($booking, $dates);
+    }
+
+    public function listBookingDatesBetween(Booking $booking, Carbon $fromDate, Carbon $toDate): array
+    {
+        if ($booking->getPlanType() === Plan::ONCEOFF) {
+            $dates = $this->getOnceOffBookingDate($booking, $fromDate);
+        } else {
+            $dates = $this
+                ->recurringPatternService
+                ->getRecurringDateTimeBetween($fromDate, $toDate, $booking->getEvent());
+        }
+        return $this->formatReturnDates($booking, $dates);
+    }
+
+    /**
+     * @param array $dates
+     * @return array
+     */
+    private function formatReturnDates(Booking $booking, array $dates): array
+    {
         $returnDates = [];
         /** @var Carbon $date */
         foreach ($dates as $date) {

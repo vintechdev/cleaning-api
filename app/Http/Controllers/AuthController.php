@@ -12,7 +12,8 @@ use App\RoleUser;
 use App\Customermetadata;
 use Route;
 use DB;
-
+use Illuminate\Support\Str;
+use App\PasswordReset;
 use Facade\FlareClient\Http\Response;
 use Illuminate\Support\Facades\Hash;
 // for email verify
@@ -20,6 +21,7 @@ use Stripe;
 use Validator;
 use Illuminate\Foundation\Auth\VerifiesEmails;
 use Illuminate\Auth\Events\Verified;
+use PhpParser\Node\Expr\FuncCall;
 
 class AuthController extends Controller
 {
@@ -50,6 +52,42 @@ class AuthController extends Controller
     //         'message' => 'Successfully created user!'
     //     ], 201);
     // }
+public function UpdateToken(Request $request)
+{
+    $validator = $request->validate([
+        'email' => 'required|email',
+    ]);
+
+    $passwordReset = PasswordReset::updateOrCreate(
+        ['email' => $request->email],
+        [
+            'email' => $request->email,
+            'token' =>Str::random(60)
+         ]
+    );
+    if($passwordReset){
+        return response()->json(['success'=>true,'token'=>$passwordReset->token],201);
+    }else{
+
+    }
+    
+}
+     public function UserExist(Request $request)
+    {
+        $validator = $request->validate([
+            'email' => 'required|email',
+        ]);
+    //    $count = User::where(['email' => $request->email])->count();
+        $user = User::where('email', $request->email)->first();
+        if($user){
+            return response()->json(['success'=>true,'user'=>$user],201);
+        }else{
+            return response()->json(['error'=>'Email not found. Please try again.'],404);
+        }
+        # code...
+    }
+
+
     public function register(Request $request)
     {
       //  dd($request->all());
@@ -120,7 +158,7 @@ class AuthController extends Controller
         
        // print_r($lastinsertid);exit;
         // for email verify
-       // $User->sendApiEmailVerificationNotification();
+        $User->sendApiEmailVerificationNotification();
         $success['message'] = 'Please confirm yourself by clicking on verify user button sent to you on your email';
         
         foreach($roles as $r){

@@ -657,7 +657,7 @@ class BookingController extends Controller
     }
 
     //for provider cancel booking by uuid
-    public function provider_cancelbooking(Request $request, $uuid)
+    public function provider_cancelbooking(Request $getbookingdetails, $uuid)
     {
          $user = Auth::user();
 

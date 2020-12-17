@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Redirect;
 class VerificationApiController extends Controller
 {
     use VerifiesEmails;
@@ -37,14 +38,16 @@ class VerificationApiController extends Controller
         $current_timestamp = time();
         if($current_timestamp > $expires_at){
             $user->sendApiEmailVerificationNotification();
-            return response()->json('This link is expired! Check your email for new link.');
+            return redirect(env('FRONT_URL').'signin?expired=true');
+           // return response()->json('This link is expired! Check your email for new link.');
         }
         
         $date = date('Y-m-d g:i:s');
         $user->email_verified_at = $date; // to enable the “email_verified_at field of that user be a current time stamp by mimicing the must verify email feature
         $user->status = "active";
         $user->save();
-        return response()->json('Email verified!');
+        return redirect(env('FRONT_URL').'signin?verified=true');
+      //  return response()->json('Email verified!');
     }
     /**
     * Resend the email verification notification.

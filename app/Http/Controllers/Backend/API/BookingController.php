@@ -29,7 +29,8 @@ use Input;
 use App\Services\TotalCostCalculation;
 use App\Repository\Eloquent\StripeUserMetadataRepository;
 use App\Repository\ProviderBadgeReviewRepository;
-
+use App\Services\MailService;
+use Storage;
 class BookingController extends Controller
 {
     /**
@@ -314,14 +315,20 @@ class BookingController extends Controller
 
                 // dispatch booking created event
                 event(new BookingCreated($booking));
-
-         }
+               
+        }
 
          
             //$User->sendApiEmailVerificationNotification();
-            $success['message'] = 'Please confirm yourself by clicking on verify user button sent to you on your email';
+           // $success['message'] = 'Please confirm yourself by clicking on verify user button sent to you on your email';
+           if( $this->SendBookingEmail($last_insert_id)){
+               
             $responseCode = $request->get('id') ? 200 : 201;
-            return response()->json(['saved' => true,'bookingdetailid'=> $last_insert_id], $responseCode);
+            return response()->json(['saved' => true,'bookingdetailid'=> $last_insert_id], $responseCode);exit;
+           }else{
+              
+            return response()->json(['saved' => false], 201);exit;
+           }
         }
         else{
            
@@ -329,6 +336,39 @@ class BookingController extends Controller
         }
     }
 
+    public function SendBookingEmail($bookingid){
+        Storage::put('file.txt', 'Your name');
+        
+        $bdata = Booking::join('booking_status', 'bookings.booking_status_id', '=', 'booking_status.id')
+            ->join('plans','bookings.plan_type','=','plans.id')
+            ->join('users','users.id','=','bookings.user_id')
+            ->select('bookings.*','plans.plan_name','users.first_name','users.email')
+            ->where('bookings.id', $bookingid)
+            ->get()->toArray();
+        
+
+        $data =[];
+        $data['plan']=$bdata[0]['plan_name'];
+        $data['name']=$bdata[0]['first_name'];
+        $services = app(BookingServiceRepository::class)->getServiceDetails($bookingid);
+        $mailService = app(MailService::class);
+      
+       // $companyName = isset($default['company']) && !empty($default['company']) ? $default['company'] : __('Trade By Trade');
+        $subject = 'Service Booked : '.$bookingid;
+        $data['booking'] = $bdata[0];
+        $data['services'] = $services;
+       
+        $userEmail ='keepicks@gmail.com';//$bdata[0]['email']
+        $userName = 'Keepicks';//$bdata[0]['first_name']
+        $res = $mailService->send('email.bookingcreated', $data, $userEmail, $userName, $subject);
+        //dd($res);
+        if($res){
+            return true;
+        }else{
+            return false;
+        }
+        # code...
+    }
     // for customer get appointment
     public function getappointment(Request $request, $uuid)
     {
@@ -757,7 +797,7 @@ class BookingController extends Controller
                 $Booking->booking_status_id = '5';
                 $Booking->save();
 
-                $cancelbooking = app(BookingReqestProviderRepository::class)->CancelBooking($booking_id);
+               // $cancelbooking = app(BookingReqestProviderRepository::class)->CancelBooking($booking_id);
                
                // $success['message'] = 'Booking cancelled successfully.';
                 $success['cancelled_booking_uuid'] = $lastinserteduuid;

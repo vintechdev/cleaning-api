@@ -32,17 +32,14 @@ class RecurringPatternFactory
             case Plan::WEEKLY:
                 $recurringPattern = new WeeklyRecurringPattern();
                 $recurringPattern->day_of_week = $startDate->dayOfWeek;
-                $recurringPattern->setSeparationCount(1);
                 break;
             case Plan::BIWEEKLY:
                 $recurringPattern = new WeeklyRecurringPattern();
                 $recurringPattern->day_of_week = $startDate->dayOfWeek;
-                $recurringPattern->setSeparationCount(2);
                 break;
             case Plan::MONTHLY:
                 $recurringPattern = new MonthlyRecurringPattern();
                 $recurringPattern->day_of_month = $startDate->format('d');
-                $recurringPattern->setSeparationCount(1);
                 break;
             default:
                 throw new RecurringPatternFactoryException('Recurring pattern does not exist for the plan');

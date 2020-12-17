@@ -33,16 +33,6 @@ trait RecurringPatternTrait
     }
 
     /**
-     * @param int $separationCount
-     * @return $this
-     */
-    public function setSeparationCount(int $separationCount = 1)
-    {
-        $this->separation_count = $separationCount;
-        return $this;
-    }
-
-    /**
      * Returns the date on the offset passed
      * If the dates are 10-10-2020, 12-10-2020 and 14-10-2020 and the offset is 2 it will
      * return 12-10-2020

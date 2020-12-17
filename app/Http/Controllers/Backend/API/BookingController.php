@@ -28,6 +28,7 @@ use DB;
 use Input;
 use App\Services\TotalCostCalculation;
 use App\Repository\Eloquent\StripeUserMetadataRepository;
+use App\Repository\ProviderBadgeReviewRepository;
 
 class BookingController extends Controller
 {
@@ -519,23 +520,23 @@ class BookingController extends Controller
     }
 
     public function getbookingdetails(Request $request){
+       
+        if(!$request->has('id')){
+           return  response()->json(['data' => 'id not found'], 404);
+        }
+
+      
         $user = Auth::user();
         $user_id = $user->id;
         $id = $request->id;
         // print_r($user_id);exit;
 
-        $data = DB::table('bookings')
-            ->join('booking_status', 'bookings.booking_status_id', '=', 'booking_status.id')
-           // ->join('booking_request_providers', 'bookings.id', '=', 'booking_request_providers.booking_id')
-			//->join('users', 'booking_request_providers.provider_user_id', '=', 'users.id')
-            //->join('booking_services', 'bookings.id', '=', 'booking_services.booking_id')
-            //->join('services', 'booking_services.service_id', '=', 'services.id')
-            ->select('bookings.*')
-          //  ->where('user_id', $user_id)
-            ->where('bookings.id', $id)
-       //     ->where('booking_request_providers.status', 'accepted')
-            ->get();
-        // print_r($users);exit;
+        $data = Booking::join('booking_status', 'bookings.booking_status_id', '=', 'booking_status.id')
+                ->join('plans','bookings.plan_type','=','plans.id')
+                ->select('bookings.*','plans.plan_name')
+                ->where('bookings.id', $id)
+                ->get();
+       
 
         $services = app(BookingServiceRepository::class)->getServiceDetails($id);
         $providerscount = app(BookingReqestProviderRepository::class)->getBookingProvidersCount($id);
@@ -544,9 +545,18 @@ class BookingController extends Controller
         }else{
             $providers = app(BookingReqestProviderRepository::class)->getBookingPendingProvidersDetails($id);
         }
-        
-      // dd($providers);
-        return response()->json(['data' => $data,'services'=>$services,'providers'=>$providers]);
+
+        if(count($providers)>0){
+            foreach($providers as $key=>$val){
+                $providers[$key]['badges'] = app(ProviderBadgeReviewRepository::class)->getBadgeDetails($val['provider_user_id']);
+                $providers[$key]['review'] = app(ProviderBadgeReviewRepository::class)->getReviewDetails($val['provider_user_id']);
+                $providers[$key]['avgrate'] = app(ProviderBadgeReviewRepository::class)->getAvgRating($val['provider_user_id']);
+            
+            }
+
+        }
+      // dd($data);
+        return response()->json(['data' => $data,'services'=>$services,'providers'=>$providers,'providerscount'=>$providerscount]);
 
     }
 
@@ -650,6 +660,7 @@ class BookingController extends Controller
     public function provider_cancelbooking(Request $request, $uuid)
     {
          $user = Auth::user();
+
         $user_id = $user->id;
         // print_r($user_id);exit;
 
@@ -702,17 +713,18 @@ class BookingController extends Controller
     }
     
     //for cancel booking by uuid
-    public function cancelbooking(Request $request, $uuid)
+    public function cancelbooking(Request $request)
     {
         $user = Auth::user();
         $user_id = $user->id;
+        $bookingid = $request->id;
         // print_r($user_id);exit;
 
         $data = DB::table('bookings')
             ->join('booking_status', 'bookings.booking_status_id', '=', 'booking_status.id')
             ->join('booking_services', 'bookings.id', '=', 'booking_services.booking_id')
             ->select('bookings.id as booking_id','bookings.booking_date','bookings.booking_time', 'booking_status.status as booking_status', 'booking_services.initial_number_of_hours as number_of_hours', 'booking_services.initial_service_cost as agreed_service_amount')
-            ->where('bookings.uuid', $uuid)
+            ->where('bookings.id', $bookingid)
             ->get();
         // print_r($data);exit;
 
@@ -727,7 +739,7 @@ class BookingController extends Controller
 
             $Bookingchange = Bookingchange::firstOrNew(['id' => $request->get('id')]);
             $Bookingchange->id = $request->get('id');
-            $Bookingchange->uuid = $request->get('uuid');
+            //$Bookingchange->uuid = $request->get('uuid');
             $Bookingchange->booking_id = $booking_id;
             $Bookingchange->is_cancelled = '1';
             $Bookingchange->booking_date = $booking_date;
@@ -741,14 +753,16 @@ class BookingController extends Controller
             $lastinserteduuid = $Bookingchange->uuid;
 
             if($lastinserteduuid){
-                $Booking = Booking::firstOrNew(['uuid' => $uuid]);
+                $Booking = Booking::firstOrNew(['id' => $bookingid]);
                 $Booking->booking_status_id = '5';
                 $Booking->save();
 
-                $success['message'] = 'Booking cancelled successfully.';
+                $cancelbooking = app(BookingReqestProviderRepository::class)->CancelBooking($booking_id);
+               
+               // $success['message'] = 'Booking cancelled successfully.';
                 $success['cancelled_booking_uuid'] = $lastinserteduuid;
 
-                return response()->json(['success' => $success]);
+                return response()->json(['success' => $success,'message' => 'Booking cancelled successfully.']);
             } else{
                 return response()->json(['message' => 'Failed to cancel this booking.']);
             }

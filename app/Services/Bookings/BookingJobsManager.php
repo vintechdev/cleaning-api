@@ -49,10 +49,10 @@ class BookingJobsManager
     /**
      * @param User $user
      * @param Carbon|null $fromDate
-     * @param int $totalDays
+     * @param int $totalPeriod
      * @return array
      */
-    public function getAllPastBookingJobsByUser(User $user, Carbon $fromDate = null, $totalDays = 30): array
+    public function getAllPastBookingJobsByUser(User $user, Carbon $fromDate = null, $totalPeriod = 30): array
     {
         // TODO: fetch past booking dates from the table that stores the past dates
         return [];
@@ -61,10 +61,10 @@ class BookingJobsManager
     /**
      * @param User $user
      * @param Carbon|null $fromDate
-     * @param int $totalDays
+     * @param int $totalPeriod in days
      * @return array
      */
-    public function getAllFutureBookingJobsByUser(User $user, Carbon $fromDate = null, $totalDays = 30): array
+    public function getAllFutureBookingJobsByUser(User $user, Carbon $fromDate = null, $totalPeriod = 30): array
     {
         $fromDate = $fromDate ?: Carbon::now();
         $jobs = [];
@@ -82,7 +82,7 @@ class BookingJobsManager
             $toDate = clone $fromDate;
             $dates = $this
                 ->bookingEventService
-                ->listBookingDatesBetween($booking, $fromDate, $toDate->addDays($totalDays));
+                ->listBookingDatesBetween($booking, $fromDate, $toDate->addDays($totalPeriod));
 
             foreach ($dates as $date) {
                 $date['booking_id'] = $booking->id;
@@ -113,10 +113,10 @@ class BookingJobsManager
     /**
      * @param User $user
      * @param Carbon|null $fromDate
-     * @param int $totalDays
+     * @param int $totalPeriod in days
      * @return array
      */
-    public function getAllBookingJobsByUser(User $user, Carbon $fromDate = null, $totalDays = 30): array
+    public function getAllBookingJobsByUser(User $user, Carbon $fromDate = null, $totalPeriod = 30): array
     {
         $bookings = Booking::findByUserId($user->id);
 
@@ -124,8 +124,8 @@ class BookingJobsManager
             return [];
         }
 
-        $pastDates = $this->getAllPastBookingJobsByUser($user, $fromDate, $totalDays);
-        $futureDates = $this->getAllFutureBookingJobsByUser($user, $fromDate, $totalDays);
+        $pastDates = $this->getAllPastBookingJobsByUser($user, $fromDate, $totalPeriod);
+        $futureDates = $this->getAllFutureBookingJobsByUser($user, $fromDate, $totalPeriod);
 
         return array_merge($pastDates, $futureDates);
     }

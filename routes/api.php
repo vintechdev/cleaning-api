@@ -53,11 +53,7 @@ Route::namespace('Backend\API')->prefix('v1/public')->group(function () {
     Route::get('postcodes', 'PostcodesController@index')->name('api.postcode.index');
     Route::get('getallservicecategories', 'ServicecategoryController@GetAllCategories')->name('getallservicecategories');
     Route::get('plans', 'PlansController@get_all_plan')->name('api.plan.get_all_plan');
-    
-    
-	
-	
-
+    Route::post('providerdetails', 'BookingController@providerdetails')->name('providerdetails');
 });
 
 Route::namespace('Backend\API')->prefix('v1/customer')->group(function(){

@@ -2,10 +2,10 @@
 namespace App\Notifications;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
-use Illuminate\Contracts\Queue\ShouldQueue;
+
 use Illuminate\Notifications\Messages\MailMessage;
 use Config;
-class PasswordResetRequest extends Notification implements ShouldQueue
+class PasswordResetRequest extends Notification
 {
     use Queueable;
     protected $token;

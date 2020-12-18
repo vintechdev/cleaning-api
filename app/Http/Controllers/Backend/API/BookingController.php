@@ -22,6 +22,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
 use App\Repository\BookingServiceRepository;
 use App\Repository\BookingReqestProviderRepository;
+use App\Repository\UserRepository;
 use Auth;
 use Hash;
 use DB;
@@ -598,6 +599,17 @@ class BookingController extends Controller
       // dd($data);
         return response()->json(['data' => $data,'services'=>$services,'providers'=>$providers,'providerscount'=>$providerscount]);
 
+    }
+
+    public function providerdetails(Request $request)
+    {
+        $id = $request->id;
+        $providers = app(UserRepository::class)->getProviderDetails($id); 
+        $providers[0]['badges'] = app(ProviderBadgeReviewRepository::class)->getBadgeDetails($id );
+        $providers[0]['review'] = app(ProviderBadgeReviewRepository::class)->getReviewDetails($id );
+        $providers[0]['avgrate'] = app(ProviderBadgeReviewRepository::class)->getAvgRating($id );
+        return response()->json(['data' => $providers]);
+        # code...
     }
 
     //for get future booking details

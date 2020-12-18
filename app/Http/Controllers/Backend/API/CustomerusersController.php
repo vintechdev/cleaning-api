@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Validator;
 use Auth;
 use Hash;
 use DB;
+use App\Userreview;
 class CustomerusersController extends Controller
 {
     /**
@@ -90,17 +91,22 @@ class CustomerusersController extends Controller
     }
     public function getallprovider(Request $request)
     {
+
+        //$subQuery =DB::raw('count(rating) as total_ratings');// DB::table('user_reviews')->where('user_reviews.user_review_for','users.id')->avg('rating');
         $users = DB::table('users')
             ->join('role_user', 'users.id', '=', 'role_user.user_id');
 
-        if ($request->has('servicecategory') || $request->has('serviceid')) {
+           // $query =  $users->fromSub($subQuery, 'subquery');
+            
+
+        if ($request->has('servicecategory') || $request->has('serviceid')){
             $users
                 ->join('provider_service_maps', 'users.id', '=', 'provider_service_maps.provider_id')
                 ->join('services', 'provider_service_maps.service_id', '=', 'services.id')
                 ->join('service_categories', 'services.category_id', '=', 'service_categories.id');
         }
 
-        if ($request->has('postcode')) {
+        if ($request->has('postcode')){
             $users
             ->join('provider_postcode_maps', 'users.id', '=', 'provider_postcode_maps.provider_id')
             ->join('postcodes', 'provider_postcode_maps.postcode_id', '=', 'postcodes.id');
@@ -110,9 +116,11 @@ class CustomerusersController extends Controller
             $users
                 ->join('provider_working_hours', 'users.id', '=', 'provider_working_hours.provider_id');
         }
-
+        $users->leftJoin('user_reviews', function( $join){
+            $join->on('user_reviews.user_review_for', 'users.id');
+        });
         $users
-            ->select('users.*')
+            ->select(['users.*',DB::raw('AVG(user_reviews.rating) as ratings_average')])
             ->where('role_id', 2);
 
             if ($request->has('providertype')) {
@@ -139,13 +147,18 @@ class CustomerusersController extends Controller
                    // ->whereTime('provider_working_hours.end_time', '>=', $request->get('end_time'));
             }
         }
-        if ($request->has('serviceid')) {
+       
+        if ($request->has('serviceid')){
             $servicearr =  explode(',',$request->get('serviceid'));
             $users->whereIn('provider_service_maps.service_id',explode(',',$request->get('serviceid')));
             $users->groupBy('users.id')->havingRaw("count(provider_service_maps.provider_id)=".count( $servicearr));
         }
-       
-        return response()->json(['data' => $users->get()]);
+
+        $arr = $users->get();
+     //  $arr = $users->select(['users.*',DB::raw('AVG(user_reviews.rating) as ratings_average')])->get();
+
+       dd($arr);
+        return response()->json(['data' => $users->get()->avg('ratings_average')]);
     }
     
     /**

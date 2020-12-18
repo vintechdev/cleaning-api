@@ -71,6 +71,11 @@ Route::namespace('Backend\API')->prefix('v1/payments')->group(function(){
     Route::post('stripe/cards', 'PaymentsController@addStripeCard')->name('api.payments.stripe.cards')->middleware(['auth:api']);
 });
 
+Route::middleware(['auth:api'])->namespace('Backend\API')->prefix('v1/bookings')->group(function() {
+    Route::get('/{bookingId}/times', 'BookingTimesController@listBookingTimesByBookingId')->name('api.bookings.times');
+    Route::get('/jobs', 'BookingJobsController@listAllJobs');
+});
+
 // for passport
 Route::group([
     'prefix' => 'auth'

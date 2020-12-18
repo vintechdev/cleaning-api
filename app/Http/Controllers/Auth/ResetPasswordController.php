@@ -35,7 +35,8 @@ class ResetPasswordController extends Controller
     protected $redirectTo = RouteServiceProvider::HOME;
     public function forgetpassword(Request $request)
     {
-        
+       // echo "<pre>";print_r($request->headers->all());exit;
+
         $request->validate([
             'email' => 'required|string|email',
         ]);
@@ -57,6 +58,7 @@ class ResetPasswordController extends Controller
         );
        
         if ($user && $passwordReset){
+
             $res =  $user->notify(new PasswordResetRequest($passwordReset->token));
         }
           

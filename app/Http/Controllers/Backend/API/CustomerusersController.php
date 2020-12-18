@@ -92,12 +92,18 @@ class CustomerusersController extends Controller
     public function getallprovider(Request $request)
     {
 
-        //$subQuery =DB::raw('count(rating) as total_ratings');// DB::table('user_reviews')->where('user_reviews.user_review_for','users.id')->avg('rating');
+     
+    //    $sub = DB::table('user_reviews')->select('user_review_for',DB::raw('AVG(rating) as ratings_average'))->groupBy('user_reviews.user_review_for');
+       
+
+
+
         $users = DB::table('users')
             ->join('role_user', 'users.id', '=', 'role_user.user_id');
-
+           $users->leftJoin( DB::raw("(SELECT AVG(user_reviews.rating) as avgrate, user_reviews.user_review_for FROM `user_reviews`  group by user_reviews.user_review_for) as p "), 'p.user_review_for', '=', 'users.id');
            // $query =  $users->fromSub($subQuery, 'subquery');
             
+           $users->leftJoin( DB::raw("(SELECT count(provider_user_id) as completed_jobs, booking_request_providers.provider_user_id FROM `booking_request_providers` inner join bookings on(bookings.id=booking_request_providers.booking_id) where booking_request_providers.status='accepted' and bookings.booking_status_id=4 group by booking_request_providers.provider_user_id) as j"), 'j.provider_user_id', '=', 'users.id');
 
         if ($request->has('servicecategory') || $request->has('serviceid')){
             $users
@@ -116,14 +122,14 @@ class CustomerusersController extends Controller
             $users
                 ->join('provider_working_hours', 'users.id', '=', 'provider_working_hours.provider_id');
         }
-        $users->leftJoin('user_reviews', function( $join){
+       /*  $users->leftJoin('user_reviews', function( $join){
             $join->on('user_reviews.user_review_for', 'users.id');
-        });
+        }); */
         $users
-            ->select(['users.*',DB::raw('AVG(user_reviews.rating) as ratings_average')])
+            ->select(['users.*','p.avgrate','j.completed_jobs'])
             ->where('role_id', 2);
 
-            if ($request->has('providertype')) {
+            if ($request->has('providertype')){
                 $users->where(
                     'users.providertype',
                     $request->has('providertype')
@@ -151,14 +157,15 @@ class CustomerusersController extends Controller
         if ($request->has('serviceid')){
             $servicearr =  explode(',',$request->get('serviceid'));
             $users->whereIn('provider_service_maps.service_id',explode(',',$request->get('serviceid')));
-            $users->groupBy('users.id')->havingRaw("count(provider_service_maps.provider_id)=".count( $servicearr));
+            $users->groupBy('users.id','p.avgrate')->havingRaw("count(provider_service_maps.provider_id)=".count( $servicearr));
         }
 
-        $arr = $users->get();
-     //  $arr = $users->select(['users.*',DB::raw('AVG(user_reviews.rating) as ratings_average')])->get();
-
-       dd($arr);
-        return response()->json(['data' => $users->get()->avg('ratings_average')]);
+      //  $users->orderBy('ratings_average', 'DESC');
+    //   $arr = $users->select(['users.*',DB::raw('AVG(user_reviews.rating) as ratings_average' )])->get();
+    $arr = $users->get();
+ // dd($arr);
+      
+       return response()->json(['data' => $users->get()]);
     }
     
     /**

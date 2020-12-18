@@ -27,7 +27,7 @@ class BookingJobsController extends Controller
             $request->all(),
             [
                 'from' => 'date_format:d-m-Y H:i:s',
-                'total_days' => 'int',
+                'total_period' => 'int',
                 'type' => [
                     Rule::in(['all', 'past', 'future'])
                 ]
@@ -40,7 +40,7 @@ class BookingJobsController extends Controller
         }
 
         $from = $request->has('from') ? Carbon::createFromFormat('d-m-Y H:i:s', $request->get('from')) : null;
-        $totalDays = $request->has('total_days') ? $request->get('total_days') : 30;
+        $totalDays = $request->has('total_period') ? $request->get('total_period') : 30;
 
         if (!$request->has('type') || $request->get('type') == 'all') {
             $jobs = $bookingManager->getAllBookingJobsByUser(auth()->user(), $from, $totalDays);

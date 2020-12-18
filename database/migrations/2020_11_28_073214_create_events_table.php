@@ -17,8 +17,8 @@ class CreateEventsTable extends Migration
         Schema::create('events', function (Blueprint $table) {
             $table->integer('id')->unsigned()->autoIncrement();
             $table->timestamp('start_date');
-            $table->timestamp('end_date')->nullable(true)->default(DB::raw('CURRENT_TIMESTAMP'));
-            $table->timestamp('created')->nullable(true);
+            $table->timestamp('end_date')->nullable(true);
+            $table->timestamp('created')->nullable(false)->default(DB::raw('CURRENT_TIMESTAMP'));
         });
 
         Schema::create('recurring_patterns', function (Blueprint $table) {
@@ -27,7 +27,7 @@ class CreateEventsTable extends Migration
             $table->string('recurringpatternable_type')->nullable(false);
             $table->integer('recurringpatternable_id')->unsigned();
             $table->integer('separation_count')->default(1);
-            $table->timestamp('created')->default(DB::raw('CURRENT_TIMESTAMP'));
+            $table->timestamp('created')->nullable(false)->default(DB::raw('CURRENT_TIMESTAMP'));
 
             $table->foreign('event_id')->references('id')->on('events')->onDelete('cascade');
             $table->index('event_id', 'event_id_idx');

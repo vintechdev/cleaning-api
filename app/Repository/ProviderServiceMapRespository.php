@@ -9,10 +9,11 @@ class ProviderServiceMapRespository{
 
         public function GetServicePriceofProvider($serviceid,$providerid){
            
+           
            $pdr=Providerservicemaps::leftJoin('services', function($join){
                   $join->on('services.id', '=', 'provider_service_maps.service_id');
                 })->whereIn('provider_service_maps.service_id',$serviceid)
-                ->where('provider_service_maps.provider_id',$providerid)->get(['services.service_type','services.is_default_service','provider_service_maps.*'])->toarray();
+                ->where('provider_service_maps.provider_id',$providerid)->whereNotNull('provider_service_maps.amount')->get(['services.service_type','services.is_default_service','provider_service_maps.*'])->toarray();
            return $pdr;
         }
         public function GetServicePrice($serviceid){

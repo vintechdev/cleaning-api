@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\DB;
 use App\Service;
 use App\Promocodes;
 use App\User;
+use App\Customeruser;
 class UserRepository{
 
     public function getProviderDetails($id)
@@ -32,6 +33,12 @@ class UserRepository{
         public function CheckPromocode($promocode,$categoryid){
             $res = Promocodes::where('name',$promocode)->where('category_id',$categoryid)->limit(1)->get()->toArray();
             return $res;
+        }
+        public function getAgencyData()
+        {
+          # code...
+          $users = Customeruser::where('providertype','agency')->pluck('id')->toArray();
+          return $users;
         }
 }
 

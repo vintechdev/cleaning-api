@@ -18,6 +18,7 @@ use DB;
 use Input;
 use Response;
 use App\Services\TotalCostCalculation;
+use App\Repository\UserRepository;
 
 class ServiceController extends Controller
 {
@@ -51,13 +52,25 @@ class ServiceController extends Controller
 
     public function geserviceprice(Request $request){
 
-        $validated =  $request->validate([
+        $validator = Validator::make($request->all(), [
             'serviceid' => 'required',
+            'servicetime'=>'required|array',
+            'booking_provider_type'=>'required|string'
         ]);
+        
+        if($validator->fails()){
+            $message = $validator->messages()->all();
+            return response()->json(['message' => $message], 401);
+        }
+        
         //  dd($validated);
         $id = $request->get('serviceid');
         $servicetime = $request->get('servicetime');
-        $providerid = $request->get('providerid');
+        $providerid = $request->has('providerid')?$request->get('providerid'):'';
+
+        if($request->get('booking_provider_type')=='agency'){
+            $providerid = app(UserRepository::class)->getAgencyData();
+        }
         $servicetime = (is_array($id))?$request->get('servicetime'):$request->get('gettimeslot');
         $result = app(TotalCostCalculation::class)->GetHighestTotalPrice($id,$providerid,$servicetime);
        

@@ -14,6 +14,7 @@ use Auth;
 use Hash;
 use DB;
 use App\Userreview;
+use Session;
 class CustomerusersController extends Controller
 {
     /**
@@ -95,78 +96,101 @@ class CustomerusersController extends Controller
      
     //    $sub = DB::table('user_reviews')->select('user_review_for',DB::raw('AVG(rating) as ratings_average'))->groupBy('user_reviews.user_review_for');
        
+        $rules = array(
+            'postcode' => 'required|numeric',
+            'serviceid'=>'required|string',
+            'servicecategory'=>'required|numeric',
+            'start_time'=>'string',
+            'end_time'=>'string',
+            'day'=>'string'
+        );
+
+     
+        $params = $request->all();
+        $validator = Validator::make($params, $rules);
+        if ($validator->fails()){
+
+            $message = $validator->messages()->all();
+            return response()->json(['message' => $message], 400);
+
+        }else{
+
+       
 
 
-
-        $users = Customeruser::join('role_user', 'users.id', '=', 'role_user.user_id');
-           $users->leftJoin( DB::raw("(SELECT AVG(user_reviews.rating) as avgrate, user_reviews.user_review_for FROM `user_reviews`  group by user_reviews.user_review_for) as p "), 'p.user_review_for', '=', 'users.id');
-           // $query =  $users->fromSub($subQuery, 'subquery');
+            $users = Customeruser::join('role_user', 'users.id', '=', 'role_user.user_id');
+            $users->leftJoin( DB::raw("(SELECT AVG(user_reviews.rating) as avgrate, user_reviews.user_review_for FROM `user_reviews`  group by user_reviews.user_review_for) as p "), 'p.user_review_for', '=', 'users.id');
+            // $query =  $users->fromSub($subQuery, 'subquery');
             
-           $users->leftJoin( DB::raw("(SELECT count(provider_user_id) as completed_jobs, booking_request_providers.provider_user_id FROM `booking_request_providers` inner join bookings on(bookings.id=booking_request_providers.booking_id) where booking_request_providers.status='accepted' and bookings.booking_status_id=4 group by booking_request_providers.provider_user_id) as j"), 'j.provider_user_id', '=', 'users.id');
+            $users->leftJoin( DB::raw("(SELECT count(provider_user_id) as completed_jobs, booking_request_providers.provider_user_id FROM `booking_request_providers` inner join bookings on(bookings.id=booking_request_providers.booking_id) where booking_request_providers.status='accepted' and bookings.booking_status_id=4 group by booking_request_providers.provider_user_id) as j"), 'j.provider_user_id', '=', 'users.id');
 
-        //   $users->leftJoin( DB::raw("(SELECT pm.amount,pm.type,sr.is_default_service,pm.provider_id from provider_service_maps pm join services sr on(pm.service_id=sr.id) where sr.is_default_service=1 and sr.deleted_at is null and pm.deleted_at is null) as r"), 'r.provider_id', '=', 'users.id');
+            $users->leftJoin(DB::raw("(SELECT pm.amount,pm.type,sr.is_default_service,pm.provider_id from provider_service_maps pm join services sr on(pm.service_id=sr.id) where sr.is_default_service=1 and sr.deleted_at is null and pm.deleted_at is null) as r"), 'r.provider_id', '=', 'users.id');
 
-            if ($request->has('servicecategory') || $request->has('serviceid')){
+            if($request->has('servicecategory') || $request->has('serviceid')){
                 $users
                     ->join('provider_service_maps', 'users.id', '=', 'provider_service_maps.provider_id')
                     ->join('services', 'provider_service_maps.service_id', '=', 'services.id')
                     ->join('service_categories', 'services.category_id', '=', 'service_categories.id');
+            } 
+
+            if ($request->has('postcode')){
+                $users
+                ->join('provider_postcode_maps', 'users.id', '=', 'provider_postcode_maps.provider_id')
+                ->join('postcodes', 'provider_postcode_maps.postcode_id', '=', 'postcodes.id');
+
             }
-
-        if ($request->has('postcode')){
+            if ($request->has('day') || ($request->has('start_time') && $request->has('end_time'))){
+                $users
+                    ->join('provider_working_hours', 'users.id', '=', 'provider_working_hours.provider_id');
+            }
+            $users->leftJoin('user_reviews', function( $join){
+                $join->on('user_reviews.user_review_for', 'users.id');
+            }); 
             $users
-            ->join('provider_postcode_maps', 'users.id', '=', 'provider_postcode_maps.provider_id')
-            ->join('postcodes', 'provider_postcode_maps.postcode_id', '=', 'postcodes.id');
-
-        }
-        if ($request->has('day') || ($request->has('start_time') && $request->has('end_time'))){
-            $users
-                ->join('provider_working_hours', 'users.id', '=', 'provider_working_hours.provider_id');
-        }
-       /*  $users->leftJoin('user_reviews', function( $join){
-            $join->on('user_reviews.user_review_for', 'users.id');
-        }); */
-        $users
-            ->select(['users.*','p.avgrate','j.completed_jobs'])//,'r.*'
-            ->where('role_id', 2);
+                ->select(['users.*','p.avgrate','j.completed_jobs','r.*'])//,
+                ->where('role_id', 2);
 
             if ($request->has('providertype')){
-                $users->where(
-                    'users.providertype',
-                    $request->has('providertype')
-                );
+                    $users->where(
+                        'users.providertype',
+                        $request->has('providertype')
+                    );
             }
 
-        if ($request->has('servicecategory')){
-            $users->where('service_categories.id', $request->get('servicecategory'));
-        }
-     
-        if ($request->has('postcode')) {
-            $users->where('postcodes.postcode', $request->get('postcode'));
-        }
-        if ($request->has('day') || ($request->has('start_time') )) {//&& $request->has('end_time')
-            if ($request->get('day')) {
-                $users->where('provider_working_hours.working_days', 'LIKE', '%' . $request->get('day') . '%');
+            if ($request->has('servicecategory')){
+                $users->where('service_categories.id', $request->get('servicecategory'));
+            }
+        
+            if ($request->has('postcode')) {
+                $users->where('postcodes.postcode', $request->get('postcode'));
+            }
+            if ($request->has('day') || ($request->has('start_time') )) {//&& $request->has('end_time')
+                if ($request->get('day')) {
+                    $users->where('provider_working_hours.working_days', 'LIKE', '%' . $request->get('day') . '%');
+                }
+
+                if ($request->has('start_time') && $request->has('end_time')){
+                    $users->whereTime('provider_working_hours.start_time', '<=', $request->get('start_time'));
+                    // ->whereTime('provider_working_hours.end_time', '>=', $request->get('end_time'));
+                }
+            }
+        
+            if ($request->has('serviceid')){
+                $servicearr =  explode(',',$request->get('serviceid'));
+                $users->whereIn('provider_service_maps.service_id',explode(',',$request->get('serviceid')));
+                $users->groupBy('users.id','p.avgrate','r.amount','r.type','r.is_default_service')->havingRaw("count(provider_service_maps.provider_id)=".count( $servicearr));
             }
 
-            if ($request->has('start_time') && $request->has('end_time')){
-                $users->whereTime('provider_working_hours.start_time', '<=', $request->get('start_time'));
-                   // ->whereTime('provider_working_hours.end_time', '>=', $request->get('end_time'));
-            }
-        }
-       
-        if ($request->has('serviceid')){
-            $servicearr =  explode(',',$request->get('serviceid'));
-            $users->whereIn('provider_service_maps.service_id',explode(',',$request->get('serviceid')));
-            $users->groupBy('users.id','p.avgrate')->havingRaw("count(provider_service_maps.provider_id)=".count( $servicearr));
-        }
+            $agency = clone $users;
 
-     
-    //   $arr = $users->select(['users.*',DB::raw('AVG(user_reviews.rating) as ratings_average' )])->get();
-    $arr = $users->where('users.providertype','agency')->get();
- // dd($arr);
+            $users->where('providertype','freelancer');
+            $freelancer = $users->get()->toArray();
+            $agency = $agency->where('providertype','agency')->pluck('id')->toArray();//->toArray();
+           
+            
+            return response()->json(['data' =>$freelancer,'agency'=>count($agency),'agencyids'=>$agency],200);
+    }
       
-       return response()->json(['data' => $users->get()]);
     }
     
     /**

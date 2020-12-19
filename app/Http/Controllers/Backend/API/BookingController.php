@@ -144,20 +144,26 @@ class BookingController extends Controller
 
     public function promocode_discount(Request $request)
     { 
+        $validator = Validator::make($request->all(), [
+            'serviceid'=>'required|array',
+            'servicetime'=>'required|array',
+            'servicecategory'=>'required|numeric',
+            'promocode'=>'required|string',
+            'booking_provider_type'=>'required|string',
+        ]);
+        
+        if($validator->fails()){
+            $message = $validator->messages()->all();
+            return response()->json(['message' => $message], 401);
+        }
+
+
         
         $result = app(TotalCostCalculation::class)->PromoCodeDiscount($request);
         return response()->json($result);
 
     }
 
-    public function promocode_discount2(Request $request)
-    {
-
-       
-        
-         return response()->json();
-
-    }
     public function index($uuid,$uuid1)
     {
 
@@ -212,6 +218,39 @@ class BookingController extends Controller
      public function add_booking(Request $request,StripeUserMetadataRepository $striepusermetadata)
     {
 
+        $validator = Validator::make($request->get('bookings'), [
+            'booking_date'=>'required|date|date_format:Y-m-d',
+            'booking_time'=>'required|date_format:H:i',
+            'booking_postcode'=>'required|numeric',
+            'booking_provider_type'=>'required|string',
+            'plan_type'=>'required|numeric',
+            'promocode'=>'nullable|string',
+            'total_cost'=>'required|numeric',
+            'discount'=>'nullable|numeric',
+            'final_cost'=>'required|numeric',
+            
+        ]);
+
+     /*    $validator = Validator::make($request->get('bookings'), [
+            'booking_date'=>'required|date|date_format:Y-m-d',
+            'booking_time'=>'required|date_format:H:i',
+            'booking_postcode'=>'required|numeric',
+            'booking_provider_type'=>'required|string',
+            'plan_type'=>'required|numeric',
+            'promocode'=>'nullable|string',
+            'total_cost'=>'required|numeric',
+            'discount'=>'null|numeric',
+            'final_cost'=>'required|numeric',
+            'addressid'=>'required|numeric'
+            
+        ]); */
+        
+        if($validator->fails()){
+            $message = $validator->messages()->all();
+            return response()->json(['message' => $message], 401);
+        }
+
+
         $user_id=auth('api')->user()->id;
         $usercard = $striepusermetadata->findByUserId($user_id);
 
@@ -219,7 +258,7 @@ class BookingController extends Controller
             return response()->json(['saved' => false],402);
         }
 
-        $service = $request->service;
+        $service =  $request->service;
         $bookings = $request->bookings;
         $question = $request->question;
         $provider = $request->provider;
@@ -272,9 +311,9 @@ class BookingController extends Controller
             }
 
          
+dd(session('agencyids'));
 
-
-            if(! empty($provider))
+                if(! empty($provider))
                 {
                     foreach($provider as $key => $provider)
                     {
@@ -604,12 +643,24 @@ class BookingController extends Controller
 
     public function providerdetails(Request $request)
     {
-        $id = $request->id;
-        $providers = app(UserRepository::class)->getProviderDetails($id); 
-        $providers[0]['badges'] = app(ProviderBadgeReviewRepository::class)->getBadgeDetails($id );
-        $providers[0]['review'] = app(ProviderBadgeReviewRepository::class)->getReviewDetails($id );
-        $providers[0]['avgrate'] = app(ProviderBadgeReviewRepository::class)->getAvgRating($id );
-        return response()->json(['data' => $providers]);
+
+        $rules = array(
+            'id' => 'required|numeric',
+        );
+        $params = $request->all();
+        $validator = Validator::make($params, $rules);
+        if ($validator->fails()){
+            $message = $validator->messages()->all();
+            return response()->json(['message' => $message], 400);
+        }else{
+            $id = $request->id;
+
+            $providers = app(UserRepository::class)->getProviderDetails($id); 
+            $providers[0]['badges'] = app(ProviderBadgeReviewRepository::class)->getBadgeDetails($id );
+            $providers[0]['review'] = app(ProviderBadgeReviewRepository::class)->getReviewDetails($id );
+            $providers[0]['avgrate'] = app(ProviderBadgeReviewRepository::class)->getAvgRating($id);
+            return response()->json(['data' => $providers]);
+        }
         # code...
     }
 

@@ -3,6 +3,7 @@ namespace App\Services;
 use App\Repository\ProviderServiceMapRespository;
 use Response;
 use Illuminate\Http\Request;
+use App\Repository\UserRepository;
 
 class TotalCostCalculation{
 
@@ -10,23 +11,31 @@ class TotalCostCalculation{
     {
         $this->providerservicemap = $providerservicemap;
     }
-    public function GetHighestTotalPrice($servideid,$provider_id,$servicetime){
+    public function GetHighestTotalPrice($servideid,$provider_id='',$servicetime){
             $priceperprovider  =[];
             $result=[];
             $servicewiseprice = [];
-            $provider_id = explode(',',$provider_id);
+            if(!is_array($provider_id)){
+                $provider_id = explode(',',$provider_id);
+            }
+            
             $totaltime=0;
+            $totalprice=0;
             $is_default_service_id ='';
             $provider_service_price = [];
             $provider_service_cost_with_time = [];
+            $high_def_ser_price_provider_id=[];
             if(is_array($servideid)){
                     
                 foreach($provider_id as $pid){
+                   
                     $serpr = [];
                     $sertotprice = [];
                     $pdr = $this->providerservicemap->GetServicePriceofProvider($servideid,$pid);
+                   
                     $totalserviceprice =0;
                     foreach($pdr as $v){
+                        if($v['amount']!=''){
                         if($v['is_default_service']==1){$is_default_service_id=$v['service_id'];}
                         if($v['service_type']=='hourly'){
                             
@@ -50,27 +59,33 @@ class TotalCostCalculation{
                         
                         $priceperprovider[$pid] = $totalserviceprice;
                     }
-                  
+                }
+                if(count($serpr)>0){
                    $provider_service_price[$pid]= $serpr;
                    $provider_service_cost_with_time[$pid]= $sertotprice;
                 }
-                $totaltime = array_sum($servicetime);
-                arsort($priceperprovider);
-                $max = max($priceperprovider); 
-
-                //check highest price provider
-              
-               $highestcount = count(array_keys($priceperprovider, $max));
-               if($highestcount>1){
-                   //if same price offers by >2 providers check default service price;
-                   $keys = array_keys($priceperprovider, $max );
-                   $high_def_ser_price_provider_id = $this->GetHighestDefServicePriceProvider($keys,$servicewiseprice[$is_default_service_id]);
-                }else{
-                    $key = array_keys($priceperprovider, $max); 
-                    $high_def_ser_price_provider_id = $key[0];
+                
                 }
               
-                $totalprice = $max;
+                if(count($priceperprovider)>0){
+                        $totaltime = array_sum($servicetime);
+                        arsort($priceperprovider);
+                        $max = max($priceperprovider);
+
+                        //check highest price provider
+                    
+                    $highestcount = count(array_keys($priceperprovider, $max));
+                    if($highestcount>1){
+                        //if same price offers by >2 providers check default service price;
+                        $keys = array_keys($priceperprovider, $max );
+                        $high_def_ser_price_provider_id = $this->GetHighestDefServicePriceProvider($keys,$servicewiseprice[$is_default_service_id]);
+                        }else{
+                            $key = array_keys($priceperprovider, $max); 
+                            $high_def_ser_price_provider_id = $key[0];
+                        }
+                        $totalprice = $max;
+                }
+               
                 $result['highvalproviderid'] = $high_def_ser_price_provider_id;
                 $result['provider_wise_service_price'] = $provider_service_price;
                 $result['provider_service_cost_with_time'] = $provider_service_cost_with_time;
@@ -110,27 +125,42 @@ class TotalCostCalculation{
     }
 
     public function PromoCodeDiscount(Request $request){
-        $id = $request->get('serviceid');
+       
+       // echo "in";exit;
+     
+       $id = $request->get('serviceid');
         $servicetime = $request->get('servicetime');
-        $providerid = $request->get('providerid');
+        
         $promocode = $request->promocode;
         $categoryid = $request->servicecategory;
-        $res = $this->GetHighestTotalPrice($id,$providerid,$servicetime);
        
-        $total_amount = $res['total_cost'];
         $result=array();
         $arr = $this->providerservicemap->CheckPromocode($promocode,$categoryid);
         if(!empty($arr)){
-                
-            if( $arr[0]['discount_type']=='flat'){
-                $discount_amount=$total_amount-$arr[0]['discount'];
+
+                if($request->get('booking_provider_type')=='agency'){
+                    $providerid = app(UserRepository::class)->getAgencyData();
+                }else{
+                    $providerid = $request->get('providerid');
+                }
+    
+            $res = $this->GetHighestTotalPrice($id,$providerid,$servicetime);
+        
+            $total_amount = $res['total_cost'];
+                    
+            if($total_amount>0){
+                    if( $arr[0]['discount_type']=='flat'){
+                        $discount_amount=$total_amount-$arr[0]['discount'];
+                    }else{
+                        $discount_amount=$total_amount-($total_amount*$arr[0]['discount'])/100;
+                    }
+                    $result['total_cost']=$total_amount;
+                    $result['discount']=$arr[0]['discount'];
+                    $result['final_cost']=$discount_amount;
+                    return ['data' => $result];
             }else{
-                $discount_amount=$total_amount-($total_amount*$arr[0]['discount'])/100;
-            }
-            $result['total_cost']=$total_amount;
-            $result['discount']=$arr[0]['discount'];
-            $result['final_cost']=$discount_amount;
-            return ['data' => $result];
+                return ['data' => 'Something went wrong. Please contact administrator.'];
+             }
          }else{
             return ['data' => 'Promocode is not valid'];
          }

@@ -137,7 +137,7 @@ class CustomerusersController extends Controller
                 );
             }
 
-        if ($request->has('servicecategory')) {
+        if ($request->has('servicecategory')){
             $users->where('service_categories.id', $request->get('servicecategory'));
         }
      

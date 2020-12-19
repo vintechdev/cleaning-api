@@ -24,7 +24,7 @@ class ProviderBadgeReviewRepository{
     public function getAvgRating($providerid)
     {
         # code...
-        $avrate = Userreview::where('user_reviews.user_review_for',$providerid)->avg('rating');
+        
         return $avrate;
     }
 

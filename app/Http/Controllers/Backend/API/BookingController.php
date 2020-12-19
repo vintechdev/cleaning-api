@@ -225,11 +225,11 @@ class BookingController extends Controller
         $provider = $request->provider;
       // echo "<pre>";print_r($request->bookings);exit;
  
-        if(count($bookings)>0)
-        {
+        if(count($bookings)>0){
+
           //  $booking=array('booking' => $booking);
           //  $booking=json_encode($booking);
-         //  print_r(json_encode($booking));exit;
+          //  print_r(json_encode($booking));exit;
 
          
 
@@ -338,6 +338,7 @@ class BookingController extends Controller
     }
 
     public function SendBookingEmail($bookingid){
+        
         Storage::put('file.txt', 'Your name');
         
         $bdata = Booking::join('booking_status', 'bookings.booking_status_id', '=', 'booking_status.id')

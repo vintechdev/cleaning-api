@@ -104,14 +104,14 @@ class CustomerusersController extends Controller
             
            $users->leftJoin( DB::raw("(SELECT count(provider_user_id) as completed_jobs, booking_request_providers.provider_user_id FROM `booking_request_providers` inner join bookings on(bookings.id=booking_request_providers.booking_id) where booking_request_providers.status='accepted' and bookings.booking_status_id=4 group by booking_request_providers.provider_user_id) as j"), 'j.provider_user_id', '=', 'users.id');
 
-           $users->leftJoin( DB::raw("(SELECT pm.amount,pm.type,sr.is_default_service,pm.provider_id from provider_service_maps pm join services sr on(pm.service_id=sr.id) where sr.is_default_service=1 and sr.deleted_at is null and pm.deleted_at is null) as r"), 'r.provider_id', '=', 'users.id');
+        //   $users->leftJoin( DB::raw("(SELECT pm.amount,pm.type,sr.is_default_service,pm.provider_id from provider_service_maps pm join services sr on(pm.service_id=sr.id) where sr.is_default_service=1 and sr.deleted_at is null and pm.deleted_at is null) as r"), 'r.provider_id', '=', 'users.id');
 
-        if ($request->has('servicecategory') || $request->has('serviceid')){
-            $users
-                ->join('provider_service_maps', 'users.id', '=', 'provider_service_maps.provider_id')
-                ->join('services', 'provider_service_maps.service_id', '=', 'services.id')
-                ->join('service_categories', 'services.category_id', '=', 'service_categories.id');
-        }
+            if ($request->has('servicecategory') || $request->has('serviceid')){
+                $users
+                    ->join('provider_service_maps', 'users.id', '=', 'provider_service_maps.provider_id')
+                    ->join('services', 'provider_service_maps.service_id', '=', 'services.id')
+                    ->join('service_categories', 'services.category_id', '=', 'service_categories.id');
+            }
 
         if ($request->has('postcode')){
             $users
@@ -127,7 +127,7 @@ class CustomerusersController extends Controller
             $join->on('user_reviews.user_review_for', 'users.id');
         }); */
         $users
-            ->select(['users.*','p.avgrate','j.completed_jobs','r.*'])
+            ->select(['users.*','p.avgrate','j.completed_jobs'])//,'r.*'
             ->where('role_id', 2);
 
             if ($request->has('providertype')){
@@ -149,7 +149,7 @@ class CustomerusersController extends Controller
                 $users->where('provider_working_hours.working_days', 'LIKE', '%' . $request->get('day') . '%');
             }
 
-            if ($request->has('start_time') && $request->has('end_time')) {
+            if ($request->has('start_time') && $request->has('end_time')){
                 $users->whereTime('provider_working_hours.start_time', '<=', $request->get('start_time'));
                    // ->whereTime('provider_working_hours.end_time', '>=', $request->get('end_time'));
             }
@@ -163,7 +163,7 @@ class CustomerusersController extends Controller
 
      
     //   $arr = $users->select(['users.*',DB::raw('AVG(user_reviews.rating) as ratings_average' )])->get();
-    $arr = $users->get();
+    $arr = $users->where('users.providertype','agency')->get();
  // dd($arr);
       
        return response()->json(['data' => $users->get()]);
@@ -284,7 +284,8 @@ class CustomerusersController extends Controller
         $responseCode = $request->get('id') ? 200 : 201;
         return response()->json(['saved' => $Customeruser], $responseCode);
     }
-public function profile_view(Request $request)
+
+    public function profile_view(Request $request)
     {
         
         

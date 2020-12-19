@@ -15,4 +15,12 @@ class Servicecategory extends Model
     protected $table = 'service_categories';
     use SoftDeletes;
     protected $fillable = ['id'];
+
+    public function __construct(){
+        parent::__construct();
+    }
+    
+  /*   public function getAllCategory(){
+        return  $result = Servicecategory::where('active',1)->get()->toArray();
+    } */
 }

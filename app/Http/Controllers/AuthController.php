@@ -165,7 +165,7 @@ Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
   
     /**
      * Login user and create token
-     *
+     *n
      * @param  [string] email
      * @param  [string] password
      * @param  [boolean] remember_me
@@ -175,26 +175,19 @@ Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
      */
     public function login(Request $request)
     {
-        // echo "login";exit;
-
-        $validator = $request->validate([
-            'email' => 'required|string|email|exists:users,email',
-            'password' => 'required|string'
-        ]);
         $credentials = request(['email', 'password']);
-        // print_r($credentials);exit;
 
         if(!Auth::attempt($credentials))
             return response()->json([
                 'message' => 'Unauthorized'
-            ], 201);
+            ], 401);
 
         $user = Auth::user();
         // print_r($user);exit;
 
         if(!$request->email || !$request->password){
             // return an error response
-            return response()->json(['message'=>'Username or Password field empty'], 201);
+            return response()->json(['message'=>'Username or Password field empty'], 401);
         } else{
             $login_email = $request->email;
             $login_password = $request->password;
@@ -203,12 +196,12 @@ Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
             // print_r($user);exit;
             if (! $user) {
                 // return an error response
-                return response()->json(['message'=>'Email not found'], 201);
+                return response()->json(['message'=>'Email not found'], 401);
             }
         
             if (!Hash::check($login_password, $user->password)) {
                 // return an error response
-                return response()->json(['message'=>'Please enter correct password'], 201);
+                return response()->json(['message'=>'Please enter correct password'], 401);
             }
             
             $client = DB::table('oauth_clients')
@@ -217,7 +210,7 @@ Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
 
             if (! $client) {
                 // Passport not setup properly
-                return response()->json(['message'=>'Passport not setup properly'], 201);
+                return response()->json(['message'=>'Passport not setup properly'], 401);
                
             }
 
@@ -242,8 +235,9 @@ Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
                 $Customermetadata = Customermetadata::where('user_id', $user->id)->first();
                 // dd($Customermetadata);
 
-                $json['userdata'] = array(
+                $json['userdata'] =
                     [
+                        'id' => $user->id,
                         'uuid' => $user->uuid,
                         'first_name' => $user->first_name,
                         'last_name' => $user->last_name,
@@ -255,14 +249,13 @@ Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
                         'updated_at' => $user->updated_at,
                         'deleted_at' => $user->deleted_at,
                         'customer_stripe_id' => $Customermetadata->user_stripe_customer_id
-                    ]
-                );
+                    ];
     
                 $response->setContent(json_encode($json));
     
                 return $response;
             } else{
-                return response()->json(['message'=>'Please Verify Email'], 201);
+                return response()->json(['message'=>'Please Verify Email'], 401);
             }
         }
 

@@ -15,6 +15,9 @@ use Illuminate\Support\Facades\Validator;
 use Auth;
 use Hash;
 use DB;
+use Input;
+use Response;
+use App\Services\TotalCostCalculation;
 
 class ServiceController extends Controller
 {
@@ -42,6 +45,24 @@ class ServiceController extends Controller
                             
         return response()->json(['data' => $users],200);
 
+    }
+    //---get total service price calculation //
+
+
+    public function geserviceprice(Request $request){
+
+        $validated =  $request->validate([
+            'serviceid' => 'required',
+        ]);
+        //  dd($validated);
+        $id = $request->get('serviceid');
+        $servicetime = $request->get('servicetime');
+        $providerid = $request->get('providerid');
+        $servicetime = (is_array($id))?$request->get('servicetime'):$request->get('gettimeslot');
+        $result = app(TotalCostCalculation::class)->GetHighestTotalPrice($id,$providerid,$servicetime);
+       
+        return Response::json($result);
+        
     }
     public function index(Request $request)
     {
@@ -77,9 +98,11 @@ class ServiceController extends Controller
 		if ($request->has('service_cost')) {
 			$services = $services->where('service_cost', 'LIKE', '%'.$request->get('service_cost').'%');
 		}
-        $services = $services->paginate(20);
+        $services = $services->paginate(150);
         return (new ServiceCollection($services));
     }
+
+
 
     /**
      * Store a newly created resource in storage.

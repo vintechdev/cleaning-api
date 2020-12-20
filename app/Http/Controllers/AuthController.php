@@ -221,6 +221,7 @@ public function UpdateToken(Request $request)
      */
     public function login(Request $request)
     {
+        
         $credentials = request(['email', 'password']);
 
         if(!Auth::attempt($credentials))
@@ -298,7 +299,7 @@ public function UpdateToken(Request $request)
                     ];
     
                 $response->setContent(json_encode($json));
-    
+   
                 return $response;
             } else{
                 return response()->json(['message'=>'Please Verify Email'], 401);

@@ -16,6 +16,13 @@ class UserRepository{
         return $res;
     }
 
+    public function getUserDetails($id)
+    {
+        # code...
+        $res = User::where('id',$id)->get()->toArray();
+        return $res;
+    }
+
         public function GetServicePriceofProvider($serviceid,$providerid){
            
            $pdr=Providerservicemaps::leftJoin('services', function($join){

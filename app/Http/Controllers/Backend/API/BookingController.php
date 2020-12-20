@@ -19,6 +19,7 @@ use App\Http\Requests\Backend\BookingRequest;
 use App\Http\Resources\BookingCollection;
 use App\Http\Resources\Booking as BookingResource;
 use App\Http\Controllers\Controller;
+use App\Repository\BookingAddressRepository;
 use Illuminate\Support\Facades\Validator;
 use App\Repository\BookingServiceRepository;
 use App\Repository\BookingReqestProviderRepository;
@@ -218,38 +219,53 @@ class BookingController extends Controller
      public function add_booking(Request $request,StripeUserMetadataRepository $striepusermetadata)
     {
 
-        $validator = Validator::make($request->get('bookings'), [
-            'booking_date'=>'required|date|date_format:Y-m-d',
-            'booking_time'=>'required|date_format:H:i',
-            'booking_postcode'=>'required|numeric',
-            'booking_provider_type'=>'required|string',
-            'plan_type'=>'required|numeric',
-            'promocode'=>'nullable|string',
-            'total_cost'=>'required|numeric',
-            'discount'=>'nullable|numeric',
-            'final_cost'=>'required|numeric',
-            
+      //  dd($request->all());
+       
+        $validator = Validator::make($request->all('bookings'), [
+            '*.booking_date'=>'required|date|date_format:Y-m-d',
+            '*.booking_time'=>'required|date_format:H:i',
+            '*.booking_postcode'=>'required|numeric',
+            '*.booking_provider_type'=>'required|string',
+            '*.plan_type'=>'required|numeric',
+            '*.promocode'=>'nullable|string',
+            '*.total_cost'=>'required|numeric',
+            '*.discount'=>'nullable|numeric',
+            '*.final_cost'=>'required|numeric',
         ]);
 
-     /*    $validator = Validator::make($request->get('bookings'), [
-            'booking_date'=>'required|date|date_format:Y-m-d',
-            'booking_time'=>'required|date_format:H:i',
-            'booking_postcode'=>'required|numeric',
-            'booking_provider_type'=>'required|string',
-            'plan_type'=>'required|numeric',
-            'promocode'=>'nullable|string',
-            'total_cost'=>'required|numeric',
-            'discount'=>'null|numeric',
-            'final_cost'=>'required|numeric',
-            'addressid'=>'required|numeric'
-            
-        ]); */
         
-        if($validator->fails()){
+        if ($validator->fails()){
             $message = $validator->messages()->all();
-            return response()->json(['message' => $message], 401);
+            return response()->json(['message' => $message], 400);
         }
 
+        /*  $validator1 = Validator::make($request->all('provider'), [
+            'provider.provider_user_id' => 'required|integer',
+            'provider.booking_request_providers_status' => 'required|string',
+            'provider.service_id'    => 'required|numeric',
+        ]);
+        if ($validator1->fails()){
+            $message = $validator1->messages()->all();
+             return response()->json(['message' => $message], 400);
+         }
+        $validator2 = Validator::make($request->all('service'), [
+            '*.service_id' => 'required|integer',
+            '*.initial_service_cost' => 'required|numeric',
+            '*.initial_number_of_hours'    => 'nullable|numeric',
+        ]);
+        if ($validator2->fails()){
+            $message = $validator2->messages()->all();
+             return response()->json(['message' => $message], 400);
+         }
+        $validator3 = Validator::make($request->all('question'), [
+            '*.service_question_id' => 'nullable|integer',
+            '*.answer' => 'nullable|string',
+        ]);  
+        if ($validator3->fails()){
+            $message = $validator3->messages()->all();
+             return response()->json(['message' => $message], 400);
+         }*/
+      
 
         $user_id=auth('api')->user()->id;
         $usercard = $striepusermetadata->findByUserId($user_id);
@@ -311,7 +327,7 @@ class BookingController extends Controller
             }
 
          
-dd(session('agencyids'));
+
 
                 if(! empty($provider))
                 {
@@ -355,25 +371,64 @@ dd(session('agencyids'));
 
                 // dispatch booking created event
                 event(new BookingCreated($booking));
-               
         }
+            //send email notification to providers
+            //$this->SendBookingProviderEmail($last_insert_id,$user_id);
 
-         
-            //$User->sendApiEmailVerificationNotification();
-           // $success['message'] = 'Please confirm yourself by clicking on verify user button sent to you on your email';
-           if( $this->SendBookingEmail($last_insert_id)){
-               
-            $responseCode = $request->get('id') ? 200 : 201;
-            return response()->json(['saved' => true,'bookingdetailid'=> $last_insert_id], $responseCode);exit;
+           
+
+           //send email to customer
+           $res = true;//$this->SendBookingEmail($last_insert_id);
+           if(  $res ){
+                $responseCode = $request->get('id') ? 200 : 201;
+                return response()->json(['saved' => true,'bookingdetailid'=> $last_insert_id], $responseCode);exit;
            }else{
-              
-            return response()->json(['saved' => false], 201);exit;
+                return response()->json(['saved' => false], 201);exit;
            }
         }
         else{
            
             return response()->json(['saved' => false]);
         }
+    }
+
+    public function SendBookingProviderEmail($bookingid,$user_id)
+    {
+        # code...
+        $bookingproviders = app(BookingReqestProviderRepository::class)->getBookingProvidersData($bookingid);
+        $bookingaddress = app(BookingAddressRepository::class)->Bookingaddress($bookingid);
+        $userdetails = app(UserRepository::class)->getUserDetails($user_id);
+        $services = app(BookingServiceRepository::class)->getServiceDetails($bookingid);
+        $bookings = Booking::leftJoin('plans','plans.id','=','bookings.plan_type')->where('bookings.id',$bookingid)->get(['bookings.*','plans.plan_name'])->toArray();
+        $data['bookings']=$bookings[0];
+        $mailService = app(MailService::class);
+
+        $data['address']=$bookingaddress;
+        $data['userdetails'] = $userdetails;
+        $data['services'] = $services;
+       
+        
+      //  dd( $bookingproviders);
+        if(count($bookingproviders)>0){
+
+            foreach($bookingproviders as $k=>$v){
+                $userEmail = $v['email'];
+                $userName = $v['first_name'];
+                $subject = 'New Service Request Received.';
+                $data['providers_name'] = $v['first_name'];
+                $res = $mailService->send('email.bookingrequestprovider', $data, $userEmail, $userName, $subject);
+               
+            }
+        }
+       
+       
+        if($res){
+            return true;
+        }else{
+            return false;
+        }
+
+
     }
 
     public function SendBookingEmail($bookingid){

@@ -30,6 +30,7 @@ class MailService
         try {
            // echo $this->defaultEmail;exit;
             Mail::send($template,array('data' => $data), function ($message) use ($name, $to, $subject) {
+               
                 $message->to($to, $name)->subject($subject)->replyTo(
                     $this->defaultEmail, $this->defaultName
                 );

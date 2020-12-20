@@ -100,9 +100,9 @@ class CustomerusersController extends Controller
             'postcode' => 'required|numeric',
             'serviceid'=>'required|string',
             'servicecategory'=>'required|numeric',
-            'start_time'=>'string',
-            'end_time'=>'string',
-            'day'=>'string'
+            'start_time'=>'nullable|string',
+            'end_time'=>'nullable|string',
+            'day'=>'nullable|string'
         );
 
      

@@ -26,6 +26,11 @@ class BookingReqestProviderRepository{
         return $result;
 
     }
+    public function getBookingProvidersData($bookingid){
+        $result = Bookingrequestprovider::leftJoin('users','users.id', '=','booking_request_providers.provider_user_id')->where('booking_request_providers.booking_id',$bookingid)->get(['booking_request_providers.*','users.email','users.first_name'])->toArray();
+        return $result;
+
+  }
 
 }
 

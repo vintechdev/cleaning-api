@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Backend\API;
 
+use App\Bookingstatus;
 use App\Events\BookingCreated;
 use App\Service;
 use App\Booking;
@@ -235,7 +236,7 @@ class BookingController extends Controller
          $booking = new Booking;
         
          $booking->user_id = $user_id;
-         $booking->booking_status_id = 1;
+         $booking->booking_status_id = Bookingstatus::BOOKING_STATUS_PENDING;
          // $booking->description = ($bookings['description'])?$bookings['description']:'';
          $booking->is_recurring =(isset($bookings['is_recurring']))?$bookings['is_recurring']:0;
          $booking->parent_event_id = '';//$bookings['parent_event_id'];
@@ -268,9 +269,6 @@ class BookingController extends Controller
                 $bookingaddress->postcode = $bookingdetails['postcode'];
                 $bookingaddress->save();
             }
-
-         
-
 
             if(! empty($provider))
                 {
@@ -901,44 +899,5 @@ class BookingController extends Controller
         else{
             return response()->json(['message' => 'Unable to change the booking status.']);
         }
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function delete(Request $request)
-    {
-        $booking = Booking::find($request->get('id'));
-        $bookingaddress = Bookingaddress::find($request->get('id'));
-        $bookingquestion = Bookingquestion::find($request->get('id'));
-        $bookingservice = Bookingservice::find($request->get('id'));
-        $endusermetadatum = Endusermetadatum::find($request->get('id'));
-        $payment = Payment::find($request->get('id'));
-        $bookingrequestprovider = Bookingrequestprovider::find($request->get('id'));
-            $booking->delete();
-            $bookingaddress->delete();
-            $bookingquestion->delete();
-            $bookingservice->delete();
-            $endusermetadatum->delete();
-            $payment->delete();
-            $bookingrequestprovider->delete();
-
-        return response()->json(['no_content' => true], 200);
-    }
-
-    /**
-     * Restore the specified resource to storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function restore(Request $request)
-    {
-        $booking = Booking::withTrashed()->find($request->get('id'));
-        $booking->restore();
-        return response()->json(['no_content' => true], 200);
     }
 }

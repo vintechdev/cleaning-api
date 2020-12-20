@@ -146,21 +146,13 @@ class CustomerusersController extends Controller
             $users->leftJoin('user_reviews', function( $join){
                 $join->on('user_reviews.user_review_for', 'users.id');
             }); 
-            $users
-                ->select(['users.*','p.avgrate','j.completed_jobs','r.*'])//,
-                ->where('role_id', 2);
-
+            $users->select(['users.*','p.avgrate','j.completed_jobs','r.*'])->where('role_id', 2);
             if ($request->has('providertype')){
-                    $users->where(
-                        'users.providertype',
-                        $request->has('providertype')
-                    );
+                    $users->where('users.providertype',$request->has('providertype'));
             }
-
             if ($request->has('servicecategory')){
                 $users->where('service_categories.id', $request->get('servicecategory'));
             }
-        
             if ($request->has('postcode')) {
                 $users->where('postcodes.postcode', $request->get('postcode'));
             }
@@ -168,17 +160,38 @@ class CustomerusersController extends Controller
                 if ($request->get('day')) {
                     $users->where('provider_working_hours.working_days', 'LIKE', '%' . $request->get('day') . '%');
                 }
-
                 if ($request->has('start_time') && $request->has('end_time')){
                     $users->whereTime('provider_working_hours.start_time', '<=', $request->get('start_time'));
                     // ->whereTime('provider_working_hours.end_time', '>=', $request->get('end_time'));
                 }
             }
         
-            if ($request->has('serviceid')){
+            if($request->has('serviceid')){
                 $servicearr =  explode(',',$request->get('serviceid'));
                 $users->whereIn('provider_service_maps.service_id',explode(',',$request->get('serviceid')));
                 $users->groupBy('users.id','p.avgrate','r.amount','r.type','r.is_default_service')->havingRaw("count(provider_service_maps.provider_id)=".count( $servicearr));
+            }
+            if($request->has('pricerange')){
+                $users->where('r.amount','=<',$request->get('pricerange'));
+            }
+            if($request->has('cleaningrange')){
+                $users->where('j.completed_jobs','>',$request->get('cleaningrange'));
+            }
+            if($request->has('sorting')){
+                if($request->get('sorting')=='new'){
+                    $column = 'users.created_at';
+                    $dir = 'desc';
+                }else if($request->get('sorting')=='pasc'){
+                    $column = 'r.amount';
+                    $dir = 'asc';
+                }else if($request->get('sorting')=='pdesc'){
+                    $column = 'r.amount';
+                    $dir = 'desc';
+                }else{
+                    $column = 'j.completed_jobs';
+                    $dir = 'desc';
+                }
+                $users->orderBy($column,$dir);
             }
 
             $agency = clone $users;

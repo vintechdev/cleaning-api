@@ -73,17 +73,13 @@ Route::namespace('Backend\API')->prefix('v1/payments')->group(function(){
     Route::post('stripe/cards', 'PaymentsController@addStripeCard')->name('api.payments.stripe.cards')->middleware(['auth:api']);
 });
 
-Route::middleware(['auth:api'])->namespace('Backend\API')->prefix('v1/bookings')->group(function() {
-    Route::get('/{bookingId}/times', 'BookingTimesController@listBookingTimesByBookingId')->name('api.bookings.times');
-    Route::get('/jobs', 'BookingJobsController@listAllJobs');
-});
-
 // for passport
 Route::group([
     'prefix' => 'auth'
 ], function () {
     Route::post('login', 'AuthController@login');
     Route::post('register', 'AuthController@register');
+    Route::get('logout', 'AuthController@logout')->middleware(['auth:api']);
 });
 // Route::post('/oauth/token', 'AuthController@login');
 
@@ -114,7 +110,14 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
     Route::patch('edit_alternate_date/{uuid}', 'BookingController@edit_alternate_date')->name('edit_alternate_date')->middleware(['scope:customer']);
 
     Route::post('promocode_discount', 'BookingController@promocode_discount')->name('promocode_discount')->middleware(['scope:customer']);
-    Route::post('add_booking', 'BookingController@add_booking')->name('add_booking')->middleware(['scope:customer']);
+    Route::post('bookings', 'BookingController@add_booking')->name('add_booking')->middleware(['scope:customer']);
+    Route::put('bookings', 'BookingController@updateBooking')->name('update_booking')->middleware(['scope:customer']);
+
+    Route::get('/bookings/{bookingId}/times', 'BookingTimesController@listBookingTimesByBookingId')
+        ->name('api.bookings.times')
+        ->middleware('scope:customer');
+    Route::get('/bookings/jobs', 'BookingJobsController@listAllJobs')->middleware('scope:customer');
+
     Route::post('add_multipal_question', 'BookingquestionsController@add_multipal_question')->name('add_multipal_question')->middleware(['scope:customer']);
     Route::post('add_multipal_service', 'BookingserviceController@add_multipal_service')->name('add_multipal_service')->middleware(['scope:customer']);
     Route::get('getcleanardata/{uuid}', 'UserreviewController@getcleanardata')->name('api.Userreview.getcleanardata')->middleware(['scope:customer']);
@@ -160,9 +163,6 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
     Route::get('getfuturebookingdetails', 'BookingController@getfuturebookingdetails')->name('api.Booking.getfuturebookingdetails')->middleware(['scope:customer']);
 
     Route::get('getpastbookingdetails', 'BookingController@getpastbookingdetails')->name('api.Booking.getpastbookingdetails')->middleware(['scope:customer']);
-   
-    Route::patch('cancelbooking', 'BookingController@cancelbooking')->name('api.Booking.cancelbooking')->middleware(['scope:customer']);
-    Route::post('cancelbooking', 'BookingController@cancelbooking')->name('api.Booking.cancelbooking')->middleware(['scope:customer']);
 
     Route::get('getpaymenthistory', 'PaymentController@getpaymenthistory')->name('api.Payment.getpaymenthistory')->middleware(['scope:customer']);
 
@@ -832,18 +832,6 @@ Route::middleware(['auth:api'])->namespace('Backend\API')->prefix('v1/backend')-
     Route::post('/bookingaddresses/{bookingaddress}/delete', 'BookingaddressesController@delete')->name('api.bookingaddress.delete');
     Route::post('/bookingaddresses/{bookingaddress}/restore', 'BookingaddressesController@restore')->name('api.bookingaddress.restore');
     Route::post('/bookingaddresses/{bookingaddress}/force-delete', 'BookingaddressesController@forceDelete')->name('api.bookingaddress.force-delete');
-
-
-    // Booking Route
-    Route::get('users/{uuid}/bookings/{uuid1}', 'BookingsController@index')->name('api.booking.index');
-
-    // Route::get('bookings', 'BookingsController@index')->name('api.booking.index');
-
-    Route::get('/bookings/{booking}', 'BookingsController@form')->name('api.booking.form');
-    Route::post('/bookings/save', 'BookingsController@post')->name('api.booking.save');
-    Route::post('/bookings/{booking}/delete', 'BookingsController@delete')->name('api.booking.delete');
-    Route::post('/bookings/{booking}/restore', 'BookingsController@restore')->name('api.booking.restore');
-    Route::post('/bookings/{booking}/force-delete', 'BookingsController@forceDelete')->name('api.booking.force-delete');
 
 });
 

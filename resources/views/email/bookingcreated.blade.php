@@ -8,7 +8,12 @@
 
 <h3 style="text-align: left;">{{__('Hello')}}, {{ ucwords($data['name']) }}</h3>
 <p style="font-size: 15px;text-align: left;">
-  {{__('Your Service has been booked successfully. You will be notified once provider will accept your service request.')}}
+  {{__('Your Service has been booked successfully. 
+    @if($data['booking']['booking_provider_type']=='freelancer')
+    You will be notified once provider will accept your service request.')}}
+    @else
+    Agency will contact you soon!!
+    @endif
 </p>
 
 <table cellpadding="5" cellspacing ="0" style="width: 100%;border: 1px solid #000;font-size:16px" border="1">

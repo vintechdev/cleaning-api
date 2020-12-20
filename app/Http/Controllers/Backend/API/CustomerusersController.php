@@ -171,12 +171,15 @@ class CustomerusersController extends Controller
                 $users->whereIn('provider_service_maps.service_id',explode(',',$request->get('serviceid')));
                 $users->groupBy('users.id','p.avgrate','r.amount','r.type','r.is_default_service')->havingRaw("count(provider_service_maps.provider_id)=".count( $servicearr));
             }
-            
+
             if($request->has('pricerange')){
                 $users->where('r.amount','<=',$request->get('pricerange'));
             }
             if($request->has('cleaningrange')){
                 $users->where(DB::raw('IFNULL(j.completed_jobs,0)'),'>=',$request->get('cleaningrange'));
+            }
+            if($request->has('avgrate')){
+                $users->where('p.avgrate','=',$request->get('avgrate'));
             }
             if($request->has('sorting')){
                 if($request->get('sorting')=='new'){

@@ -124,7 +124,7 @@ class CustomerusersController extends Controller
             
             $users->leftJoin( DB::raw("(SELECT count(provider_user_id) as completed_jobs, booking_request_providers.provider_user_id FROM `booking_request_providers` inner join bookings on(bookings.id=booking_request_providers.booking_id) where booking_request_providers.status='accepted' and bookings.booking_status_id=4 group by booking_request_providers.provider_user_id) as j"), 'j.provider_user_id', '=', 'users.id');
 
-            $users->leftJoin(DB::raw("(SELECT pm.amount,pm.type,sr.is_default_service,pm.provider_id from provider_service_maps pm join services sr on(pm.service_id=sr.id) where sr.is_default_service=1 and sr.deleted_at is null and pm.deleted_at is null) as r"), 'r.provider_id', '=', 'users.id');
+            $users->leftJoin(DB::raw("(SELECT pm.amount,pm.type,sr.is_default_service,pm.provider_id from provider_service_maps pm join services sr on(pm.service_id=sr.id) where sr.is_default_service=1 and sr.deleted_at is null and pm.deleted_at is null and pm.status=1) as r"), 'r.provider_id', '=', 'users.id');
 
             if($request->has('servicecategory') || $request->has('serviceid')){
                 $users
@@ -179,7 +179,7 @@ class CustomerusersController extends Controller
                 $users->where(DB::raw('IFNULL(j.completed_jobs,0)'),'>=',$request->get('cleaningrange'));
             }
             if($request->has('avgrate')){
-                $users->where('p.avgrate','=',$request->get('avgrate'));
+                $users->where('p.avgrate','>=',$request->get('avgrate'));
             }
             if($request->has('sorting')){
                 if($request->get('sorting')=='new'){

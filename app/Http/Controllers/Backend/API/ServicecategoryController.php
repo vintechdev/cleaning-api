@@ -524,7 +524,7 @@ class ServicecategoryController extends Controller
     public function get_all_servicecategory(Request $request)
     {
 	  // $servicecategories = Servicecategory::query();
-      $servicecategories = Servicecategory::select('id','uuid','name','description','created_at','updated_at','deleted_at')->where('active', 1)->orderby('position','ASC');
+      $servicecategories = Servicecategory::select('id','uuid','name','icon','description','created_at','updated_at','deleted_at')->where('active', 1)->orderby('position','ASC');
 
 	  return $servicecategories->get()->toArray();
      // return (new ServicecategoryCollection($servicecategories));

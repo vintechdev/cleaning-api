@@ -54,8 +54,8 @@ class ServiceController extends Controller
 
         $validator = Validator::make($request->all(), [
             'serviceid' => 'required',
-            'servicetime'=>'required|array',
-            'booking_provider_type'=>'required|string'
+            'servicetime'=>'nullable|array',
+            'booking_provider_type'=>'nullable|string'
         ]);
         
         if($validator->fails()){

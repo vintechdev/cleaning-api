@@ -33,6 +33,7 @@ use App\Repository\Eloquent\StripeUserMetadataRepository;
 use App\Repository\ProviderBadgeReviewRepository;
 use App\Services\MailService;
 use Storage;
+use App\Bookingactivitylogs;
 class BookingController extends Controller
 {
     /**
@@ -312,6 +313,16 @@ class BookingController extends Controller
          if($booking->save()){
             $last_insert_id=DB::getPdo()->lastInsertId();
           
+            //insert into booking logs
+            $logs = new Bookingactivitylogs;
+            $logs->booking_id = $last_insert_id;
+            $logs->user_id = $user_id;
+            $logs->booking_date = $bookings['booking_date'];
+            $logs->booking_time = $bookings['booking_time'];
+            $logs->booking_postcode = $bookings['booking_postcode'];
+            $logs->action ='add';
+            $logs->detail = 'add_booking';
+            $logs->save();
           
             $bookingdetails =  Useraddress::where('id',$bookings['addressid'])->get()->toarray();
             if(count($bookingdetails)>0){
@@ -874,6 +885,17 @@ class BookingController extends Controller
     //for cancel booking by uuid
     public function cancelbooking(Request $request)
     {
+
+        $validator = Validator::make($request->all(), [
+            'id'=>'required|numeric',
+            'reason'=>'nullable|string',
+        ]);
+
+        
+        if ($validator->fails()){
+            $message = $validator->messages()->all();
+            return response()->json(['message' => $message], 400);
+        }
         $user = Auth::user();
         $user_id = $user->id;
         $bookingid = $request->id;
@@ -882,7 +904,7 @@ class BookingController extends Controller
         $data = DB::table('bookings')
             ->join('booking_status', 'bookings.booking_status_id', '=', 'booking_status.id')
             ->join('booking_services', 'bookings.id', '=', 'booking_services.booking_id')
-            ->select('bookings.id as booking_id','bookings.booking_date','bookings.booking_time', 'booking_status.status as booking_status', 'booking_services.initial_number_of_hours as number_of_hours', 'booking_services.initial_service_cost as agreed_service_amount')
+            ->select('bookings.id as booking_id','bookings.booking_postcode','bookings.booking_date','bookings.booking_time', 'booking_status.status as booking_status', 'booking_services.initial_number_of_hours as number_of_hours', 'booking_services.initial_service_cost as agreed_service_amount')
             ->where('bookings.id', $bookingid)
             ->get();
         // print_r($data);exit;
@@ -905,9 +927,22 @@ class BookingController extends Controller
             $Bookingchange->booking_time = $booking_time;
             $Bookingchange->number_of_hours = $number_of_hours;
             $Bookingchange->agreed_service_amount = $agreed_service_amount;
-            $Bookingchange->comments = $request->get('comments');
+            $Bookingchange->comments = $request->get('reason');
             $Bookingchange->changed_by_user = $user_id;
             $Bookingchange->save();
+
+            
+            //insert into booking logs
+            $logs = new Bookingactivitylogs;
+            $logs->booking_id = $booking_id;
+            $logs->user_id = $user_id;
+            $logs->booking_date = $booking_date;
+            $logs->booking_time = $booking_time;
+            $logs->booking_postcode = $data[0]->booking_postcode;
+            $logs->action ='cancel';
+            $logs->detail = 'cancel_booking';
+            $logs->save();
+
 
             $lastinserteduuid = $Bookingchange->uuid;
 
@@ -921,9 +956,9 @@ class BookingController extends Controller
                // $success['message'] = 'Booking cancelled successfully.';
                 $success['cancelled_booking_uuid'] = $lastinserteduuid;
 
-                return response()->json(['success' => $success,'message' => 'Booking cancelled successfully.']);
+                return response()->json(['success' => $success,'message' => 'Booking cancelled successfully.'],200);
             } else{
-                return response()->json(['message' => 'Failed to cancel this booking.']);
+                return response()->json(['message' => 'Failed to cancel this booking.'],201);
             }
         }
     }

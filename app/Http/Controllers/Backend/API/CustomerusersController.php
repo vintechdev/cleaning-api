@@ -143,9 +143,9 @@ class CustomerusersController extends Controller
                 $users
                     ->join('provider_working_hours', 'users.id', '=', 'provider_working_hours.provider_id');
             }
-            $users->leftJoin('user_reviews', function( $join){
+           /*  $users->leftJoin('user_reviews', function( $join){
                 $join->on('user_reviews.user_review_for', 'users.id');
-            }); 
+            });  */
             $users->select(['users.*','p.avgrate','j.completed_jobs','r.*'])->where('role_id', 2);
             if ($request->has('providertype')){
                     $users->where('users.providertype',$request->has('providertype'));
@@ -172,15 +172,15 @@ class CustomerusersController extends Controller
                 $users->groupBy('users.id','p.avgrate','r.amount','r.type','r.is_default_service')->havingRaw("count(provider_service_maps.provider_id)=".count( $servicearr));
             }
 
-            if($request->has('pricerange')){
+            if($request->has('pricerange') && $request->get('pricerange')>0){
                 $users->where('r.amount','<=',$request->get('pricerange'));
             }
-            if($request->has('cleaningrange')){
+            if($request->has('cleaningrange') && $request->get('cleaningrange')>0){
                 $users->where(DB::raw('IFNULL(j.completed_jobs,0)'),'>=',$request->get('cleaningrange'));
             }
-            if($request->has('avgrate')){
-                $users->where('p.avgrate','>=',$request->get('avgrate'));
-            }
+             if($request->has('rating') && $request->get('rating')>0){
+                $users->where(DB::raw('IFNULL(p.avgrate,0)'),'>=',$request->get('rating'));
+            } 
             if($request->has('sorting')){
                 if($request->get('sorting')=='new'){
                     $column = 'users.created_at';

@@ -152,7 +152,7 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
     Route::patch('editservices/{uuid}', 'ServiceController@editservices')->name('api.Service.editservices')->middleware(['scope:customer']);
 
     Route::post('addaddress', 'UseraddressController@addaddress')->name('api.Useraddress.addaddress')->middleware(['scope:customer']);
-
+    Route::post('delete_address', 'UseraddressController@delete')->name('api.Useraddress.delete_address')->middleware(['scope:customer']);
     
 
     Route::patch('editaddress/{uuid}', 'UseraddressController@editaddress')->name('api.Useraddress.editaddress')->middleware(['scope:customer']);

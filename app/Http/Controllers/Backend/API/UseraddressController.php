@@ -225,6 +225,14 @@ class UseraddressController extends Controller
      */
     public function delete(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'id' => 'required',
+        ]);
+        
+        if($validator->fails()){
+            $message = $validator->messages()->all();
+            return response()->json(['message' => $message], 401);
+        }
         $useraddress = Useraddress::find($request->get('id'));
         $useraddress->delete();
         return response()->json(['no_content' => true], 200);

@@ -10,6 +10,7 @@ use App\Role;
 use App\Register;
 use App\RoleUser;
 use App\Customermetadata;
+use App\Http\Resources\LoginActivityLog;
 use Route;
 use DB;
 use Illuminate\Support\Str;
@@ -25,6 +26,7 @@ use PhpParser\Node\Expr\FuncCall;
 use Illuminate\Foundation\Auth\ThrottlesLogins;
 use Illuminate\Support\Facades\Lang;
 use Illuminate\Validation\ValidationException;
+use App\Loginactivitylogs;
 
 use Illuminate\Http\Response;
 
@@ -226,6 +228,33 @@ protected function sendLockoutResponse(Request $request)
     ])->status(Response::HTTP_TOO_MANY_REQUESTS); */
   
 }
+public function logoutlog(Request $request)
+{ 
+    $log = array(
+        'userid'=>$request->id,
+        'ip'=>$request->login_ip,
+        'user_agent'=>$request->user_agent,
+        'action'=>$request->action,
+        'detail'=>$request->detail);
+    $this->loginlog($log);
+    return response()->json(['saved'=>true]);
+    # code...
+}
+
+public function loginlog($data)
+{
+
+    $logs = new Loginactivitylogs();
+    $logs->user_id  = $data['userid']; 
+    $logs->ip = $data['ip'];
+    $logs->user_agent = $data['user_agent'];
+    $logs->action = $data['action'];
+    $logs->detail = $data['detail'];
+    $logs->save();
+    return true;
+
+    # code...
+}
     public function login(Request $request)
     {
         
@@ -243,6 +272,8 @@ protected function sendLockoutResponse(Request $request)
         }
         if(!Auth::attempt($credentials)){
             $this->incrementLoginAttempts($request);
+
+
             return response()->json([
                 'message' => 'Unauthorized'
             ], 401);
@@ -298,7 +329,12 @@ protected function sendLockoutResponse(Request $request)
                     $json['error'] = $json['message'];
                 }
 
-              
+                $log = array('userid'=>$user->id,
+                            'ip'=>$request->login_ip,
+                            'user_agent'=>$request->user_agent,
+                            'action'=>'login',
+                            'detail'=>'login');
+                $this->loginlog($log);
                 $this->clearLoginAttempts($request);
                 $Customermetadata = Customermetadata::where('user_id', $user->id)->first();
                 // dd($Customermetadata);
@@ -384,6 +420,8 @@ protected function sendLockoutResponse(Request $request)
      */
     public function logout(Request $request)
     {
+       
+
         Auth::logout(); // logs out the user 
         //Session::flush();
         $request->user()->token()->revoke();

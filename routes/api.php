@@ -85,6 +85,7 @@ Route::group([
     Route::post('register', 'AuthController@register');
     Route::post('userexist', 'AuthController@UserExist')->name('userexist');
     Route::post('updatetoken', 'AuthController@UpdateToken')->name('updatetoken');
+    Route::post('logoutlog', 'AuthController@logoutlog')->name('logoutlog');
     
 });
 // Route::post('/oauth/token', 'AuthController@login');

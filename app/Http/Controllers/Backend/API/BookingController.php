@@ -331,7 +331,7 @@ class BookingController extends Controller
                 $bookingaddress->booking_id = $last_insert_id;
                 $bookingaddress->address_line1 = $bookingdetails['address_line1'];
                 $bookingaddress->address_line2 = $bookingdetails['address_line2'];
-                $bookingaddress->subrub = $bookingdetails['subrub'];
+                $bookingaddress->subrub = $bookingdetails['suburb'];
                 $bookingaddress->state = $bookingdetails['state'];
                 $bookingaddress->postcode = $bookingdetails['postcode'];
                 $bookingaddress->save();

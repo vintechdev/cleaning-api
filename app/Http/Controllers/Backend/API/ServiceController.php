@@ -60,7 +60,7 @@ class ServiceController extends Controller
         
         if($validator->fails()){
             $message = $validator->messages()->all();
-            return response()->json(['message' => $message], 401);
+            return response()->json(['message' => $message], 201);
         }
         
         //  dd($validated);

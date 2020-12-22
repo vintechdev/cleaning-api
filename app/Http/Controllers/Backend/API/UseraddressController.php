@@ -112,21 +112,36 @@ class UseraddressController extends Controller
     //for add address
     public function addaddress(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'address_label'=>'nullable|string',
+            'address_line1' => 'required',
+            'address_line2' => 'required',
+            'suburb' => 'required',
+            'state' => 'required',
+            'postcode' => 'required|numeric'
+        ]);
+        
+        if($validator->fails()){
+            $message = $validator->messages()->all();
+            return response()->json(['message' => $message], 401);
+        }
         $user = Auth::user();
         $user_id = $user->id;
         $Useraddress = Useraddress::firstOrNew(['id' => $request->get('id')]);
         $Useraddress->id = $request->get('id');
+        $Useraddress->address_label = $request->get('address_label');
         $Useraddress->uuid = $request->get('uuid');
         $Useraddress->user_id = $user_id;
         $Useraddress->type = 'home';//$request->get('type');
         $Useraddress->address_line1 = $request->get('address_line1');
         $Useraddress->address_line2 = $request->get('address_line2');
-        $Useraddress->subrub = $request->get('subrub');
+        $Useraddress->suburb = $request->get('suburb');
         $Useraddress->state = $request->get('state');
         $Useraddress->postcode = $request->get('postcode');
         $Useraddress->save();
-        $responseCode = $request->get('id') ? 200 : 201;
-        return response()->json(['saved' => true], $responseCode);
+        $id = $Useraddress->id;
+      
+        return response()->json(['saved' => true,'id'=>$id], 200);
         
     }
 
@@ -135,9 +150,10 @@ class UseraddressController extends Controller
     {
 
         $validator = Validator::make($request->all(), [
+            'address_label'=>'nullable|string',
             'address_line1' => 'required',
             'address_line2' => 'required',
-            'subrub' => 'required',
+            'suburb' => 'required',
             'state' => 'required',
             'postcode' => 'required|numeric'
         ]);
@@ -172,9 +188,10 @@ class UseraddressController extends Controller
         // {
             $Useraddress = Useraddress::firstOrNew(['uuid' => $uuid]);
             // $Useraddress->type = $request->get('type');
+            $Useraddress->address_label = $request->get('address_label');
             $Useraddress->address_line1 = $request->get('address_line1');
             $Useraddress->address_line2 = $request->get('address_line2');
-            $Useraddress->subrub = $request->get('subrub');
+            $Useraddress->suburb = $request->get('suburb');
             $Useraddress->state = $request->get('state');
             $Useraddress->postcode = $request->get('postcode');
             $Useraddress->save();

@@ -14,7 +14,7 @@ use Route;
 use DB;
 use Illuminate\Support\Str;
 use App\PasswordReset;
-use Facade\FlareClient\Http\Response;
+//use Facade\FlareClient\Http\Response;
 use Illuminate\Support\Facades\Hash;
 // for email verify
 use Stripe;
@@ -22,10 +22,23 @@ use Validator;
 use Illuminate\Foundation\Auth\VerifiesEmails;
 use Illuminate\Auth\Events\Verified;
 use PhpParser\Node\Expr\FuncCall;
+use Illuminate\Foundation\Auth\ThrottlesLogins;
+use Illuminate\Support\Facades\Lang;
+use Illuminate\Validation\ValidationException;
+
+use Illuminate\Http\Response;
 
 class AuthController extends Controller
 {
     use VerifiesEmails;
+    use ThrottlesLogins;
+
+    public function __construct()
+    {
+       // $this->beforeFilter('throttle:2,1', ['only' =>['login']]);
+        
+    }
+    
     /**
      * Create user
      *
@@ -91,72 +104,51 @@ public function UpdateToken(Request $request)
     public function register(Request $request)
     {
       //  dd($request->all());
-      $count = User::where(['email' => $request->get('email')])->count();
-      if($count>0){
-            return response()->json(['error'=>'Email already Exists. Please try again with another Email.']);
-      }else{
+         $validator = Validator::make($request->all(), [
+            'first_name' => 'required',
+            'last_name'=>'required',
+            'password' => 'required',
+            'email'=>'required|email',
+            'mobile_number' => 'required|numeric'
+        ]);
+
+        
+        if ($validator->fails()){
+            $message = $validator->messages()->all();
+            return response()->json(['message' => $message], 400);
+        }
+        $count = User::where(['email' => $request->get('email')])->count();
+        if($count>0){
+                return response()->json(['error'=>'Email already Exists. Please try again with another Email.']);
+        }else{
 
      
-      try { 
-        // $User = new Register();
-        $User = User::firstOrNew(['id' => $request->get('id')]);
-        $User->id = $request->get('id');
-        $User->uuid = $request->get('uuid');
-        $User->first_name = $request->get('first_name');
-        $User->last_name = $request->get('last_name');
-        $User->email = $request->get('email');
-        $User->password = bcrypt($request->get('password'));
-        // $is_enduser = $request->get('is_enduser');
-        // $is_provider = $request->get('is_provider');
-        // $is_admin = $request->get('is_admin');
-        $User->mobile_number = $request->get('mobile_number');
-        $User->social_login = $request->get('social_login');
-        $User->remember_token = $request->get('remember_token');
-        $User->status = "email_verification";
-        $User->fcm_token = $request->get('fcm_token');
-        $roles = explode(',', $request->get('role'));
-        // dd($roles);
-        $User->save();
-        $success['saved'] = true;
-    } catch(\Illuminate\Database\QueryException $ex){ 
-        dd($ex->getMessage()); 
-        // Note any method of class PDOException can be called on $ex.
-      }
-        // $stripeCustomer = $User->createAsStripeCustomer();
-        // if($stripeCustomer->id){
-        //     $success['stripe'] = 'Customer created into stripe account successfully.';
-        // } else{
-        //     $success['stripe'] = 'Failed to create customer into stripe account.';
-        // }
-        // dd($stripeCustomer);
-
-//         $stripe = new \Stripe\StripeClient(
-//   'sk_test_tVIWBNGg2HuiCv7zfMr3Tiit'
-// );
-// $stripe->accounts->create([
-//   'type' => 'custom',
-//   'country' => 'US',
-//   'email' => 'jenny.rosen@example.com',
-//   'business_type' => 'individual',
-//   'capabilities' => [
-//     'card_payments' => ['requested' => true],
-//     'transfers' => ['requested' => true],
-//   ],
-// ]);
+        try { 
+            // $User = new Register();
+            $User = User::firstOrNew(['id' => $request->get('id')]);
+            $User->id = $request->get('id');
+            $User->uuid = $request->get('uuid');
+            $User->first_name = $request->get('first_name');
+            $User->last_name = $request->get('last_name');
+            $User->email = $request->get('email');
+            $User->password = bcrypt($request->get('password'));
+            $User->mobile_number = $request->get('mobile_number');
+            $User->social_login = $request->get('social_login');
+            $User->remember_token = $request->get('remember_token');
+            $User->status = "email_verification";
+            $User->fcm_token = $request->get('fcm_token');
+            $roles = explode(',', $request->get('role'));
+            // dd($roles);
+            $User->save();
+            $success['saved'] = true;
+        } catch(\Illuminate\Database\QueryException $ex){ 
+            dd($ex->getMessage()); 
+            // Note any method of class PDOException can be called on $ex.
+        }
+        
         $lastinsertid = $User->id;
 
-//         $stripe = new \Stripe\StripeClient(
-//   'sk_test_tVIWBNGg2HuiCv7zfMr3Tiit'
-// );
-/* Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
 
-  $account = Stripe\Account::create([
-    'country' => 'US',
-    'type' => 'custom',
-    'requested_capabilities' => ['card_payments', 'transfers'],
-  ]); */
-        
-       // print_r($lastinsertid);exit;
         // for email verify
         $User->sendApiEmailVerificationNotification();
         $success['message'] = 'Please confirm yourself by clicking on verify user button sent to you on your email';
@@ -179,12 +171,7 @@ public function UpdateToken(Request $request)
                 $user_id = $User->id;
                 //$stripeCustomer = $User->createAsStripeCustomer();
                 $Customermetadata = new Customermetadata();
-                /* $stripeCustomer = $Customermetadata->createAsStripeCustomer($options, $user_id);
-                if($stripeCustomer->id){
-                    $success['stripe'] = 'Customer created into stripe account successfully.';
-                } else{
-                    $success['stripe'] = 'Failed to create customer into stripe account.';
-                } */
+                
             }
 
             if($r == 'provider'){
@@ -196,11 +183,7 @@ public function UpdateToken(Request $request)
         
         // $email = $request->get('email');
 
-        // $data = ([
-        //  'first_name' => $request->get('first_name'),
-        //  'email' => $request->get('email'),
-        //  'mobile_number' => $request->get('mobile_number'),
-        //  ]);
+      
 
         // Mail::to($email)->send(new WelcomeMail($data));
     
@@ -219,15 +202,52 @@ public function UpdateToken(Request $request)
      * @return [string] token_type
      * @return [string] expires_at
      */
+    public function maxAttempts()
+{
+    //Lock out on 5th Login Attempt
+    return 2;
+}
+
+public function decayMinutes()
+{
+    //Lock for 1 minute
+    return 1;
+}
+
+protected function sendLockoutResponse(Request $request)
+{
+     $seconds = $this->limiter()->availableIn(
+        $this->throttleKey($request)
+    );
+    return response()->json([
+        'message' => Lang::get('auth.throttle', ['seconds' => $seconds])
+    ], 201);
+    /* throw ValidationException::withMessages([
+        'throttle' => [Lang::get('auth.throttle', ['seconds' => $seconds])],
+    ])->status(Response::HTTP_TOO_MANY_REQUESTS); */
+  
+}
     public function login(Request $request)
     {
         
+        
         $credentials = request(['email', 'password']);
 
-        if(!Auth::attempt($credentials))
+      //  dd($credentials);
+        //lockout event
+        if($this->hasTooManyLoginAttempts($request)){
+            
+            
+           
+            $this->fireLockoutEvent($request);
+            return $this->sendLockoutResponse($request);
+        }
+        if(!Auth::attempt($credentials)){
+            $this->incrementLoginAttempts($request);
             return response()->json([
                 'message' => 'Unauthorized'
             ], 401);
+        }
 
         $user = Auth::user();
         // print_r($user);exit;
@@ -279,6 +299,8 @@ public function UpdateToken(Request $request)
                     $json['error'] = $json['message'];
                 }
 
+              
+                $this->clearLoginAttempts($request);
                 $Customermetadata = Customermetadata::where('user_id', $user->id)->first();
                 // dd($Customermetadata);
 
@@ -381,6 +403,10 @@ public function UpdateToken(Request $request)
         
         return response()->json($request->user());
     }
+    public function username()
+{
+    return 'email';
+}
 
     /**
     * details api

@@ -80,6 +80,7 @@ Route::middleware(['auth:api'])->namespace('Backend\API')->prefix('v1/bookings')
 Route::group([
     'prefix' => 'auth'
 ], function () {
+  
     Route::post('login', 'AuthController@login');
     Route::post('register', 'AuthController@register');
     Route::post('userexist', 'AuthController@UserExist')->name('userexist');

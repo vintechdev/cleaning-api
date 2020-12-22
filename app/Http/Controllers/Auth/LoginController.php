@@ -28,6 +28,9 @@ class LoginController extends Controller
      */
     protected $redirectTo = RouteServiceProvider::HOME;
 
+    protected $maxAttempts = 5;
+    protected $decayMinutes = 1;
+
     /**
      * Create a new controller instance.
      *
@@ -37,4 +40,5 @@ class LoginController extends Controller
     {
         $this->middleware('guest')->except('logout');
     }
+    
 }

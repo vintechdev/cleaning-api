@@ -37,7 +37,7 @@ class Booking extends Model
      */
     public function getStartDate(): Carbon
     {
-        return Carbon::createFromFormat('Y-m-d H:i', $this->booking_date . ' ' . $this->booking_time);
+        return Carbon::createFromFormat('Y-m-d H:i:s', $this->booking_date . ' ' . $this->booking_time);
     }
 
     /**
@@ -106,11 +106,80 @@ class Booking extends Model
     }
 
     /**
+     * @return int
+     */
+    public function getUserId(): int
+    {
+        return $this->user_id;
+    }
+
+    /**
      * @param int $userId
      * @return Builder|null
      */
     public static function findByUserId(int $userId): ?Builder
     {
         return self::where(['user_id' => $userId]);
+    }
+
+    /**
+     * @return int
+     */
+    public function getStatus(): int
+    {
+        return $this->booking_status_id;
+    }
+
+    public function setStatus(int $status)
+    {
+        if (!Bookingstatus::isValidStatus($status)) {
+            throw new \Exception('Invalid status id received');
+        }
+        $this->booking_status_id = $status;
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getId(): int
+    {
+        return $this->id;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isRecurring(): bool
+    {
+        return $this->is_recurring == 1;
+    }
+
+    /**
+     * @param bool $recurring
+     * @return $this
+     */
+    public function setRecurring(bool $recurring)
+    {
+        $this->is_recurring = (int) $recurring;
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getPostCode(): int
+    {
+        return $this->booking_postcode;
+    }
+
+    /**
+     * @param int $postCode
+     * @return $this|int
+     */
+    public function setPostCode(int $postCode)
+    {
+        return $this->booking_postcode = $postCode;
+        return $this;
     }
 }

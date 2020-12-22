@@ -4,12 +4,17 @@ namespace App\Http\Controllers\Backend\API;
 
 use App\Bookingstatus;
 use App\Events\BookingCreated;
+use App\Exceptions\Booking\BookingManagerException;
+use App\Exceptions\Booking\InvalidBookingStatusActionException;
+use App\Exceptions\Booking\UnauthorizedAccessException;
 use App\Service;
 use App\Booking;
 use App\Bookingaddress;
 use App\Bookingquestion;
 use App\Bookingservice;
 use App\Customermetadata;
+use App\Services\Bookings\BookingStatusManager;
+use App\User;
 use App\Useraddress;
 use App\Payment;
 use App\Bookingchange;
@@ -214,8 +219,17 @@ class BookingController extends Controller
         $user_id=auth('api')->user()->id;
         $usercard = $striepusermetadata->findByUserId($user_id);
 
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'booking_date' => 'required|date_format:Y-m-d',
+                'booking_time' => 'required|date_format:H:i:s',
+                'booking_end_time' => 'required|date_format:H:i:s',
+            ]
+        );
+
         if (is_null($usercard) || is_null($usercard->stripe_payment_method_id)){
-            return response()->json(['saved' => false],402);
+            return response()->json(['saved' => false], 402);
         }
 
         $service = $request->service;
@@ -277,7 +291,7 @@ class BookingController extends Controller
                         $bookingrequestprovider = new Bookingrequestprovider;
                         $bookingrequestprovider->booking_id = $last_insert_id;
                         $bookingrequestprovider->provider_user_id = $provider['provider_user_id'];
-                        $bookingrequestprovider->status = $provider['booking_request_providers_status'];
+                        $bookingrequestprovider->setStatus(Bookingrequestprovider::STATUS_PENDING);
                         $bookingrequestprovider->provider_comment = $provider['provider_comment'];
                         $bookingrequestprovider->visible_to_enduser = $provider['visible_to_enduser'];
                         $bookingrequestprovider->save();
@@ -311,7 +325,7 @@ class BookingController extends Controller
                 }
 
                 // dispatch booking created event
-                event(new BookingCreated($booking));
+                event(new BookingCreated($booking, auth('api')->user()));
 
          }
 
@@ -325,6 +339,59 @@ class BookingController extends Controller
            
             return response()->json(['saved' => false]);
         }
+    }
+
+    /**
+     * @param Request $request
+     * @param Booking $booking
+     * @param BookingStatusManager $bookingManager
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function updateBooking(Request $request, Booking $booking, BookingStatusManager $bookingManager)
+    {
+        $validator = Validator::make($request->all(), [
+            'status' => 'required|in:cancelled,rejected,accepted,arrived,completed'
+        ]);
+
+        if($validator->fails()) {
+            $message = $validator->messages()->all();
+            return response()->json(['message' => $message], 401);
+        }
+
+        /** @var BookingStatusManager $bookingStatusManager */
+        $bookingStatusManager = app(BookingStatusManager::class);
+        /** @var User $user */
+        $user = auth('api')->user();
+        try {
+            switch ($request->get('status')) {
+                case 'cancelled':
+                    $bookingStatusManager->cancelBooking($booking, $user);
+                    break;
+                case 'rejected':
+                    $bookingStatusManager->rejectBooking($booking, $user);
+                    break;
+                case 'accepted':
+                    $bookingStatusManager->acceptBooking($booking, $user);
+                    break;
+                case 'arrived':
+                    $bookingStatusManager->arriveForBooking($booking, $user);
+                    break;
+                case 'completed':
+                    $bookingStatusManager->completeBooking($booking, $user);
+                    break;
+                default:
+                    return response()->json(['message' => 'Invalid action received'], 400);
+            }
+        } catch (UnauthorizedAccessException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 403);
+        } catch (InvalidBookingStatusActionException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 400);
+        } catch (\Exception $exception) {
+            throw $exception;
+            return response()->json(['message' => 'Something went wrong. Please contact administrator.'], 500);
+        }
+
+        return response()->json(['message' => 'Booking status updated'], 201);
     }
 
     // for customer get appointment

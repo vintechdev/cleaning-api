@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\Backend\API;
-
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 use App\Customeruser;
 use App\Http\Requests\Backend\CustomeruserRequest;
@@ -15,6 +15,8 @@ use Hash;
 use DB;
 use App\Userreview;
 use Session;
+use File;
+use Config;
 class CustomerusersController extends Controller
 {
     /**
@@ -90,10 +92,7 @@ class CustomerusersController extends Controller
         $Customerusers = $Customerusers->paginate(20);
         return (new CustomeruserCollection($Customerusers));
     }
-    public function getallprovider(Request $request)
-    {
-
-     
+    public function getallprovider(Request $request){
     //    $sub = DB::table('user_reviews')->select('user_review_for',DB::raw('AVG(rating) as ratings_average'))->groupBy('user_reviews.user_review_for');
        
         $rules = array(
@@ -109,14 +108,9 @@ class CustomerusersController extends Controller
         $params = $request->all();
         $validator = Validator::make($params, $rules);
         if ($validator->fails()){
-
             $message = $validator->messages()->all();
             return response()->json(['message' => $message], 400);
-
         }else{
-
-       
-
 
             $users = Customeruser::join('role_user', 'users.id', '=', 'role_user.user_id');
             $users->leftJoin( DB::raw("(SELECT AVG(user_reviews.rating) as avgrate, user_reviews.user_review_for FROM `user_reviews`  group by user_reviews.user_review_for) as p "), 'p.user_review_for', '=', 'users.id');
@@ -134,8 +128,7 @@ class CustomerusersController extends Controller
             } 
 
             if ($request->has('postcode')){
-                $users
-                ->join('provider_postcode_maps', 'users.id', '=', 'provider_postcode_maps.provider_id')
+                $users->join('provider_postcode_maps', 'users.id', '=', 'provider_postcode_maps.provider_id')
                 ->join('postcodes', 'provider_postcode_maps.postcode_id', '=', 'postcodes.id');
 
             }
@@ -298,40 +291,68 @@ class CustomerusersController extends Controller
     public function profile_update(Request $request)
     {
 
-        $validator = Validator::make($request->all(), [
+       
+         $validator = Validator::make($request->all(), [
             'first_name' => 'required',
             'last_name' => 'required',
             'email' => 'required|email',
             'mobile_number' => 'required|min:10|max:10',
         ]);
-        
+
         if($validator->fails()){
             $message = $validator->messages()->all();
             return response()->json(['message' => $message], 401);
         }
-
         $user = Auth::user();
         $user_id = $user->id;
         // print_r($user_id);exit;
 
-        $Customeruser = Customeruser::firstOrNew(['id' => $user_id]);
-        $Customeruser->first_name = $request->get('first_name');
-        $Customeruser->last_name = $request->get('last_name');
-        $Customeruser->email = $request->get('email');
-        $Customeruser->profilepic = $request->get('profilepic');
-        $Customeruser->mobile_number = $request->get('mobile_number');
-        $Customeruser->save();
+        $count = Customeruser::where('email',$request->get('email'))->where('id','!=', $user_id)->count();
+       
+        $image = $request->input('file_content'); // your base64 encoded
+        
+
+        if($count==0){
+
+            $Customeruser = Customeruser::firstOrNew(['id' => $user_id]);
+            $Customeruser->first_name = $request->get('first_name');
+            $Customeruser->last_name = $request->get('last_name');
+            $Customeruser->email = $request->get('email');
+           // $request->get('profilepic');
+
+            if($image!=''){
+                $type = $request->file_type;
+               
+                $image = str_replace('data:'.$type.';base64,', '', $image);
+              
+                $ext = str_replace('image/','',$type);
+                $image = str_replace(' ', '+', $image);
+                
+                $imageName = time().'.'. $ext ;
+                $destinationPath = \Config::get('const.PROFILE_PATH'); //public_path().'/images/upload/profile/';
+              
+                \File::put( $destinationPath . $imageName, base64_decode($image));
+                $Customeruser->profilepic =$imageName;
+            }
+            
+
+           
+            $Customeruser->mobile_number = $request->get('mobile_number');
+            $Customeruser->save();
+            $message ='Profile update successfully.';
+
+        }else{
+            $message ='Email already exists.';
+            $Customeruser = 'exist';
+        }
         
         $responseCode = $request->get('id') ? 200 : 201;
-        return response()->json(['saved' => $Customeruser], $responseCode);
+        return response()->json(['saved' => $Customeruser,'message'=>$message], $responseCode);
     }
 
     public function profile_view(Request $request)
     {
-        
-        
-        
-
+      
         $user = Auth::user();
         $user_id = $user->id;
         // print_r($user_id);exit;

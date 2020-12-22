@@ -2,6 +2,7 @@
 return [
     'currency' => '$',
     'FRONT_URL'=>'http://localhost/cleaningmarketplace/user-portal/public/',
+    'PROFILE_PATH'=>public_path().'/images/upload/profile/',
     'MAIL_MAILER'=>'smtp',
     'MAIL_HOST'=>'mail.spinelcreed.com',
     'MAIL_PORT'=>26,

@@ -209,13 +209,12 @@ class UseraddressController extends Controller
         // print_r($user_id);exit;
 
         $useraddresses = Useraddress::query();
-        
-		if ($user_id){
-			$useraddresses = $useraddresses->where('user_id', '=', $user_id);
+      	if ($user_id){
+			$useraddresses = $useraddresses->where('user_id', '=', $user_id)->orderBy('id','desc');
 		}
-		
-        $useraddresses = $useraddresses->paginate(20);
-        return (new UseraddressCollection($useraddresses));
+      
+        $address =  $useraddresses->get();
+        return response()->json(['data'=>$address]);
     }
 
     /**

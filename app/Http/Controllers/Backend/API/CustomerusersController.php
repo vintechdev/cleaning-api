@@ -188,17 +188,26 @@ class CustomerusersController extends Controller
                     $column = 'j.completed_jobs';
                     $dir = 'desc';
                 }
+              //  echo $column.'--'.$dir;die;
                 $users->orderBy($column,$dir);
             }
 
             $agency = clone $users;
-
+            $agencyprice = clone $users;
             $users->where('providertype','freelancer');
             $freelancer = $users->get()->toArray();
+          //  dd($freelancer);
             $agency = $agency->where('providertype','agency')->pluck('id')->toArray();//->toArray();
+           // dd($agency);
+           $highagencyprice = 0;
+            if(count($agency)>0){
+                
            
+                 $arr = $agencyprice->where('providertype','agency')->orderBy('r.amount','desc')->limit(1)->pluck('amount')->toArray();
+                 $highagencyprice = $arr[0];
+            }
             
-            return response()->json(['data' =>$freelancer,'agency'=>count($agency),'agencyids'=>$agency],200);
+            return response()->json(['data' =>$freelancer,'agency'=>count($agency),'agencyids'=>$agency,'highagencyprice'=>$highagencyprice],200);
     }
       
     }

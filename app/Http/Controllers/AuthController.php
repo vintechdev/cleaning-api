@@ -202,17 +202,16 @@ public function UpdateToken(Request $request)
      * @return [string] token_type
      * @return [string] expires_at
      */
-    public function maxAttempts()
-{
-    //Lock out on 5th Login Attempt
-    return 2;
-}
+    public function maxAttempts(){
+        //Lock out on 5th Login Attempt
+        return env('MAX_ATTEMPT');
+    }
 
-public function decayMinutes()
-{
-    //Lock for 1 minute
-    return 1;
-}
+    public function decayMinutes()
+    {
+        //Lock for 1 minute
+        return env('DECAY_TIME');
+    }
 
 protected function sendLockoutResponse(Request $request)
 {
@@ -221,7 +220,7 @@ protected function sendLockoutResponse(Request $request)
     );
     return response()->json([
         'message' => Lang::get('auth.throttle', ['seconds' => $seconds])
-    ], 201);
+    ], 423);
     /* throw ValidationException::withMessages([
         'throttle' => [Lang::get('auth.throttle', ['seconds' => $seconds])],
     ])->status(Response::HTTP_TOO_MANY_REQUESTS); */

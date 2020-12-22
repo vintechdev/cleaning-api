@@ -153,7 +153,7 @@ class CustomerusersController extends Controller
                 if ($request->get('day')) {
                     $users->where('provider_working_hours.working_days', 'LIKE', '%' . $request->get('day') . '%');
                 }
-                if ($request->has('start_time') && $request->has('end_time')){
+                if ($request->has('start_time')){
                     $users->whereTime('provider_working_hours.start_time', '<=', $request->get('start_time'));
                     // ->whereTime('provider_working_hours.end_time', '>=', $request->get('end_time'));
                 }

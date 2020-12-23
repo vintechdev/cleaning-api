@@ -385,7 +385,7 @@ class BookingController extends Controller
                 event(new BookingCreated($booking));
         }
             //send email notification to providers
-            //$this->SendBookingProviderEmail($last_insert_id,$user_id);
+            $this->SendBookingProviderEmail($last_insert_id,$user_id);
 
            
 

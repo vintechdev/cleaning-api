@@ -4,8 +4,9 @@ namespace App\Http\Controllers\Backend\API;
 
 use App\Bookingstatus;
 use App\Events\BookingCreated;
-use App\Exceptions\Booking\BookingManagerException;
+use App\Exceptions\Booking\BookingStatusChangeException;
 use App\Exceptions\Booking\InvalidBookingStatusActionException;
+use App\Exceptions\Booking\InvalidBookingStatusException;
 use App\Exceptions\Booking\UnauthorizedAccessException;
 use App\Service;
 use App\Booking;
@@ -13,7 +14,8 @@ use App\Bookingaddress;
 use App\Bookingquestion;
 use App\Bookingservice;
 use App\Customermetadata;
-use App\Services\Bookings\BookingStatusManager;
+use App\Services\Bookings\BookingStatusChangeContext;
+use App\Services\Bookings\BookingStatusChangeFactory;
 use App\User;
 use App\Useraddress;
 use App\Payment;
@@ -344,10 +346,9 @@ class BookingController extends Controller
     /**
      * @param Request $request
      * @param Booking $booking
-     * @param BookingStatusManager $bookingManager
      * @return \Illuminate\Http\JsonResponse
      */
-    public function updateBooking(Request $request, Booking $booking, BookingStatusManager $bookingManager)
+    public function updateBooking(Request $request, Booking $booking)
     {
         $validator = Validator::make($request->all(), [
             'status' => 'required|in:cancelled,rejected,accepted,arrived,completed'
@@ -358,36 +359,22 @@ class BookingController extends Controller
             return response()->json(['message' => $message], 401);
         }
 
-        /** @var BookingStatusManager $bookingStatusManager */
-        $bookingStatusManager = app(BookingStatusManager::class);
-        /** @var User $user */
-        $user = auth('api')->user();
+        /** @var BookingStatusChangeFactory $statusChangeFactory */
+        $statusChangeFactory = app(BookingStatusChangeFactory::class);
         try {
-            switch ($request->get('status')) {
-                case 'cancelled':
-                    $bookingStatusManager->cancelBooking($booking, $user);
-                    break;
-                case 'rejected':
-                    $bookingStatusManager->rejectBooking($booking, $user);
-                    break;
-                case 'accepted':
-                    $bookingStatusManager->acceptBooking($booking, $user);
-                    break;
-                case 'arrived':
-                    $bookingStatusManager->arriveForBooking($booking, $user);
-                    break;
-                case 'completed':
-                    $bookingStatusManager->completeBooking($booking, $user);
-                    break;
-                default:
-                    return response()->json(['message' => 'Invalid action received'], 400);
-            }
+            $strategy = $statusChangeFactory->create($request->get('status'));
+        } catch (InvalidBookingStatusException $exception) {
+            return response()->json(['message' => 'Invlaid booking status received'], 400);
+        }
+
+        $context = new BookingStatusChangeContext($strategy);
+        try {
+            $context->changeStatus($booking, auth('api')->user());
         } catch (UnauthorizedAccessException $exception) {
             return response()->json(['message' => $exception->getMessage()], 403);
         } catch (InvalidBookingStatusActionException $exception) {
             return response()->json(['message' => $exception->getMessage()], 400);
         } catch (\Exception $exception) {
-            throw $exception;
             return response()->json(['message' => 'Something went wrong. Please contact administrator.'], 500);
         }
 

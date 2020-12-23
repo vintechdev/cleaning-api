@@ -3,8 +3,7 @@
 namespace App\Policies;
 
 use App\Booking;
-use App\Bookingrequestprovider;
-use App\Services\Bookings\BookingStatusManager;
+use App\Services\Bookings\BookingVerificationService;
 use App\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
@@ -17,17 +16,17 @@ class BookingPolicy
     use HandlesAuthorization;
 
     /**
-     * @var BookingStatusManager
+     * @var BookingVerificationService
      */
-    private $bookingManager;
+    private $bookingVerificationService;
 
     /**
      * BookingPolicy constructor.
-     * @param BookingStatusManager $bookingManager
+     * @param BookingVerificationService $bookingVerificationService
      */
-    public function __construct(BookingStatusManager $bookingManager)
+    public function __construct(BookingVerificationService $bookingVerificationService)
     {
-        $this->bookingManager = $bookingManager;
+        $this->bookingVerificationService = $bookingVerificationService;
     }
 
     /**
@@ -39,6 +38,6 @@ class BookingPolicy
      */
     public function update(User $user, Booking $booking)
     {
-        return $this->bookingManager->canUserUpdateBooking($booking, $user);
+        return $this->bookingVerificationService->canUserUpdateBooking($booking, $user);
     }
 }

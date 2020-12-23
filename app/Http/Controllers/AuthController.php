@@ -420,11 +420,10 @@ public function loginlog($data)
      */
     public function logout(Request $request)
     {
-       
-
-        Auth::logout(); // logs out the user 
-        //Session::flush();
         $request->user()->token()->revoke();
+        //Auth::logout(); // logs out the user
+        //Session::flush();
+
         //$request->session()->forget('key');
        
         return response()->json(['message'=>'Successfully logged out'], 200);

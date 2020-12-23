@@ -11,7 +11,31 @@ use App\Services\Bookings\Interfaces\BookingStatusChangeStrategyInterface;
  */
 class BookingStatusChangeFactory
 {
-    public function create(string $status): BookingStatusChangeStrategyInterface
+    /**
+     * @param string $status
+     * @param array $parameters
+     * @return BookingStatusChangeStrategyInterface
+     */
+    public function create(string $status, array $parameters): BookingStatusChangeStrategyInterface
+    {
+        $strategy = $this->getStrategy($status);
+
+        if (isset($parameters['status_change_message'])) {
+            $strategy->setStatusChangeMessage($parameters['status_change_message']);
+        }
+
+        if ($strategy instanceof CompleteBookingStrategy && isset($parameters['services'])) {
+            $strategy->setServicesDetails($parameters['services']);
+        }
+
+        return $strategy;
+    }
+
+    /**
+     * @param string $status
+     * @return BookingStatusChangeStrategyInterface
+     */
+    private function getStrategy(string $status): BookingStatusChangeStrategyInterface
     {
         switch ($status) {
             case 'rejected':

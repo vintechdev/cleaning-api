@@ -193,6 +193,22 @@ class Booking extends Model
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function bookingServices()
+    {
+        return $this->hasMany(Bookingservice::class, 'booking_id', 'id');
+    }
+
+    /**
+     * @return Collection
+     */
+    public function getBookingServices(): Collection
+    {
+        return $this->bookingServices;
+    }
+
+    /**
      * @return Collection
      */
     public function getBookingNotes(): Collection

@@ -286,6 +286,7 @@ class BookingController extends Controller
                 $bookingaddress->save();
             }
 
+            //TODO: Validate if these are available providers. We can't pass any providers
             if(! empty($provider))
                 {
                     foreach($provider as $key => $provider)
@@ -301,6 +302,7 @@ class BookingController extends Controller
                     }
                 }
 
+                //TODO: Validate if they service belongs to the category chosen
                 if(count($service)>0){
                     foreach($service as $key => $serv){
                         $bookingservice = new Bookingservice;
@@ -352,7 +354,8 @@ class BookingController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'status' => 'required|in:cancelled,rejected,accepted,arrived,completed',
-            'status_change_message' => 'string'
+            'status_change_message' => 'string',
+            'services' => 'array'
         ]);
 
         if($validator->fails()) {
@@ -363,10 +366,7 @@ class BookingController extends Controller
         /** @var BookingStatusChangeFactory $statusChangeFactory */
         $statusChangeFactory = app(BookingStatusChangeFactory::class);
         try {
-            $strategy = $statusChangeFactory->create($request->get('status'));
-            if ($request->has('status_change_message')) {
-                $strategy->setStatusChangeMessage($request->get('status_change_message'));
-            }
+            $strategy = $statusChangeFactory->create($request->get('status'), $request->all());
         } catch (InvalidBookingStatusException $exception) {
             return response()->json(['message' => 'Invlaid booking status received'], 400);
         }

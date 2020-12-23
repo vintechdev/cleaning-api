@@ -30,6 +30,10 @@ class CancelBookingStrategy extends AbstractBookingStatusChangeStrategy
             throw new UnauthorizedAccessException('User does not have permission to cancel this booking');
         }
 
+        if (!$this->getStatusChangeMessage()) {
+            throw new InvalidBookingStatusActionException('Notes are required for cancelling booking');
+        }
+
         if (!$booking->setStatus(Bookingstatus::BOOKING_STATUS_CANCELLED)->save()) {
             throw new BookingStatusChangeException('Booking cancellation failed while saving');
         }

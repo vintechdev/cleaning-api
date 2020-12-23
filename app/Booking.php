@@ -176,11 +176,11 @@ class Booking extends Model
 
     /**
      * @param int $postCode
-     * @return $this|int
+     * @return $this
      */
-    public function setPostCode(int $postCode)
+    public function setPostCode(int $postCode): Booking
     {
-        return $this->booking_postcode = $postCode;
+        $this->booking_postcode = $postCode;
         return $this;
     }
 

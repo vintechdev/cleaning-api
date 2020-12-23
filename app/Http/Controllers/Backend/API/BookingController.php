@@ -351,7 +351,8 @@ class BookingController extends Controller
     public function updateBooking(Request $request, Booking $booking)
     {
         $validator = Validator::make($request->all(), [
-            'status' => 'required|in:cancelled,rejected,accepted,arrived,completed'
+            'status' => 'required|in:cancelled,rejected,accepted,arrived,completed',
+            'status_change_message' => 'string'
         ]);
 
         if($validator->fails()) {
@@ -363,6 +364,9 @@ class BookingController extends Controller
         $statusChangeFactory = app(BookingStatusChangeFactory::class);
         try {
             $strategy = $statusChangeFactory->create($request->get('status'));
+            if ($request->has('status_change_message')) {
+                $strategy->setStatusChangeMessage($request->get('status_change_message'));
+            }
         } catch (InvalidBookingStatusException $exception) {
             return response()->json(['message' => 'Invlaid booking status received'], 400);
         }

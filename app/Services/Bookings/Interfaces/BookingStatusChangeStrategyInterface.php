@@ -23,4 +23,10 @@ interface BookingStatusChangeStrategyInterface
      * @throws BookingStatusChangeException
      */
     public function changeStatus(Booking $booking, User $user): bool;
+
+    /**
+     * @param string $message
+     * @return $this
+     */
+    public function setStatusChangeMessage(string $message);
 }

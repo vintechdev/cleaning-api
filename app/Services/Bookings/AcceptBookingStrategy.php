@@ -3,6 +3,7 @@
 namespace App\Services\Bookings;
 
 use App\Booking;
+use App\BookingNote;
 use App\Bookingrequestprovider;
 use App\Bookingstatus;
 use App\Events\BookingStatusChanged;
@@ -25,7 +26,7 @@ class AcceptBookingStrategy extends AbstractBookingStatusChangeStrategy
      * @throws UnauthorizedAccessException
      * @throws BookingStatusChangeException
      */
-    public function changeStatus(Booking $booking, User $user): bool
+    protected function handleStatusChange(Booking $booking, User $user): bool
     {
         if (!$this->canUserAcceptBooking($booking, $user)) {
             throw new UnauthorizedAccessException('User does not have permission to accept booking');

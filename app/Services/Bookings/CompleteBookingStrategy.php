@@ -25,7 +25,7 @@ class CompleteBookingStrategy extends AbstractBookingStatusChangeStrategy
      * @throws UnauthorizedAccessException
      * @throws BookingStatusChangeException
      */
-    public function changeStatus(Booking $booking, User $user): bool
+    protected function handleStatusChange(Booking $booking, User $user): bool
     {
         if (!$this->canUserCompleteBooking($booking, $user)) {
             throw new UnauthorizedAccessException('User does not have access to this function');

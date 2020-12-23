@@ -3,6 +3,10 @@
 namespace App\Services\Bookings;
 
 use App\Booking;
+use App\BookingNote;
+use App\Exceptions\Booking\BookingStatusChangeException;
+use App\Exceptions\Booking\InvalidBookingStatusActionException;
+use App\Exceptions\Booking\UnauthorizedAccessException;
 use App\Repository\BookingReqestProviderRepository;
 use App\Services\Bookings\Interfaces\BookingStatusChangeStrategyInterface;
 use App\User;
@@ -24,6 +28,21 @@ abstract class AbstractBookingStatusChangeStrategy implements BookingStatusChang
     protected $bookingVerificationService;
 
     /**
+     * @var string
+     */
+    protected $statusChangeMessage;
+
+    /**
+     * @param Booking $booking
+     * @param User $user
+     * @return bool
+     * @throws InvalidBookingStatusActionException
+     * @throws UnauthorizedAccessException
+     * @throws BookingStatusChangeException
+     */
+    abstract protected function handleStatusChange(Booking $booking, User $user): bool;
+
+    /**
      * AbstractBookingStatusChangeStrategy constructor.
      * @param BookingReqestProviderRepository $bookingReqestProviderRepository
      * @param BookingVerificationService $bookingVerificationService
@@ -34,6 +53,32 @@ abstract class AbstractBookingStatusChangeStrategy implements BookingStatusChang
     ) {
         $this->bookingRequestProviderRepo = $bookingReqestProviderRepository;
         $this->bookingVerificationService = $bookingVerificationService;
+    }
+
+    /**
+     * @param Booking $booking
+     * @param User $user
+     * @return bool
+     * @throws InvalidBookingStatusActionException
+     * @throws UnauthorizedAccessException
+     * @throws BookingStatusChangeException
+     */
+    public function changeStatus(Booking $booking, User $user): bool
+    {
+        if (!$this->handleStatusChange($booking, $user)) {
+            return false;
+        }
+
+        if ($this->getStatusChangeMessage()) {
+            $bookingNote = new BookingNote();
+            $bookingNote->setBookingStatusId($booking->getStatus())
+                ->setUserId($user->getId())
+                ->setNotes($this->getStatusChangeMessage());
+
+            $booking->saveBookingNotes([$bookingNote]);
+        }
+
+        return true;
     }
 
     /**
@@ -64,5 +109,23 @@ abstract class AbstractBookingStatusChangeStrategy implements BookingStatusChang
     protected function isUserAChosenBookingProvider(User $user, Booking $booking): bool
     {
         return $this->bookingVerificationService->isUserAChosenBookingProvider($user, $booking);
+    }
+
+    /**
+     * @param string $message
+     * @return AbstractBookingStatusChangeStrategy
+     */
+    public function setStatusChangeMessage(string $message)
+    {
+        $this->statusChangeMessage = $message;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getStatusChangeMessage(): string
+    {
+        return $this->statusChangeMessage;
     }
 }

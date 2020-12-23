@@ -5,7 +5,6 @@ namespace App\Services\Bookings;
 use App\Booking;
 use App\Bookingrequestprovider;
 use App\Bookingstatus;
-use App\Events\BookingStatusChanged;
 use App\Exceptions\Booking\BookingStatusChangeException;
 use App\Exceptions\Booking\InvalidBookingStatusActionException;
 use App\Exceptions\Booking\UnauthorizedAccessException;
@@ -25,7 +24,7 @@ class CancelBookingStrategy extends AbstractBookingStatusChangeStrategy
      * @throws UnauthorizedAccessException
      * @throws BookingStatusChangeException
      */
-    public function changeStatus(Booking $booking, User $user): bool
+    protected function handleStatusChange(Booking $booking, User $user): bool
     {
         if (!$this->canUserCancelBooking($booking, $user)) {
             throw new UnauthorizedAccessException('User does not have permission to cancel this booking');

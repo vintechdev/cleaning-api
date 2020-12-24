@@ -1,9 +1,12 @@
 <?php 
 namespace App\Repository;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Bookingrequestprovider;
+
+//TODO: Make this extend AbstractBaseRepository
 class BookingReqestProviderRepository{
 
     public function getBookingProvidersCount($bookingid){
@@ -32,6 +35,52 @@ class BookingReqestProviderRepository{
 
   }
 
-}
+    /**
+     * @param int $bookingId
+     * @return Collection
+     */
+    public function getAllByBookingId(int $bookingId): Collection
+    {
+        return Bookingrequestprovider::where(['booking_id' => $bookingId])->get();
+    }
 
-?>
+    /**
+     * @param int $bookingId
+     * @param int $providerId
+     * @return Bookingrequestprovider|null
+     */
+    public function getByBookingAndProviderId(int $bookingId, int $providerId): ?Bookingrequestprovider
+    {
+        /** @var Collection $requestProviders */
+        $requestProviders = Bookingrequestprovider::where(['booking_id' => $bookingId, 'provider_user_id' => $providerId]);
+        if (!$requestProviders->count()) {
+            return null;
+        }
+
+        return $requestProviders->first();
+    }
+
+    /**
+     * @param array $statuses
+     * @param int $bookingId
+     * @return Collection
+     */
+    public function getAllWithStatuses(array $statuses, int $bookingId): Collection
+    {
+        return Bookingrequestprovider::where(
+            [
+                ['booking_id', '=', $bookingId]
+            ]
+        )->whereIn('status', $statuses)->get();
+    }
+
+    /**
+     * @param array $statuses
+     * @param int $bookingId
+     * @return int
+     */
+    public function getCountWithStatuses(array $statuses, int $bookingId): int
+    {
+        return $this->getAllWithStatuses($statuses, $bookingId)->count();
+    }
+}

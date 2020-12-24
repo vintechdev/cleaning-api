@@ -110,6 +110,11 @@ Route::middleware(['auth:api', 'role:admin'])->namespace('Backend\API')->prefix(
 
 });
 Route::post('getdashboard', 'HomeController@dashboard')->name('api.home.getdashboard')->middleware(['auth:api']);
+Route::middleware(['auth:api'])->namespace('Backend\API')->prefix('v1')->group(function () {
+    Route::patch('bookings/{booking}', 'BookingController@updateBooking')->name('update_booking')->middleware(['can:update,booking']);
+    Route::patch('bookings/{booking}/dates/{recurring_date}', 'BookingController@updateRecurredBooking')->name('update_recurred_booking')->middleware(['can:update,booking']);
+});
+
 Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->prefix('v1/customer')->group(function () {
     // Customeruser Route
 
@@ -124,7 +129,6 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
 
     Route::post('promocode_discount', 'BookingController@promocode_discount')->name('promocode_discount')->middleware(['scope:customer']);
     Route::post('bookings', 'BookingController@add_booking')->name('add_booking')->middleware(['scope:customer']);
-    Route::put('bookings', 'BookingController@updateBooking')->name('update_booking')->middleware(['scope:customer']);
 
     Route::get('/bookings/{bookingId}/times', 'BookingTimesController@listBookingTimesByBookingId')
         ->name('api.bookings.times')

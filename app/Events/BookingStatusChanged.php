@@ -8,10 +8,10 @@ use App\User;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * Class BookingCreated
+ * Class BookingStatusChanged
  * @package App\Events
  */
-class BookingCreated implements BookingEvent
+class BookingStatusChanged implements BookingEvent
 {
     use SerializesModels;
 
@@ -26,14 +26,26 @@ class BookingCreated implements BookingEvent
     private $user;
 
     /**
-     * BookingCreated constructor.
+     * @var int
+     */
+    private $oldStatus;
+
+    /**
+     * @var int
+     */
+    private $newStatus;
+
+    /**
+     * BookingStatusChanged constructor.
      * @param Booking $booking
      * @param User $user
      */
-    public function __construct(Booking $booking, User $user)
+    public function __construct(Booking $booking, User $user, int $oldStatus, int $newStatus)
     {
         $this->booking = $booking;
         $this->user = $user;
+        $this->oldStatus = $oldStatus;
+        $this->newStatus = $newStatus;
     }
 
     /**
@@ -50,5 +62,21 @@ class BookingCreated implements BookingEvent
     public function getUser(): User
     {
         return $this->user;
+    }
+
+    /**
+     * @return int
+     */
+    public function getOldStatus(): int
+    {
+        return $this->oldStatus;
+    }
+
+    /**
+     * @return int
+     */
+    public function getNewStatus(): int
+    {
+        return $this->newStatus;
     }
 }

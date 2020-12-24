@@ -14,6 +14,8 @@ class Booking extends JsonResource
      */
     public function toArray($request)
     {
+        $this->getBookingServices()->toArray();
+        $this->getBookingNotes()->toArray();
         return parent::toArray($request);
     }
 }

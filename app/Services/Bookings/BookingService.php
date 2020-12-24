@@ -51,7 +51,7 @@ class BookingService
      * TODO: This function is moved from controller. Needs refactoring
      * @param array $bookingAttributes
      * @param User $user
-     * @param Booking|null $parentId
+     * @param Booking|null $parent
      * @return Booking
      * @throws NoSavedCardException
      */
@@ -141,7 +141,7 @@ class BookingService
                             if (!$parent) {
                                 $bookingrequestprovider->setStatus(Bookingrequestprovider::STATUS_PENDING);
                             } else {
-                                $bookingrequestprovider->setStatus(isset($provider['status']) ? : Bookingrequestprovider::STATUS_PENDING);
+                                $bookingrequestprovider->setStatus((isset($provider['status']) ? $provider['status'] : Bookingrequestprovider::STATUS_PENDING));
                             }
 
                             $bookingrequestprovider->provider_comment = $provider['provider_comment'];
@@ -150,7 +150,6 @@ class BookingService
                                 DB::rollBack();
                                 throw new BookingCreationException('Booking request provider could not be saved');
                             }
-
                         }
                     }
 

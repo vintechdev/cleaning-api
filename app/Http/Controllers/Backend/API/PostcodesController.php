@@ -9,7 +9,7 @@ use App\Http\Requests\Backend\PostcodeRequest;
 use App\Http\Resources\PostcodeCollection;
 use App\Http\Resources\Postcode as PostcodeResource;
 use App\Http\Controllers\Controller;
-
+use DB;
 class PostcodesController extends Controller
 {
    // use CanUpload;
@@ -44,16 +44,16 @@ class PostcodesController extends Controller
      */
     
 
-    public function search_provider_postcode(request $request){
+    public function search_postcode(request $request){
 
     $postcode = Postcode::query();
       if ($request->has('postcode')) {
 
-            $postcode = postcode::select('postcode','suburb','state')->where('postcode', 'LIKE', '%'.$request->get('postcode').'%')->orwhere('suburb', 'LIKE', '%'.$request->get('postcode').'%');
+            $postcode = postcode::select('id as value',DB::raw("CONCAT(postcode,', ',suburb,', ',state) AS text"))->where('postcode', 'LIKE', '%'.$request->get('postcode').'%')->orwhere('suburb', 'LIKE', '%'.$request->get('postcode').'%');
         }
 
-        $postcode = $postcode->paginate(10);
-        return (new ServicecategoryCollection($postcode));
+        $postcode = $postcode->get();
+        return response()->json(['success'=>true,'data'=>$postcode],200);
 
     }
 

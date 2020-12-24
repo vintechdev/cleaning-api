@@ -58,12 +58,40 @@ class Bookingservice extends Model
         if (is_null($this->getFinalNumberOfHours())) {
             return $this;
         }
-        $this->final_service_cost = $this->getService()->getTotalCost($this->getFinalNumberOfHours());
+        $this->final_service_cost = $this
+            ->getService()
+            ->getTotalCost($this->getFinalNumberOfHours(), $this->getInitialServiceCost());
         return $this;
+    }
+
+    /**
+     * @return int|null
+     */
+    public function getInitialServiceCost(): ?int
+    {
+        return $this->initial_service_cost;
     }
 
     public function getFinalTotal(): ?int
     {
         return $this->final_service_cost;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isRemoved(): bool
+    {
+        return $this->is_removed;
+    }
+
+    /**
+     * @param bool $isRemoved
+     * @return $this
+     */
+    public function setRemoved(bool $isRemoved): Bookingservice
+    {
+        $this->is_removed = $isRemoved;
+        return $this;
     }
 }

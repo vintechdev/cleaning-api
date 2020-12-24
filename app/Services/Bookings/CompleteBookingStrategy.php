@@ -6,11 +6,9 @@ use App\Booking;
 use App\Bookingrequestprovider;
 use App\Bookingservice;
 use App\Bookingstatus;
-use App\Events\BookingStatusChanged;
 use App\Exceptions\Booking\BookingStatusChangeException;
 use App\Exceptions\Booking\InvalidBookingStatusActionException;
 use App\Exceptions\Booking\UnauthorizedAccessException;
-use App\Service;
 use App\User;
 
 /**
@@ -99,33 +97,25 @@ class CompleteBookingStrategy extends AbstractBookingStatusChangeStrategy
             throw new InvalidBookingStatusActionException('No services found for this booking');
         }
 
-        $updatedBookingServices = [];
-        foreach ($this->services as $service) {
-            $bookingServices = $booking->getBookingServices();
-            $found = false;
-            /** @var Bookingservice $bookingService */
-            foreach ($bookingServices as $bookingService) {
-                if ($bookingService->getService()->getId() != $service['service_id']) {
-                    continue;
-                }
+        $bookingServices = $booking->getBookingServices();
 
-                $found = true;
+        $serviceIds = array_map(function ($service) {
+            return $service['service_id'];
+        }, $this->services);
+
+        $services = array_combine($serviceIds, $this->services);
+
+        /** @var Bookingservice $bookingService */
+        foreach ($bookingServices as $bookingService) {
+            if (in_array($bookingService->getService()->getId(), $serviceIds)) {
+                $service = $services[$bookingService->getService()->getId()];
                 if (isset($service['final_number_of_hours'])) {
                     $bookingService->setFinalNumberOfHours($service['final_number_of_hours']);
-                    $bookingService->updateFinalTotal();
-                    $updatedBookingServices[] = $bookingService;
+                    $bookingService->updateFinalTotal()->save();
                 }
-                break;
+                continue;
             }
-
-            if (!$found) {
-                throw new InvalidBookingStatusActionException('Service id ' . $service['service_id'] . ' does not belong to this booking');
-            }
-        }
-
-        // Save booking services if no exceptions are thrown.
-        foreach ($updatedBookingServices as $bookingService) {
-            $bookingService->save();
+            $bookingService->setRemoved(true)->save();
         }
 
         return true;

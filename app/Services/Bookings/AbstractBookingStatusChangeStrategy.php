@@ -10,6 +10,7 @@ use App\Exceptions\Booking\UnauthorizedAccessException;
 use App\Repository\BookingReqestProviderRepository;
 use App\Services\Bookings\Interfaces\BookingStatusChangeStrategyInterface;
 use App\User;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Class AbstractBookingStatusChangeStrategy
@@ -65,19 +66,27 @@ abstract class AbstractBookingStatusChangeStrategy implements BookingStatusChang
      */
     public function changeStatus(Booking $booking, User $user): bool
     {
-        if (!$this->handleStatusChange($booking, $user)) {
-            return false;
+        DB::beginTransaction();
+        try {
+            if (!$this->handleStatusChange($booking, $user)) {
+                DB::rollBack();
+                return false;
+            }
+
+            if ($this->getStatusChangeMessage()) {
+                $bookingNote = new BookingNote();
+                $bookingNote->setBookingStatusId($booking->getStatus())
+                    ->setUserId($user->getId())
+                    ->setNotes($this->getStatusChangeMessage());
+
+                $booking->saveBookingNotes([$bookingNote]);
+            }
+        } catch (\Exception $exception) {
+            DB::rollBack();
+            throw $exception;
         }
 
-        if ($this->getStatusChangeMessage()) {
-            $bookingNote = new BookingNote();
-            $bookingNote->setBookingStatusId($booking->getStatus())
-                ->setUserId($user->getId())
-                ->setNotes($this->getStatusChangeMessage());
-
-            $booking->saveBookingNotes([$bookingNote]);
-        }
-
+        DB::commit();
         return true;
     }
 

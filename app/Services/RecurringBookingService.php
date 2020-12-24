@@ -112,23 +112,4 @@ class RecurringBookingService
     {
         return $this->recurringBookingRepo->findAllByEvent($event);
     }
-
-    /**
-     * @param Event $event
-     * @return Collection
-     */
-    public function findAllPastByEvent(Event $event): Collection
-    {
-        return $this->recurringBookingRepo->findAllPastByEvent($event);
-    }
-
-    /**
-     * @param Event $event
-     * @param Carbon $date
-     * @return Collection
-     */
-    public function findAllByEventBetweenDates(Event $event, Carbon $minDate, Carbon $maxDate): Collection
-    {
-        return $this->recurringBookingRepo->findAllByEventBetweenDates($event, $date);
-    }
 }

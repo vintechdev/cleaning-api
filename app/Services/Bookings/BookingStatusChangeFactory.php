@@ -15,6 +15,7 @@ class BookingStatusChangeFactory
      * @param string $status
      * @param array $parameters
      * @return BookingStatusChangeStrategyInterface
+     * @throws InvalidBookingStatusException
      */
     public function create(string $status, array $parameters): BookingStatusChangeStrategyInterface
     {
@@ -34,6 +35,7 @@ class BookingStatusChangeFactory
     /**
      * @param string $status
      * @return BookingStatusChangeStrategyInterface
+     * @throws InvalidBookingStatusException
      */
     private function getStrategy(string $status): BookingStatusChangeStrategyInterface
     {

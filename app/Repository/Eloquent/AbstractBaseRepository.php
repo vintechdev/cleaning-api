@@ -32,13 +32,13 @@ abstract class AbstractBaseRepository implements EloquentRepositoryInterface
      */
     public function create(array $attributes): Model
     {
+        $model = $this->getModel();
         if (
-            $this
-            ->getModel()
+            $model
             ->setRawAttributes($attributes)
             ->save()
         ) {
-            return $this->getModel();
+            return $model;
         }
 
         throw new ModelPersistenceException('Unable to create entry to db');

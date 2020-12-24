@@ -5,6 +5,7 @@ namespace App\Services\Bookings\Interfaces;
 use App\Booking;
 use App\Exceptions\Booking\BookingStatusChangeException;
 use App\Exceptions\Booking\InvalidBookingStatusActionException;
+use App\Exceptions\Booking\RecurringBookingStatusChangeException;
 use App\Exceptions\Booking\UnauthorizedAccessException;
 use App\User;
 
@@ -21,6 +22,7 @@ interface BookingStatusChangeStrategyInterface
      * @throws InvalidBookingStatusActionException
      * @throws UnauthorizedAccessException
      * @throws BookingStatusChangeException
+     * @throws RecurringBookingStatusChangeException
      */
     public function changeStatus(Booking $booking, User $user): bool;
 

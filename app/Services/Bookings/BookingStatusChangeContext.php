@@ -6,6 +6,7 @@ use App\Booking;
 use App\Events\BookingStatusChanged;
 use App\Exceptions\Booking\BookingStatusChangeException;
 use App\Exceptions\Booking\InvalidBookingStatusActionException;
+use App\Exceptions\Booking\RecurringBookingStatusChangeException;
 use App\Exceptions\Booking\UnauthorizedAccessException;
 use App\Services\Bookings\Interfaces\BookingStatusChangeStrategyInterface;
 use App\User;
@@ -37,6 +38,7 @@ class BookingStatusChangeContext
      * @throws InvalidBookingStatusActionException
      * @throws UnauthorizedAccessException
      * @throws BookingStatusChangeException
+     * @throws RecurringBookingStatusChangeException
      */
     public function changeStatus(Booking $booking, User $user): bool
     {

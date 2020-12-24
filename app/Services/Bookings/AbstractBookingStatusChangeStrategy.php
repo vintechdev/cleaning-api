@@ -6,6 +6,7 @@ use App\Booking;
 use App\BookingNote;
 use App\Exceptions\Booking\BookingStatusChangeException;
 use App\Exceptions\Booking\InvalidBookingStatusActionException;
+use App\Exceptions\Booking\RecurringBookingStatusChangeException;
 use App\Exceptions\Booking\UnauthorizedAccessException;
 use App\Repository\BookingReqestProviderRepository;
 use App\Services\Bookings\Interfaces\BookingStatusChangeStrategyInterface;
@@ -63,9 +64,16 @@ abstract class AbstractBookingStatusChangeStrategy implements BookingStatusChang
      * @throws InvalidBookingStatusActionException
      * @throws UnauthorizedAccessException
      * @throws BookingStatusChangeException
+     * @throws RecurringBookingStatusChangeException
      */
     public function changeStatus(Booking $booking, User $user): bool
     {
+        if ($booking->isRecurring()) {
+            throw new RecurringBookingStatusChangeException(
+                'Booking status for recurring booking can not be changed. Individual recurring bookings need to be updated.'
+            );
+        }
+
         DB::beginTransaction();
         try {
             if (!$this->handleStatusChange($booking, $user)) {

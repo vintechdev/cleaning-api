@@ -34,6 +34,10 @@ class CancelBookingStrategy extends AbstractBookingStatusChangeStrategy
             throw new InvalidBookingStatusActionException('Notes are required for cancelling booking');
         }
 
+        if ($booking->getStatus() === Bookingstatus::BOOKING_STATUS_CANCELLED) {
+            throw new InvalidBookingStatusActionException('Booking is already cancelled');
+        }
+
         if (!$booking->setStatus(Bookingstatus::BOOKING_STATUS_CANCELLED)->save()) {
             throw new BookingStatusChangeException('Booking cancellation failed while saving');
         }

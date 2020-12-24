@@ -42,6 +42,17 @@ class Booking extends Model
     }
 
     /**
+     * @param Carbon $startDateTime
+     * @return Booking
+     */
+    public function setStartDateTime(Carbon $startDateTime): Booking
+    {
+        $this->booking_date = $startDateTime->format('Y-m-d');
+        $this->booking_time = $startDateTime->format('H:i:s');
+        return $this;
+    }
+
+    /**
      * @return Carbon|null
      */
     public function getEndDate(): ?Carbon
@@ -153,10 +164,13 @@ class Booking extends Model
      */
     public function isRecurring(): bool
     {
-        return $this->is_recurring == 1;
+        return !$this->isChildBooking() &&
+            !is_null($this->getEvent()) &&
+            $this->getPlanType() !== Plan::ONCEOFF;
     }
 
     /**
+     * TODO: Get rid of this field as there are other ways to identify recurring booking.
      * @param bool $recurring
      * @return $this
      */
@@ -225,5 +239,13 @@ class Booking extends Model
         /** @var BookingNote $bookingNote */
         $this->bookingNotes()->saveMany($bookingNotes);
         return true;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isChildBooking(): bool
+    {
+        return !is_null($this->parent_booking_id);
     }
 }

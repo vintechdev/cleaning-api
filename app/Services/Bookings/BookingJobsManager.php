@@ -4,7 +4,6 @@ namespace App\Services\Bookings;
 
 use App\Booking;
 use App\Repository\BookingReqestProviderRepository;
-use App\Repository\BookingServiceRepository;
 use App\Services\BookingEventService;
 use App\User;
 use Carbon\Carbon;
@@ -26,24 +25,16 @@ class BookingJobsManager
     private $bookingRequestProviderRepo;
 
     /**
-     * @var BookingServiceRepository
-     */
-    private $bookingServiceRepo;
-
-    /**
      * BookingManager constructor.
      * @param BookingEventService $bookingEventService
      * @param BookingReqestProviderRepository $bookingReqestProviderRepository
-     * @param BookingServiceRepository $bookingServiceRepository
      */
     public function __construct(
         BookingEventService $bookingEventService,
-        BookingReqestProviderRepository $bookingReqestProviderRepository,
-        BookingServiceRepository $bookingServiceRepository
+        BookingReqestProviderRepository $bookingReqestProviderRepository
     ) {
         $this->bookingEventService = $bookingEventService;
         $this->bookingRequestProviderRepo = $bookingReqestProviderRepository;
-        $this->bookingServiceRepo = $bookingServiceRepository;
     }
 
     /**
@@ -77,8 +68,7 @@ class BookingJobsManager
         /** @var Booking $booking */
         foreach ($bookings->get() as $booking) {
             $providerDetails = $this->getProviderDetails($booking);
-            $serviceInfo = $this->bookingServiceRepo->getServiceDetails($booking->id);
-
+            $serviceInfo = $booking->getBookingServices();
             $toDate = clone $fromDate;
             $dates = $this
                 ->bookingEventService
@@ -87,7 +77,7 @@ class BookingJobsManager
             foreach ($dates as $date) {
                 $date['booking_id'] = $booking->id;
                 $date['providers'] = $providerDetails;
-                $date['service'] = $serviceInfo ? $serviceInfo[0] : [];
+                $date['service'] = $serviceInfo;
                 $bookingDates[] = $date;
             }
         }

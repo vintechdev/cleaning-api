@@ -36,6 +36,7 @@ class BookingEventService
      * BookingEventService constructor.
      * @param RecurringPatternFactory $recurringPatternFactory
      * @param EventService $eventService
+     * @param RecurringPatternService $service
      */
     public function __construct(
         RecurringPatternFactory $recurringPatternFactory,
@@ -49,10 +50,13 @@ class BookingEventService
 
     /**
      * @param Booking $booking
-     * @return Event
+     * @return Event|null
      */
-    public function createBookingEvent(Booking $booking): Event
+    public function createBookingEvent(Booking $booking): ?Event
     {
+        if ($booking->getPlanType() === Plan::ONCEOFF) {
+            return null;
+        }
         $event = new Event();
         $event->start_date = $booking->getStartDate();
         $event->end_date = $booking->getEndDate();

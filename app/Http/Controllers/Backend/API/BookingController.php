@@ -4,24 +4,32 @@ namespace App\Http\Controllers\Backend\API;
 
 use App\Bookingstatus;
 use App\Events\BookingCreated;
+use App\Exceptions\Booking\BookingCreationException;
 use App\Exceptions\Booking\BookingStatusChangeException;
 use App\Exceptions\Booking\InvalidBookingStatusActionException;
 use App\Exceptions\Booking\InvalidBookingStatusException;
+use App\Exceptions\Booking\RecurringBookingStatusChangeException;
 use App\Exceptions\Booking\UnauthorizedAccessException;
+use App\Exceptions\NoSavedCardException;
+use App\Exceptions\RecurringBookingCreationException;
 use App\Service;
 use App\Booking;
 use App\Bookingaddress;
 use App\Bookingquestion;
 use App\Bookingservice;
 use App\Customermetadata;
+use App\Services\Bookings\BookingService as BookingServiceAlias;
 use App\Services\Bookings\BookingStatusChangeContext;
 use App\Services\Bookings\BookingStatusChangeFactory;
+use App\Services\Bookings\Builder\BookingStatusChangeContextBuilder;
+use App\Services\RecurringBookingService;
 use App\User;
 use App\Useraddress;
 use App\Payment;
 use App\Bookingchange;
 use App\OnceBookingAlternateDate;
 use App\Bookingrequestprovider;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Http\Requests\Backend\BookingRequest;
 use App\Http\Resources\BookingCollection;
@@ -215,142 +223,32 @@ class BookingController extends Controller
     }
 
 
-     public function add_booking(Request $request,StripeUserMetadataRepository $striepusermetadata)
+     public function add_booking(Request $request, BookingServiceAlias $bookingService)
     {
+        $user=auth('api')->user();
 
-        $user_id=auth('api')->user()->id;
-        $usercard = $striepusermetadata->findByUserId($user_id);
-
-        $validator = Validator::make(
-            $request->all(),
-            [
-                'booking_date' => 'required|date_format:Y-m-d',
-                'booking_time' => 'required|date_format:H:i:s',
-                'booking_end_time' => 'required|date_format:H:i:s',
-            ]
-        );
-
-        if (is_null($usercard) || is_null($usercard->stripe_payment_method_id)){
-            return response()->json(['saved' => false], 402);
+        try {
+            $booking = $bookingService->createBooking($request->all(), $user);
+        } catch (\InvalidArgumentException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 400);
+        } catch (NoSavedCardException $exception) {
+            return response()->json(['message' => 'No saved card found.'], 402);
+        } catch (BookingCreationException $exception) {
+            return response()->json(['message' => 'Something went wrong. Please contact administrator.'], 500);
+        } catch (\Exception $exception) {
+            return response()->json(['message' => 'Something went wrong. Please contact administrator.'], 500);
         }
 
-        $service = $request->service;
-        $bookings = $request->bookings;
-        $question = $request->question;
-        $provider = $request->provider;
-      // echo "<pre>";print_r($request->bookings);exit;
- 
-        if(count($bookings)>0)
-        {
-          //  $booking=array('booking' => $booking);
-          //  $booking=json_encode($booking);
-         //  print_r(json_encode($booking));exit;
-
-         
-
-         //----------New changes ----------------//
-         $booking = new Booking;
-        
-         $booking->user_id = $user_id;
-         $booking->booking_status_id = Bookingstatus::BOOKING_STATUS_PENDING;
-         // $booking->description = ($bookings['description'])?$bookings['description']:'';
-         $booking->is_recurring =(isset($bookings['is_recurring']))?$bookings['is_recurring']:0;
-         $booking->parent_event_id = '';//$bookings['parent_event_id'];
-         $booking->booking_date = $bookings['booking_date'];
-         $booking->booking_time = $bookings['booking_time'];
-         $booking->booking_end_time = $bookings['booking_end_time'];
-         $booking->booking_postcode = $bookings['booking_postcode'];
-         $booking->booking_provider_type = $bookings['booking_provider_type'];
-         $booking->plan_type = $bookings['plan_type'];
-         $booking->promocode = $bookings['promocode'];
-         $booking->total_cost = $bookings['total_cost'];
-         $booking->discount = $bookings['discount'];
-         $booking->final_cost = $bookings['final_cost'];
-         $booking->final_hours = $bookings['final_hours'];
-         $booking->is_flexible = $bookings['is_flexible'];
-
-         if($booking->save()){
-            $last_insert_id=DB::getPdo()->lastInsertId();
-          
-          
-            $bookingdetails =  Useraddress::where('id',$bookings['addressid'])->get()->toarray();
-            if(count($bookingdetails)>0){
-                $bookingdetails = $bookingdetails[0];
-                $bookingaddress = new Bookingaddress;
-                $bookingaddress->booking_id = $last_insert_id;
-                $bookingaddress->address_line1 = $bookingdetails['address_line1'];
-                $bookingaddress->address_line2 = $bookingdetails['address_line2'];
-                $bookingaddress->subrub = $bookingdetails['subrub'];
-                $bookingaddress->state = $bookingdetails['state'];
-                $bookingaddress->postcode = $bookingdetails['postcode'];
-                $bookingaddress->save();
-            }
-
-            //TODO: Validate if these are available providers. We can't pass any providers
-            if(! empty($provider))
-                {
-                    foreach($provider as $key => $provider)
-                    {
-                        $bookingrequestprovider = new Bookingrequestprovider;
-                        $bookingrequestprovider->booking_id = $last_insert_id;
-                        $bookingrequestprovider->provider_user_id = $provider['provider_user_id'];
-                        $bookingrequestprovider->setStatus(Bookingrequestprovider::STATUS_PENDING);
-                        $bookingrequestprovider->provider_comment = $provider['provider_comment'];
-                        $bookingrequestprovider->visible_to_enduser = $provider['visible_to_enduser'];
-                        $bookingrequestprovider->save();
-
-                    }
-                }
-
-                //TODO: Validate if they service belongs to the category chosen
-                if(count($service)>0){
-                    foreach($service as $key => $serv){
-                        $bookingservice = new Bookingservice;
-                        $bookingservice->booking_id = $last_insert_id;
-                        $bookingservice->service_id = $serv['service_id'];
-                        $bookingservice->initial_number_of_hours = $serv['initial_number_of_hours'];
-                        $bookingservice->initial_service_cost = $serv['initial_service_cost'];
-                        $bookingservice->final_number_of_hours = $serv['final_number_of_hours'];
-                        $bookingservice->final_service_cost = $serv['final_service_cost'];
-                        $bookingservice->save();
-                    }
-                }
-
-                if(! empty($question)){
-                    foreach($question as $key => $quest){
-                        if($quest['answer']!=null){
-                            $bookingquestion = new Bookingquestion;
-                            $bookingquestion->booking_id = $last_insert_id;
-                            $bookingquestion->service_question_id = $quest['service_question_id'];
-                            $bookingquestion->answer = $quest['answer'];
-                            $bookingquestion->save();
-                        }
-                    }
-                }
-
-                // dispatch booking created event
-                event(new BookingCreated($booking, auth('api')->user()));
-
-         }
-
-         
-            //$User->sendApiEmailVerificationNotification();
-            $success['message'] = 'Please confirm yourself by clicking on verify user button sent to you on your email';
-            $responseCode = $request->get('id') ? 200 : 201;
-            return response()->json(['saved' => true,'bookingdetailid'=> $last_insert_id], $responseCode);
-        }
-        else{
-           
-            return response()->json(['saved' => false]);
-        }
+        return response()->json(['booking' => new BookingResource($booking)], 201);
     }
 
     /**
      * @param Request $request
      * @param Booking $booking
+     * @param BookingStatusChangeContextBuilder $contextBuilder
      * @return \Illuminate\Http\JsonResponse
      */
-    public function updateBooking(Request $request, Booking $booking)
+    public function updateBooking(Request $request, Booking $booking, BookingStatusChangeContextBuilder $contextBuilder)
     {
         $validator = Validator::make($request->all(), [
             'status' => 'required|in:cancelled,rejected,accepted,arrived,completed',
@@ -363,15 +261,47 @@ class BookingController extends Controller
             return response()->json(['message' => $message], 401);
         }
 
-        /** @var BookingStatusChangeFactory $statusChangeFactory */
-        $statusChangeFactory = app(BookingStatusChangeFactory::class);
+        return $this->changeBookingStatus($request, $booking, $contextBuilder);
+    }
+
+    public function updateRecurredBooking(
+        Request $request,
+        Booking $booking,
+        string $date,
+        RecurringBookingService $recurringBookingService,
+        BookingStatusChangeContextBuilder $contextBuilder
+    ) {
+        $validator = Validator::make($request->all(), [
+            'status' => 'required|in:cancelled,rejected,accepted,arrived,completed',
+            'status_change_message' => 'string',
+            'services' => 'array'
+        ]);
+
+        if($validator->fails()) {
+            $message = $validator->messages()->all();
+            return response()->json(['message' => $message], 401);
+        }
         try {
-            $strategy = $statusChangeFactory->create($request->get('status'), $request->all());
+            $recurringBooking = $recurringBookingService->findOrCreateRecurringBooking($booking, Carbon::createFromFormat('dmYHis', $date));
+        } catch (\InvalidArgumentException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 400);
+        } catch (RecurringBookingCreationException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 400);
+        } catch (\Exception $exception) {
+            return response()->json(['message' => 'Something went wrong. Please contact administrtor.'], 500);
+        }
+
+        return $this->changeBookingStatus($request, $recurringBooking->getBooking(), $contextBuilder);
+    }
+
+    private function changeBookingStatus(Request $request, Booking $booking, BookingStatusChangeContextBuilder $contextBuilder)
+    {
+        try {
+            $context = $contextBuilder->buildContext($request->get('status'), $request->all());
         } catch (InvalidBookingStatusException $exception) {
             return response()->json(['message' => 'Invlaid booking status received'], 400);
         }
 
-        $context = new BookingStatusChangeContext($strategy);
         try {
             $context->changeStatus($booking, auth('api')->user());
         } catch (UnauthorizedAccessException $exception) {
@@ -380,6 +310,8 @@ class BookingController extends Controller
             return response()->json(['message' => $exception->getMessage()], 403);
         } catch (InvalidBookingStatusException $exception) {
             return response()->json(['message' => $exception->getMessage()], 400);
+        } catch (RecurringBookingStatusChangeException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 403);
         } catch (\Exception $exception) {
             return response()->json(['message' => 'Something went wrong. Please contact administrator.'], 500);
         }

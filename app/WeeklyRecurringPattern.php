@@ -51,7 +51,7 @@ class WeeklyRecurringPattern extends Model implements RecurringDateInterface
             return $startDateTime;
         }
 
-        $totalDays = $date->diffInDays($startDateTime);
+        $totalDays = $date->floatDiffInDays($startDateTime);
         $weeks = $totalDays/7;
         $separationCount = $this->getRecurringPattern()->getSeparationCount();
         if ($weeks < $separationCount) {
@@ -62,6 +62,17 @@ class WeeklyRecurringPattern extends Model implements RecurringDateInterface
         $startDateTime->modify('+' . $weeksToAdd . ' weeks');
 
         return $this->getNextRecurringDate($startDateTime);
+    }
+
+    /**
+     * @param Carbon $date
+     * @return bool
+     */
+    public function isValidRecurringDate(Carbon $date): bool
+    {
+        /** @var Carbon $nextValidDate */
+        $nextValidDate = $this->getNextValidDateRelativeTo($date);
+        return ($nextValidDate->floatDiffInDays($date) / 7) == $this->getRecurringPattern()->getSeparationCount();
     }
 
     /**

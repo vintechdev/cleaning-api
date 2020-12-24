@@ -138,6 +138,11 @@ class BookingEventService
         return $this->removeAllDatesWhichHasRecurringBooking($booking, $dates);
     }
 
+    /**
+     * @param Booking $booking
+     * @param array $dates
+     * @return array
+     */
     private function removeAllDatesWhichHasRecurringBooking(Booking $booking, array $dates)
     {
         if (!$dates) {

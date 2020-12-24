@@ -93,6 +93,12 @@ class BookingJobsManager
         return $this->getAllJobsBetweenDates($user, $fromDate, $toDate);
     }
 
+    /**
+     * @param User $user
+     * @param Carbon $from
+     * @param Carbon $to
+     * @return array
+     */
     private function getAllJobsBetweenDates(User $user, Carbon $from, Carbon $to): array
     {
         $jobs = [];
@@ -113,6 +119,7 @@ class BookingJobsManager
             foreach ($dates as $date) {
                 $date['booking_id'] = $booking->id;
                 $date['is_recurring'] = $booking->isRecurring();
+                $date['booking_status'] = $booking->getStatus();
                 $date['providers'] = $providerDetails;
                 $date['service'] = $serviceInfo;
                 $bookingDates[] = $date;

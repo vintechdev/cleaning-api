@@ -64,7 +64,7 @@ class RecurringBooking extends Model
      */
     public function getRecurredDate(): Carbon
     {
-        return Carbon::createFromFormat('Y-m-d H:i:s', $this->recurred_date);
+        return Carbon::createFromFormat('Y-m-d H:i:s', $this->recurred_timestamp);
     }
 
     /**

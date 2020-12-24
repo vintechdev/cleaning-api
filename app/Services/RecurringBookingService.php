@@ -3,12 +3,14 @@
 namespace App\Services;
 
 use App\Booking;
+use App\Event;
 use App\Exceptions\NoSavedCardException;
 use App\Exceptions\RecurringBookingCreationException;
 use App\RecurringBooking;
 use App\Repository\Eloquent\RecurringBookingRepository;
 use App\Services\Bookings\BookingService;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
 
 /**
  * Class RecurringBookingService
@@ -90,5 +92,43 @@ class RecurringBookingService
 
         $recurringBooking->getBooking()->setStartDateTime($date)->save();
         return $recurringBooking;
+    }
+
+    /**
+     * @param Event $event
+     * @param array $dates
+     * @return Collection
+     */
+    public function findByEventAndDates(Event $event, array $dates): Collection
+    {
+        return $this->recurringBookingRepo->findAllByEventAndDates($event, $dates);
+    }
+
+    /**
+     * @param Event $event
+     * @return Collection
+     */
+    public function findByEvent(Event $event): Collection
+    {
+        return $this->recurringBookingRepo->findAllByEvent($event);
+    }
+
+    /**
+     * @param Event $event
+     * @return Collection
+     */
+    public function findAllPastByEvent(Event $event): Collection
+    {
+        return $this->recurringBookingRepo->findAllPastByEvent($event);
+    }
+
+    /**
+     * @param Event $event
+     * @param Carbon $date
+     * @return Collection
+     */
+    public function findAllByEventBetweenDates(Event $event, Carbon $minDate, Carbon $maxDate): Collection
+    {
+        return $this->recurringBookingRepo->findAllByEventBetweenDates($event, $date);
     }
 }

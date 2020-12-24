@@ -45,8 +45,18 @@ class BookingJobsManager
      */
     public function getAllPastBookingJobsByUser(User $user, Carbon $fromDate = null, $totalPeriod = 30): array
     {
-        // TODO: fetch past booking dates from the table that stores the past dates
-        return [];
+        if (!$fromDate) {
+            $fromDate = (Carbon::now())->subDays($totalPeriod);
+        } else if ($fromDate->greaterThanOrEqualTo(Carbon::now())) {
+            return [];
+        }
+
+        $toDate = (clone $fromDate)->addDays($totalPeriod);
+        if ($toDate->greaterThanOrEqualTo(Carbon::now())) {
+            $toDate = Carbon::now();
+        }
+
+        return $this->getAllJobsBetweenDates($user, $fromDate, $toDate);
     }
 
     /**
@@ -57,7 +67,34 @@ class BookingJobsManager
      */
     public function getAllFutureBookingJobsByUser(User $user, Carbon $fromDate = null, $totalPeriod = 30): array
     {
-        $fromDate = $fromDate ?: Carbon::now();
+        $fromDate = ($fromDate && $fromDate->greaterThanOrEqualTo(Carbon::now())) ? $fromDate : Carbon::now();
+        $toDate = (clone $fromDate)->addDays($totalPeriod);
+        return $this->getAllJobsBetweenDates($user, $fromDate, $toDate);
+    }
+
+    /**
+     * @param User $user
+     * @param Carbon|null $fromDate
+     * @param int $totalPeriod in days
+     * @return array
+     */
+    public function getAllBookingJobsByUser(User $user, Carbon $fromDate = null, $totalPeriod = 30): array
+    {
+        $bookings = Booking::findByUserId($user->id);
+
+        if (!$bookings->count()) {
+            return [];
+        }
+
+        if (!$fromDate) {
+            $fromDate = Carbon::now();
+        }
+        $toDate = (clone $fromDate)->addDays($totalPeriod);
+        return $this->getAllJobsBetweenDates($user, $fromDate, $toDate);
+    }
+
+    private function getAllJobsBetweenDates(User $user, Carbon $from, Carbon $to): array
+    {
         $jobs = [];
         $bookings = Booking::findByUserId($user->id);
         if (!$bookings->count()) {
@@ -69,13 +106,13 @@ class BookingJobsManager
         foreach ($bookings->get() as $booking) {
             $providerDetails = $this->getProviderDetails($booking);
             $serviceInfo = $booking->getBookingServices();
-            $toDate = clone $fromDate;
             $dates = $this
                 ->bookingEventService
-                ->listBookingDatesBetween($booking, $fromDate, $toDate->addDays($totalPeriod));
+                ->listBookingDatesBetween($booking, $from, $to);
 
             foreach ($dates as $date) {
                 $date['booking_id'] = $booking->id;
+                $date['is_recurring'] = $booking->isRecurring();
                 $date['providers'] = $providerDetails;
                 $date['service'] = $serviceInfo;
                 $bookingDates[] = $date;
@@ -98,26 +135,6 @@ class BookingJobsManager
         });
 
         return $bookingDates;
-    }
-
-    /**
-     * @param User $user
-     * @param Carbon|null $fromDate
-     * @param int $totalPeriod in days
-     * @return array
-     */
-    public function getAllBookingJobsByUser(User $user, Carbon $fromDate = null, $totalPeriod = 30): array
-    {
-        $bookings = Booking::findByUserId($user->id);
-
-        if (!$bookings->count()) {
-            return [];
-        }
-
-        $pastDates = $this->getAllPastBookingJobsByUser($user, $fromDate, $totalPeriod);
-        $futureDates = $this->getAllFutureBookingJobsByUser($user, $fromDate, $totalPeriod);
-
-        return array_merge($pastDates, $futureDates);
     }
 
     /**

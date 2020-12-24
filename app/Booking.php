@@ -28,7 +28,7 @@ class Booking extends Model
         return $this->belongsTo(Event::class);
     }
 
-    public function getEvent(): Event
+    public function getEvent(): ?Event
     {
         return $this->event;
     }
@@ -62,7 +62,7 @@ class Booking extends Model
             return self::getFinalBookingDateTime($dateTime, $this->getFinalHours());
         }
 
-        return  null;
+        return null;
     }
 
     /**

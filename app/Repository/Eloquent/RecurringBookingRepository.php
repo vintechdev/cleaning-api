@@ -5,6 +5,7 @@ namespace App\Repository\Eloquent;
 use App\Event;
 use App\RecurringBooking;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
 
 /**
  * Class RecurringBookingRepository
@@ -28,5 +29,51 @@ class RecurringBookingRepository extends AbstractBaseRepository
     public function findByEventAndDate(Event $event, Carbon $date): ?RecurringBooking
     {
         return RecurringBooking::findByEventIdAndRecurredDate($event->getId(), $date);
+    }
+
+    /**
+     * @param Event $event
+     * @param array $dates
+     * @return Collection
+     */
+    public function findAllByEventAndDates(Event $event, array $dates): Collection
+    {
+        $modifiedDates = array_map(function (Carbon $date) {
+            return $date->format('Y-m-d H:i:s');
+        }, $dates);
+
+        return RecurringBooking::where(['event_id' => $event->getId()])->whereIn('recurred_timestamp', $modifiedDates)->get();
+    }
+
+    /**
+     * @param Event $event
+     * @return Collection
+     */
+    public function findAllByEvent(Event $event): Collection
+    {
+        return RecurringBooking::where(['event_id' => $event->getId()])->get();
+    }
+
+    /**
+     * @param Event $event
+     * @return Collection
+     */
+    public function findAllPastByEvent(Event $event): Collection
+    {
+        return RecurringBooking::where(['event_id' => $event->getId()])
+            ->where(['recurring_timestamp', '<', Carbon::now()->format('Y-m-d H:i:s')])->get();
+    }
+
+    /**
+     * @param Event $event
+     * @param Carbon $date
+     * @return Collection
+     */
+    public function findAllByEventBetweenDates(Event $event, Carbon $minDate, Carbon $maxDate): Collection
+    {
+        return RecurringBooking::where(['event_id' => $event->getId()])
+            ->where(['recurring_timestamp', '>=', $minDate->format('Y-m-d H:i:s')])
+            ->where(['recurring_timestamp', '<=', $maxDate->format('Y-m-d H:i:s')])
+            ->get();
     }
 }

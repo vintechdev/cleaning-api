@@ -49,4 +49,12 @@ class Service extends Model
 
         return $cost * $hours;
     }
+
+    /**
+     * @return bool
+     */
+    public function isDefaultService(): bool
+    {
+        return $this->is_default_service;
+    }
 }

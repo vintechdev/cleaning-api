@@ -90,11 +90,11 @@ class CompleteBookingStrategy extends AbstractBookingStatusChangeStrategy
     private function updateBookingServices(Booking $booking): bool
     {
         if (!$this->services) {
-            return true;
+            throw new InvalidBookingStatusActionException('Can not change status for booking without providing any services details');
         }
 
         if (!$booking->getBookingServices()->count()) {
-            throw new InvalidBookingStatusActionException('No services found for this booking');
+            throw new BookingStatusChangeException('No services found for this booking');
         }
 
         $bookingServices = $booking->getBookingServices();
@@ -110,10 +110,13 @@ class CompleteBookingStrategy extends AbstractBookingStatusChangeStrategy
             if (in_array($bookingService->getService()->getId(), $serviceIds)) {
                 $service = $services[$bookingService->getService()->getId()];
                 if (isset($service['final_number_of_hours'])) {
-                    $bookingService->setFinalNumberOfHours($service['final_number_of_hours']);
-                    $bookingService->updateFinalTotal()->save();
+                    $bookingService->setFinalNumberOfHours($service['final_number_of_hours'])->save();
                 }
                 continue;
+            }
+
+            if ($bookingService->getService()->isDefaultService()) {
+                throw new InvalidBookingStatusActionException('Default service can not be removed');
             }
             $bookingService->setRemoved(true)->save();
         }

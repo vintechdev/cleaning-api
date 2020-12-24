@@ -39,7 +39,7 @@ class Bookingservice extends Model
     public function setFinalNumberOfHours(int $hours): Bookingservice
     {
         $this->final_number_of_hours = $hours;
-        return $this;
+        return $this->updateFinalTotal();
     }
 
     /**

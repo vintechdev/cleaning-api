@@ -4,6 +4,7 @@ namespace App;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -27,7 +28,7 @@ class Booking extends Model
         return $this->belongsTo(Event::class);
     }
 
-    public function getEvent(): Event
+    public function getEvent(): ?Event
     {
         return $this->event;
     }
@@ -37,7 +38,18 @@ class Booking extends Model
      */
     public function getStartDate(): Carbon
     {
-        return Carbon::createFromFormat('Y-m-d H:i', $this->booking_date . ' ' . $this->booking_time);
+        return Carbon::createFromFormat('Y-m-d H:i:s', $this->booking_date . ' ' . $this->booking_time);
+    }
+
+    /**
+     * @param Carbon $startDateTime
+     * @return Booking
+     */
+    public function setStartDateTime(Carbon $startDateTime): Booking
+    {
+        $this->booking_date = $startDateTime->format('Y-m-d');
+        $this->booking_time = $startDateTime->format('H:i:s');
+        return $this;
     }
 
     /**
@@ -50,7 +62,7 @@ class Booking extends Model
             return self::getFinalBookingDateTime($dateTime, $this->getFinalHours());
         }
 
-        return  null;
+        return null;
     }
 
     /**
@@ -106,11 +118,134 @@ class Booking extends Model
     }
 
     /**
+     * @return int
+     */
+    public function getUserId(): int
+    {
+        return $this->user_id;
+    }
+
+    /**
      * @param int $userId
      * @return Builder|null
      */
     public static function findByUserId(int $userId): ?Builder
     {
         return self::where(['user_id' => $userId]);
+    }
+
+    /**
+     * @return int
+     */
+    public function getStatus(): int
+    {
+        return $this->booking_status_id;
+    }
+
+    public function setStatus(int $status)
+    {
+        if (!Bookingstatus::isValidStatus($status)) {
+            throw new \Exception('Invalid status id received');
+        }
+        $this->booking_status_id = $status;
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getId(): int
+    {
+        return $this->id;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isRecurring(): bool
+    {
+        return !$this->isChildBooking() &&
+            !is_null($this->getEvent()) &&
+            $this->getPlanType() !== Plan::ONCEOFF;
+    }
+
+    /**
+     * TODO: Get rid of this field as there are other ways to identify recurring booking.
+     * @param bool $recurring
+     * @return $this
+     */
+    public function setRecurring(bool $recurring)
+    {
+        $this->is_recurring = (int) $recurring;
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getPostCode(): int
+    {
+        return $this->booking_postcode;
+    }
+
+    /**
+     * @param int $postCode
+     * @return $this
+     */
+    public function setPostCode(int $postCode): Booking
+    {
+        $this->booking_postcode = $postCode;
+        return $this;
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function bookingNotes()
+    {
+        return $this->hasMany(BookingNote::class, 'booking_id', 'id');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function bookingServices()
+    {
+        return $this->hasMany(Bookingservice::class, 'booking_id', 'id');
+    }
+
+    /**
+     * @return Collection
+     */
+    public function getBookingServices(): Collection
+    {
+        return $this->bookingServices;
+    }
+
+    /**
+     * @return Collection
+     */
+    public function getBookingNotes(): Collection
+    {
+        return $this->bookingNotes;
+    }
+
+    /**
+     * @param array $bookingNotes
+     * @return bool
+     */
+    public function saveBookingNotes(array $bookingNotes): bool
+    {
+        /** @var BookingNote $bookingNote */
+        $this->bookingNotes()->saveMany($bookingNotes);
+        return true;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isChildBooking(): bool
+    {
+        return !is_null($this->parent_booking_id);
     }
 }

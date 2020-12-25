@@ -68,12 +68,6 @@ abstract class AbstractBookingStatusChangeStrategy implements BookingStatusChang
      */
     public function changeStatus(Booking $booking, User $user): bool
     {
-        if ($booking->isRecurring()) {
-            throw new RecurringBookingStatusChangeException(
-                'Booking status for recurring booking can not be changed. Individual recurring bookings need to be updated.'
-            );
-        }
-
         DB::beginTransaction();
         try {
             if (!$this->handleStatusChange($booking, $user)) {
@@ -81,14 +75,7 @@ abstract class AbstractBookingStatusChangeStrategy implements BookingStatusChang
                 return false;
             }
 
-            if ($this->getStatusChangeMessage()) {
-                $bookingNote = new BookingNote();
-                $bookingNote->setBookingStatusId($booking->getStatus())
-                    ->setUserId($user->getId())
-                    ->setNotes($this->getStatusChangeMessage());
-
-                $booking->saveBookingNotes([$bookingNote]);
-            }
+            $this->saveBookingNote($booking, $user);
         } catch (\Exception $exception) {
             DB::rollBack();
             throw $exception;
@@ -116,6 +103,22 @@ abstract class AbstractBookingStatusChangeStrategy implements BookingStatusChang
     protected function isUserTheBookingCustomer(User $user, Booking $booking): bool
     {
         return $this->bookingVerificationService->isUserTheBookingCustomer($user, $booking);
+    }
+
+    /**
+     * @param Booking $booking
+     * @param User $user
+     */
+    protected function saveBookingNote(Booking $booking, User $user)
+    {
+        if ($this->getStatusChangeMessage()) {
+            $bookingNote = new BookingNote();
+            $bookingNote->setBookingStatusId($booking->getStatus())
+                ->setUserId($user->getId())
+                ->setNotes($this->getStatusChangeMessage());
+
+            $booking->saveBookingNotes([$bookingNote]);
+        }
     }
 
     /**

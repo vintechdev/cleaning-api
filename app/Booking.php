@@ -248,4 +248,24 @@ class Booking extends Model
     {
         return !is_null($this->parent_booking_id);
     }
+
+    /**
+     * @return bool
+     */
+    public function isRecurredBooking(): bool
+    {
+        return $this->isChildBooking();
+    }
+
+    /**
+     * @return Booking |null
+     */
+    public function getParentBooking(): ?Booking
+    {
+        if (!$this->parent_booking_id) {
+            return null;
+        }
+
+        return Booking::find($this->parent_booking_id);
+    }
 }

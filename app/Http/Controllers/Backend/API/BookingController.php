@@ -20,6 +20,7 @@ use App\Bookingservice;
 use App\Customermetadata;
 use App\Services\Bookings\BookingService as BookingServiceAlias;
 use App\Services\Bookings\BookingStatusChangeContext;
+use App\Services\Bookings\BookingStatusChangeEngine;
 use App\Services\Bookings\BookingStatusChangeFactory;
 use App\Services\Bookings\Builder\BookingStatusChangeContextBuilder;
 use App\Services\RecurringBookingService;
@@ -248,7 +249,7 @@ class BookingController extends Controller
      * @param BookingStatusChangeContextBuilder $contextBuilder
      * @return \Illuminate\Http\JsonResponse
      */
-    public function updateBooking(Request $request, Booking $booking, BookingStatusChangeContextBuilder $contextBuilder)
+    public function updateBooking(Request $request, Booking $booking, BookingStatusChangeEngine $statusChangeEngine)
     {
         $validator = Validator::make($request->all(), [
             'status' => 'required|in:cancelled,rejected,accepted,arrived,completed',
@@ -261,15 +262,26 @@ class BookingController extends Controller
             return response()->json(['message' => $message], 401);
         }
 
-        return $this->changeBookingStatus($request, $booking, $contextBuilder);
+        $statusChangeEngine
+            ->setBooking($booking)
+            ->setUser(auth('api')->user())
+            ->setStatusChangeParameters($request->all());
+
+        return $this->changeBookingStatus($request->get('status'), $statusChangeEngine);
     }
 
+    /**
+     * @param Request $request
+     * @param Booking $booking
+     * @param string $date
+     * @param BookingStatusChangeEngine $statusChangeEngine
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function updateRecurredBooking(
         Request $request,
         Booking $booking,
         string $date,
-        RecurringBookingService $recurringBookingService,
-        BookingStatusChangeContextBuilder $contextBuilder
+        BookingStatusChangeEngine $statusChangeEngine
     ) {
         $validator = Validator::make($request->all(), [
             'status' => 'required|in:cancelled,rejected,accepted,arrived,completed',
@@ -281,37 +293,35 @@ class BookingController extends Controller
             $message = $validator->messages()->all();
             return response()->json(['message' => $message], 401);
         }
-        try {
-            $recurringBooking = $recurringBookingService->findOrCreateRecurringBooking($booking, Carbon::createFromFormat('dmYHis', $date));
-        } catch (\InvalidArgumentException $exception) {
-            return response()->json(['message' => $exception->getMessage()], 400);
-        } catch (RecurringBookingCreationException $exception) {
-            return response()->json(['message' => $exception->getMessage()], 400);
-        } catch (\Exception $exception) {
-            return response()->json(['message' => 'Something went wrong. Please contact administrtor.'], 500);
-        }
 
-        return $this->changeBookingStatus($request, $recurringBooking->getBooking(), $contextBuilder);
+        $statusChangeEngine
+            ->setBooking($booking)
+            ->setUser(auth('api')->user())
+            ->setRecurredDate(Carbon::createFromFormat('dmYHis', $date))
+            ->setStatusChangeParameters($request->all());
+
+        return $this->changeBookingStatus($request->get('status'), $statusChangeEngine);
     }
 
-    private function changeBookingStatus(Request $request, Booking $booking, BookingStatusChangeContextBuilder $contextBuilder)
+    /**
+     * @param string $status
+     * @param BookingStatusChangeEngine $statusChangeEngine
+     * @return \Illuminate\Http\JsonResponse
+     */
+    private function changeBookingStatus(string $status, BookingStatusChangeEngine $statusChangeEngine)
     {
         try {
-            $context = $contextBuilder->buildContext($request->get('status'), $request->all());
+            $booking = $statusChangeEngine->changeStatus($status);
         } catch (InvalidBookingStatusException $exception) {
             return response()->json(['message' => 'Invlaid booking status received'], 400);
-        }
-
-        try {
-            $context->changeStatus($booking, auth('api')->user());
         } catch (UnauthorizedAccessException $exception) {
             return response()->json(['message' => $exception->getMessage()], 403);
         } catch (InvalidBookingStatusActionException $exception) {
             return response()->json(['message' => $exception->getMessage()], 403);
-        } catch (InvalidBookingStatusException $exception) {
-            return response()->json(['message' => $exception->getMessage()], 400);
         } catch (RecurringBookingStatusChangeException $exception) {
             return response()->json(['message' => $exception->getMessage()], 403);
+        } catch (RecurringBookingCreationException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 400);
         } catch (\Exception $exception) {
             return response()->json(['message' => 'Something went wrong. Please contact administrator.'], 500);
         }

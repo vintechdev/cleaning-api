@@ -118,7 +118,7 @@ class BookingJobsManager
 
             foreach ($dates as $date) {
                 $date['booking_id'] = $booking->id;
-                $date['is_recurring'] = $booking->isRecurring();
+                $date['is_recurring_item'] = $booking->isRecurring();
                 $date['booking_status'] = $booking->getStatus();
                 $date['providers'] = $providerDetails;
                 $date['service'] = $serviceInfo;

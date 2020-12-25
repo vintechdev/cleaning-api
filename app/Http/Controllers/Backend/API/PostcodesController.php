@@ -49,7 +49,7 @@ class PostcodesController extends Controller
     $postcode = Postcode::query();
       if ($request->has('postcode')) {
 
-            $postcode = postcode::select('id as value',DB::raw("CONCAT(postcode,', ',suburb,', ',state) AS text"))->where('postcode', 'LIKE', '%'.$request->get('postcode').'%')->orwhere('suburb', 'LIKE', '%'.$request->get('postcode').'%');
+            $postcode = postcode::select('id as value',DB::raw("CONCAT(postcode,', ',suburb,', ',state) AS text"),'postcode')->where('postcode', 'LIKE', '%'.$request->get('postcode').'%')->orwhere('suburb', 'LIKE', '%'.$request->get('postcode').'%');
         }
 
         $postcode = $postcode->get();

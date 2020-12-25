@@ -122,7 +122,7 @@ class BookingService
                         $bookingaddress->booking_id = $last_insert_id;
                         $bookingaddress->address_line1 = $address['address_line1'];
                         $bookingaddress->address_line2 = $address['address_line2'];
-                        $bookingaddress->subrub = $address['subrub'];
+                        $bookingaddress->subrub = $address['suburb'];
                         $bookingaddress->state = $address['state'];
                         $bookingaddress->postcode = $address['postcode'];
                         if (!$bookingaddress->save()) {

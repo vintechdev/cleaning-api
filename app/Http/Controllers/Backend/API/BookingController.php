@@ -239,7 +239,7 @@ class BookingController extends Controller
 
         $validator = Validator::make($request->all('bookings'), [
             '*.booking_date'=>'required|date|date_format:Y-m-d',
-            '*.booking_time'=>'required|date_format:H:i',
+            '*.booking_time'=>'required|date_format:H:i:s',
             '*.booking_postcode'=>'required|numeric',
             '*.booking_provider_type'=>'required|string',
             '*.plan_type'=>'required|numeric',
@@ -252,6 +252,7 @@ class BookingController extends Controller
         
         if ($validator->fails()){
             $message = $validator->messages()->all();
+          
             return response()->json(['message' => $message], 400);
         }
 

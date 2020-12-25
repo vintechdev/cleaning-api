@@ -256,4 +256,16 @@ class Booking extends Model
     {
         return $this->isChildBooking();
     }
+
+    /**
+     * @return Booking |null
+     */
+    public function getParentBooking(): ?Booking
+    {
+        if (!$this->parent_booking_id) {
+            return null;
+        }
+
+        return Booking::find($this->parent_booking_id);
+    }
 }

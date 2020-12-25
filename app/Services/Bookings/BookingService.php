@@ -75,7 +75,8 @@ class BookingService
 
                 $booking->user_id = $user->getId();
                 try {
-                    $booking->setStatus(isset($bookingAttributes['booking_status']) ?: Bookingstatus::BOOKING_STATUS_PENDING);
+                    $bookingStatus = ($parent && isset($bookings['booking_status_id'])) ? $bookings['booking_status_id'] : Bookingstatus::BOOKING_STATUS_PENDING;
+                    $booking->setStatus($bookingStatus);
                 } catch (\Exception $e) {
                     DB::rollBack();
                     throw new \InvalidArgumentException('Invalid booking status');

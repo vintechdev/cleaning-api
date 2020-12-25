@@ -68,12 +68,6 @@ abstract class AbstractBookingStatusChangeStrategy implements BookingStatusChang
      */
     public function changeStatus(Booking $booking, User $user): bool
     {
-        if ($booking->isRecurring()) {
-            throw new RecurringBookingStatusChangeException(
-                'Booking status for recurring booking can not be changed. Individual recurred bookings need to be updated.'
-            );
-        }
-
         DB::beginTransaction();
         try {
             if (!$this->handleStatusChange($booking, $user)) {

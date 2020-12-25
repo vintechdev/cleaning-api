@@ -7,6 +7,7 @@ use App\Bookingrequestprovider;
 use App\Bookingstatus;
 use App\Exceptions\Booking\BookingStatusChangeException;
 use App\Exceptions\Booking\InvalidBookingStatusActionException;
+use App\Exceptions\Booking\RecurringBookingStatusChangeException;
 use App\Exceptions\Booking\UnauthorizedAccessException;
 use App\User;
 
@@ -26,6 +27,12 @@ class CancelBookingStrategy extends AbstractBookingStatusChangeStrategy
      */
     protected function handleStatusChange(Booking $booking, User $user): bool
     {
+        if ($booking->isRecurring()) {
+            throw new RecurringBookingStatusChangeException(
+                'Status for recurring booking cannot be changed to cancelled. Individual recurred booking items need to be changed.'
+            );
+        }
+
         if (!$this->canUserCancelBooking($booking, $user)) {
             throw new UnauthorizedAccessException('User does not have permission to cancel this booking');
         }

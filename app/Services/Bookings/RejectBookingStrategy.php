@@ -30,7 +30,7 @@ class RejectBookingStrategy extends AbstractBookingStatusChangeStrategy
     {
         if ($booking->isRecurredBooking()) {
             throw new RecurringBookingStatusChangeException(
-                'Individual recurred booking cannot be accepted.'
+                'Individual recurred booking cannot be rejected.'
             );
         }
 

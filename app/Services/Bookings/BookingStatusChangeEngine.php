@@ -10,7 +10,6 @@ use App\Exceptions\Booking\RecurringBookingStatusChangeException;
 use App\Exceptions\Booking\UnauthorizedAccessException;
 use App\Exceptions\NoSavedCardException;
 use App\Exceptions\RecurringBookingCreationException;
-use App\Plan;
 use App\Services\Bookings\Builder\BookingStatusChangeContextBuilder;
 use App\Services\RecurringBookingService;
 use App\User;

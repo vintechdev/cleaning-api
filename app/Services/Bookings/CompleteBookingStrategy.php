@@ -11,6 +11,7 @@ use App\Exceptions\Booking\InvalidBookingStatusActionException;
 use App\Exceptions\Booking\RecurringBookingStatusChangeException;
 use App\Exceptions\Booking\UnauthorizedAccessException;
 use App\User;
+use Carbon\Carbon;
 
 /**
  * Class CompleteBookingStrategy
@@ -26,12 +27,12 @@ class CompleteBookingStrategy extends AbstractBookingStatusChangeStrategy
     /**
      * @param Booking $booking
      * @param User $user
-     * @return bool
-     * @throws InvalidBookingStatusActionException
+     * @param Carbon|null $recurredDate
+     * @return Booking
+     * @throws RecurringBookingStatusChangeException
      * @throws UnauthorizedAccessException
-     * @throws BookingStatusChangeException
      */
-    protected function handleStatusChange(Booking $booking, User $user): bool
+    protected function handleStatusChange(Booking $booking, User $user, Carbon $recurredDate = null): Booking
     {
         if ($booking->isRecurring()) {
             throw new RecurringBookingStatusChangeException(
@@ -49,7 +50,7 @@ class CompleteBookingStrategy extends AbstractBookingStatusChangeStrategy
             throw new BookingStatusChangeException('Unable to save booking status');
         }
 
-        return true;
+        return $booking;
     }
 
     /**

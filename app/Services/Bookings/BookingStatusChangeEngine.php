@@ -117,39 +117,8 @@ class BookingStatusChangeEngine
      */
     public function changeStatus(string $status)
     {
-        if (!$this->booking->isRecurring() && !$this->booking->isRecurredBooking()) {
-            $this->runStatusChange($status);
-            return $this->booking;
-        }
-
-        if (
-            ($this->booking->isRecurredBooking() || ($this->booking->isRecurring() && $this->recurredDate)) &&
-            in_array($status, [BookingStatusChangeTypes::STATUS_ACCEPTED, BookingStatusChangeTypes::STATUS_REJECTED])
-        ) {
-            throw new RecurringBookingStatusChangeException('A recurred booking item cannot be accepted or rejected.');
-        }
-
-        if (
-            $this->booking->isRecurring() &&
-            $this->recurredDate &&
-            !in_array($this->booking->getStatus(), [Bookingstatus::BOOKING_STATUS_ACCEPTED])
-        ) {
-            throw new RecurringBookingStatusChangeException('The booking needs to be accepted before changing the status to anything else');
-        }
-
-        if ($this->recurredDate) {
-            $recurringBooking = $this
-                ->recurringBookingService
-                ->findOrCreateRecurringBooking($this->booking, $this->recurredDate);
-
-            return $this
-                ->setBooking($recurringBooking->getBooking())
-                ->setRecurredDate(null)
-                ->changeStatus($status);
-        }
-
-        $this->runStatusChange($status);
-        return $this->booking;
+        $context = $this->statusChangeContextBuilder->buildContext($status, $this->statusChangeParameters);
+        return $context->changeStatus($this->booking, $this->user);
     }
 
     /**

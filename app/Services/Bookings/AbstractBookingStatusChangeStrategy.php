@@ -4,13 +4,16 @@ namespace App\Services\Bookings;
 
 use App\Booking;
 use App\BookingNote;
+use App\Bookingstatus;
 use App\Exceptions\Booking\BookingStatusChangeException;
 use App\Exceptions\Booking\InvalidBookingStatusActionException;
 use App\Exceptions\Booking\RecurringBookingStatusChangeException;
 use App\Exceptions\Booking\UnauthorizedAccessException;
 use App\Repository\BookingReqestProviderRepository;
 use App\Services\Bookings\Interfaces\BookingStatusChangeStrategyInterface;
+use App\Services\RecurringBookingService;
 use App\User;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -34,45 +37,72 @@ abstract class AbstractBookingStatusChangeStrategy implements BookingStatusChang
      */
     protected $statusChangeMessage;
 
-    /**
-     * @param Booking $booking
-     * @param User $user
-     * @return bool
-     * @throws InvalidBookingStatusActionException
-     * @throws UnauthorizedAccessException
-     * @throws BookingStatusChangeException
-     */
-    abstract protected function handleStatusChange(Booking $booking, User $user): bool;
-
-    /**
-     * AbstractBookingStatusChangeStrategy constructor.
-     * @param BookingReqestProviderRepository $bookingReqestProviderRepository
-     * @param BookingVerificationService $bookingVerificationService
-     */
-    public function __construct(
-        BookingReqestProviderRepository $bookingReqestProviderRepository,
-        BookingVerificationService $bookingVerificationService
-    ) {
-        $this->bookingRequestProviderRepo = $bookingReqestProviderRepository;
-        $this->bookingVerificationService = $bookingVerificationService;
-    }
+    /** @var RecurringBookingService */
+    protected $recurringBookingService;
 
     /**
      * @param Booking $booking
      * @param User $user
-     * @return bool
+     * @param Carbon|null $recurredDate
+     * @return Booking
      * @throws InvalidBookingStatusActionException
      * @throws UnauthorizedAccessException
      * @throws BookingStatusChangeException
      * @throws RecurringBookingStatusChangeException
      */
-    public function changeStatus(Booking $booking, User $user): bool
+    abstract protected function handleStatusChange(
+        Booking $booking,
+        User $user,
+        Carbon $recurredDate = null
+    ): Booking;
+
+    /**
+     * AbstractBookingStatusChangeStrategy constructor.
+     * @param BookingReqestProviderRepository $bookingRequestProviderRepository
+     * @param BookingVerificationService $bookingVerificationService
+     * @param RecurringBookingService $recurringBookingService
+     */
+    public function __construct(
+        BookingReqestProviderRepository $bookingRequestProviderRepository,
+        BookingVerificationService $bookingVerificationService,
+        RecurringBookingService $recurringBookingService
+    ) {
+        $this->bookingRequestProviderRepo = $bookingRequestProviderRepository;
+        $this->bookingVerificationService = $bookingVerificationService;
+        $this->recurringBookingService = $recurringBookingService;
+    }
+
+    /**
+     * @param Booking $booking
+     * @param User $user
+     * @param Carbon|null $recurredDate
+     * @return Booking | null
+     * @throws RecurringBookingStatusChangeException
+     * @throws UnauthorizedAccessException
+     */
+    public function changeStatus(Booking $booking, User $user, Carbon $recurredDate = null): ?Booking
     {
+        if (
+            $booking->isRecurring() &&
+            $recurredDate &&
+            ($booking->getStatus() != Bookingstatus::BOOKING_STATUS_ACCEPTED)
+        ) {
+            throw new RecurringBookingStatusChangeException('The booking needs to be accepted before changing the status to anything else');
+        }
+
         DB::beginTransaction();
         try {
-            if (!$this->handleStatusChange($booking, $user)) {
+            if ($recurredDate) {
+                $booking = $this
+                    ->recurringBookingService
+                    ->findOrCreateRecurringBooking($booking, $recurredDate);
+            }
+
+            $booking = $this->handleStatusChange($booking, $user, $recurredDate);
+
+            if (!$booking) {
                 DB::rollBack();
-                return false;
+                return null;
             }
 
             $this->saveBookingNote($booking, $user);
@@ -82,7 +112,7 @@ abstract class AbstractBookingStatusChangeStrategy implements BookingStatusChang
         }
 
         DB::commit();
-        return true;
+        return $booking;
     }
 
     /**

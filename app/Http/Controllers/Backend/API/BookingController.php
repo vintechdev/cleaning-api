@@ -326,7 +326,10 @@ class BookingController extends Controller
             return response()->json(['message' => 'Something went wrong. Please contact administrator.'], 500);
         }
 
-        return response()->json(['booking' => new BookingResource($booking)], 201);
+        if ($booking) {
+            return response()->json(['booking' => new BookingResource($booking)], 201);
+        }
+        return response()->json(['message' => 'Something went wrong. Please contact administrator.'], 500);
     }
 
     // for customer get appointment

@@ -82,20 +82,13 @@ abstract class AbstractBookingStatusChangeStrategy implements BookingStatusChang
      */
     public function changeStatus(Booking $booking, User $user, Carbon $recurredDate = null): ?Booking
     {
-        if (
-            $booking->isRecurring() &&
-            $recurredDate &&
-            ($booking->getStatus() != Bookingstatus::BOOKING_STATUS_ACCEPTED)
-        ) {
-            throw new RecurringBookingStatusChangeException('The booking needs to be accepted before changing the status to anything else');
-        }
-
         DB::beginTransaction();
         try {
             if ($recurredDate) {
                 $booking = $this
                     ->recurringBookingService
-                    ->findOrCreateRecurringBooking($booking, $recurredDate);
+                    ->findOrCreateRecurringBooking($booking, $recurredDate)
+                    ->getBooking();
             }
 
             $booking = $this->handleStatusChange($booking, $user, $recurredDate);

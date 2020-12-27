@@ -28,7 +28,7 @@ class CancelBookingStrategy extends AbstractBookingStatusChangeStrategy
      */
     protected function handleStatusChange(Booking $booking, User $user, Carbon $recurredDate = null): Booking
     {
-        if ($booking->isRecurring()) {
+        if ($booking->isRecurring() && !$recurredDate) {
             throw new RecurringBookingStatusChangeException(
                 'Status for recurring booking cannot be changed to cancelled. Individual recurred booking items need to be changed.'
             );

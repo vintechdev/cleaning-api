@@ -118,23 +118,6 @@ class BookingStatusChangeEngine
     public function changeStatus(string $status)
     {
         $context = $this->statusChangeContextBuilder->buildContext($status, $this->statusChangeParameters);
-        return $context->changeStatus($this->booking, $this->user);
-    }
-
-    /**
-     * @param $status
-     * @return bool
-     * @throws RecurringBookingStatusChangeException
-     * @throws UnauthorizedAccessException
-     * @throws NoSavedCardException
-     * @throws InvalidBookingStatusException
-     * @throws InvalidBookingStatusActionException
-     * @throws RecurringBookingCreationException
-     * @throws \InvalidArgumentException
-     */
-    private function runStatusChange($status): bool
-    {
-        $context = $this->statusChangeContextBuilder->buildContext($status, $this->statusChangeParameters);
-        return $context->changeStatus($this->booking, $this->user);
+        return $context->changeStatus($this->booking, $this->user, $this->recurredDate);
     }
 }

@@ -20,8 +20,10 @@ class PlansController extends Controller
      */
     public function get_all_plan(Request $request)
     {
-        $plans = Plan::select()->orderby('sequence','asc')->get()->toarray();
-        //$plans = $plans->paginate(10);
+        $plans = Plan::leftJoin('discounts', function($join) {
+            $join->on('discounts.plan_id', '=', 'plans.id');
+          })
+        ->orderby('sequence','asc')->limit(4)->get(['plans.*','discounts.discount','discounts.discount_type'])->toarray();
         return json_encode(['data'=>$plans]);
     }
     public function get(Request $request,$users_uuid,$plans_uuid)

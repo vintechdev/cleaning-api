@@ -8,6 +8,7 @@ use App\Bookingservice;
 use App\Bookingstatus;
 use App\Exceptions\Booking\BookingStatusChangeException;
 use App\Exceptions\Booking\InvalidBookingStatusActionException;
+use App\Exceptions\Booking\RecurringBookingStatusChangeException;
 use App\Exceptions\Booking\UnauthorizedAccessException;
 use App\User;
 
@@ -32,6 +33,12 @@ class CompleteBookingStrategy extends AbstractBookingStatusChangeStrategy
      */
     protected function handleStatusChange(Booking $booking, User $user): bool
     {
+        if ($booking->isRecurring()) {
+            throw new RecurringBookingStatusChangeException(
+                'Status for recurring booking cannot be changed to arrived. Individual recurred booking items need to be changed.'
+            );
+        }
+
         if (!$this->canUserCompleteBooking($booking, $user)) {
             throw new UnauthorizedAccessException('User does not have access to this function');
         }

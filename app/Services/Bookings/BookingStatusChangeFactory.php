@@ -40,15 +40,15 @@ class BookingStatusChangeFactory
     private function getStrategy(string $status): BookingStatusChangeStrategyInterface
     {
         switch ($status) {
-            case 'rejected':
+            case BookingStatusChangeTypes::STATUS_REJECTED:
                 return app(RejectBookingStrategy::class);
-            case 'accepted':
+            case BookingStatusChangeTypes::STATUS_ACCEPTED:
                 return app(AcceptBookingStrategy::class);
-            case 'cancelled':
+            case BookingStatusChangeTypes::STATUS_CANCELLED:
                 return app(CancelBookingStrategy::class);
-            case 'arrived':
+            case BookingStatusChangeTypes::STATUS_ARRIVED:
                 return app(ArriveBookingStrategy::class);
-            case 'completed':
+            case BookingStatusChangeTypes::STATUS_COMPLETED:
                 return app(CompleteBookingStrategy::class);
             default:
                 throw new InvalidBookingStatusException('Invalid booking status received');

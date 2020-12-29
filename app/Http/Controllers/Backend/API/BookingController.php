@@ -313,7 +313,7 @@ class BookingController extends Controller
             'services' => 'array'
         ]);
 
-        if($validator->fails()) {
+        if($validator->fails()){
             $message = $validator->messages()->all();
             return response()->json(['message' => $message], 401);
         }

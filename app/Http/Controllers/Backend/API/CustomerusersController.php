@@ -119,7 +119,7 @@ class CustomerusersController extends Controller
             $users->leftJoin( DB::raw("(SELECT count(provider_user_id) as completed_jobs, booking_request_providers.provider_user_id FROM `booking_request_providers` inner join bookings on(bookings.id=booking_request_providers.booking_id) where booking_request_providers.status='accepted' and bookings.booking_status_id=4 group by booking_request_providers.provider_user_id) as j"), 'j.provider_user_id', '=', 'users.id');
 
             $users->leftJoin(DB::raw("(SELECT pm.amount,pm.type,sr.is_default_service,pm.provider_id from provider_service_maps pm join services sr on(pm.service_id=sr.id) where sr.is_default_service=1 and sr.deleted_at is null and pm.deleted_at is null and pm.status=1) as r"), 'r.provider_id', '=', 'users.id');
-
+        
             if($request->has('servicecategory') || $request->has('serviceid')){
                 $users
                     ->join('provider_service_maps', 'users.id', '=', 'provider_service_maps.provider_id')
@@ -128,8 +128,16 @@ class CustomerusersController extends Controller
             } 
 
             if ($request->has('postcode')){
-                $users->join('provider_postcode_maps', 'users.id', '=', 'provider_postcode_maps.provider_id')
-                ->join('postcodes', 'provider_postcode_maps.postcode_id', '=', 'postcodes.id');
+
+                $users->Join(DB::raw("( select DISTINCT provider_id from `provider_postcode_maps`
+                INNER JOIN `postcodes` 
+                        ON `provider_postcode_maps`.`postcode_id` = `postcodes`.`id` 
+                        where postcode = ".$request->get('postcode')."
+                ) as prv"), 'prv.provider_id', '=', 'users.id');
+             
+
+            //    $users->join('provider_postcode_maps', 'users.id', '=', 'provider_postcode_maps.provider_id')
+              //  ->join('postcodes', 'provider_postcode_maps.postcode_id', '=', 'postcodes.id');
 
             }
             if ($request->has('day') || ($request->has('start_time') && $request->has('end_time'))){
@@ -146,9 +154,7 @@ class CustomerusersController extends Controller
             if ($request->has('servicecategory')){
                 $users->where('service_categories.id', $request->get('servicecategory'));
             }
-            if ($request->has('postcode')) {
-                $users->where('postcodes.postcode', $request->get('postcode'));
-            }
+            
             if ($request->has('day') || ($request->has('start_time') )) {//&& $request->has('end_time')
                 if ($request->get('day')) {
                     $users->where('provider_working_hours.working_days', 'LIKE', '%' . $request->get('day') . '%');
@@ -161,7 +167,8 @@ class CustomerusersController extends Controller
         
             if($request->has('serviceid')){
                 $servicearr =  explode(',',$request->get('serviceid'));
-                $users->whereIn('provider_service_maps.service_id',explode(',',$request->get('serviceid')));
+             
+                $users->whereIn('provider_service_maps.service_id', $servicearr);
                 $users->groupBy('users.id','p.avgrate','r.amount','r.type','r.is_default_service')->havingRaw("count(provider_service_maps.provider_id)=".count( $servicearr));
             }
 
@@ -191,7 +198,7 @@ class CustomerusersController extends Controller
               //  echo $column.'--'.$dir;die;
                 $users->orderBy($column,$dir);
             }
-
+           // echo $users->toSql();exit;
             $agency = clone $users;
             $agencyprice = clone $users;
             $users->where('providertype','freelancer');

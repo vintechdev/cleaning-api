@@ -4,14 +4,16 @@ use App\Repository\ProviderServiceMapRespository;
 use Response;
 use Illuminate\Http\Request;
 use App\Repository\UserRepository;
+use App\Repository\Eloquent\DiscountRepository;
 
 class TotalCostCalculation{
 
-    public function __construct(ProviderServiceMapRespository $providerservicemap)
+    public function __construct(ProviderServiceMapRespository $providerservicemap,DiscountRepository $discountRepository)
     {
         $this->providerservicemap = $providerservicemap;
+        $this->discountRepository = $discountRepository;
     }
-    public function GetHighestTotalPrice($servideid,$provider_id='',$servicetime){
+    public function GetHighestTotalPrice($servideid,$provider_id='',$servicetime,$plan_id='',$promocode='',$categoryid=''){
             $priceperprovider  =[];
             $result=[];
             $servicewiseprice = [];
@@ -33,7 +35,8 @@ class TotalCostCalculation{
                     $sertotprice = [];
                     $pdr = $this->providerservicemap->GetServicePriceofProvider($servideid,$pid);
                    
-                    $totalserviceprice =0;
+                    $totalserviceprice = 0;
+
                     foreach($pdr as $v){
                         if($v['amount']!=''){
                         if($v['is_default_service']==1){$is_default_service_id=$v['service_id'];}
@@ -56,7 +59,6 @@ class TotalCostCalculation{
                         
                         $serpr[$v['service_id']]=$v['amount'];
                         $servicewiseprice[$v['service_id']][]= array($pid=>$v['amount']);
-                        
                         $priceperprovider[$pid] = $totalserviceprice;
                     }
                 }
@@ -85,10 +87,45 @@ class TotalCostCalculation{
                         }
                         $totalprice = $max;
                 }
-               
+
+                //apply plan discount
+                $plan = $this->discountRepository->getPlanDiscount($plan_id);
+                if(count($plan)>0){
+                    if($plan[0]['discount_type']=='percentage'){
+                        $discount_amount=($totalprice*$plan[0]['discount'])/100;
+                    }else{
+                        $discount_amount=$plan[0]['discount'];
+                    }
+                    $finalprice = $totalprice-$discount_amount;
+                    $result['plan_discount_price']= $discount_amount;
+                    $result['plan_discount_type']= $plan[0]['discount_type'];
+                    $result['plan_discount']= $plan[0]['discount'];
+                    $result['final_cost']=$finalprice;
+                }else{
+                    $finalprice = $totalprice;
+                }
+
+                //check promocode
+                if($promocode!=''){
+                    $arr = $this->discountRepository->CheckPromocode($promocode,$categoryid);
+                    if(count($arr)>0){
+                        if($arr[0]['discount_type']=='flat'){
+                            $discounted_amount=$arr[0]['discount'];
+                        }else{
+                            $discounted_amount=($finalprice*$arr[0]['discount'])/100;
+                        }
+                        $final_amount = $finalprice-$discounted_amount;
+                        $result['discount']=$discounted_amount;
+                        $result['final_cost']=$final_amount;
+
+                    }
+                }
+
+
                 $result['highvalproviderid'] = $high_def_ser_price_provider_id;
                 $result['provider_wise_service_price'] = $provider_service_price;
                 $result['provider_service_cost_with_time'] = $provider_service_cost_with_time;
+                
                 $result['total_cost']=$totalprice;
                 $result['total_time']=$totaltime;
                 return $result;
@@ -126,43 +163,52 @@ class TotalCostCalculation{
 
     public function PromoCodeDiscount(Request $request){
        
-       // echo "in";exit;
+       
      
-       $id = $request->get('serviceid');
+        $id = $request->get('serviceid');
         $servicetime = $request->get('servicetime');
         
         $promocode = $request->promocode;
         $categoryid = $request->servicecategory;
+        $plan_id = $request->plan_id;
        
         $result=array();
-        $arr = $this->providerservicemap->CheckPromocode($promocode,$categoryid);
+       
+        $arr = $this->discountRepository->CheckPromocode($promocode,$categoryid);
         if(!empty($arr)){
 
-                if($request->get('booking_provider_type')=='agency'){
+              /*  if($request->get('booking_provider_type')=='agency'){
                     $providerid = app(UserRepository::class)->getAgencyData();
                 }else{
                     $providerid = $request->get('providerid');
                 }
     
-            $res = $this->GetHighestTotalPrice($id,$providerid,$servicetime);
-        
-            $total_amount = $res['total_cost'];
+                $res = $this->GetHighestTotalPrice($id,$providerid,$servicetime,$plan_id);
+            
+                if(isset($res['plan_discount']) && $res['plan_discount']!=''){
+                    $total_amount = $res['final_cost'];
+                }else{
+                    $total_amount = $res['total_cost'];
+                }
+           
                     
-            if($total_amount>0){
-                    if( $arr[0]['discount_type']=='flat'){
-                        $discount_amount=$total_amount-$arr[0]['discount'];
-                    }else{
-                        $discount_amount=$total_amount-($total_amount*$arr[0]['discount'])/100;
-                    }
-                    $result['total_cost']=$total_amount;
-                    $result['discount']=$arr[0]['discount'];
-                    $result['final_cost']=$discount_amount;
-                    return ['data' => $result];
-            }else{
-                return ['data' => 'Something went wrong. Please contact administrator.'];
-             }
+                if($total_amount>0){
+                        if($arr[0]['discount_type']=='flat'){
+                            $discounted_amount=$arr[0]['discount'];
+                        }else{
+                            $discounted_amount=($total_amount*$arr[0]['discount'])/100;
+                        }
+                        $final_amount = $total_amount-$discounted_amount;
+                        $result['total_cost']=$total_amount;
+                        $result['discount']=$discounted_amount;
+                        $result['final_cost']=$final_amount;
+                        return ['data' => $result];
+                }else{
+                    return ['data' => 'Something went wrong. Please contact administrator.'];
+                }*/
+                return response()->json(['data' => 'success'],200);
          }else{
-            return ['data' => 'Promocode is not valid'];
+            return response()->json( ['data' => 'Promocode is not valid'],201);
          }
     }
 }

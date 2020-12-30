@@ -22,10 +22,7 @@ class ProviderServiceMapRespository{
              return $services;
           }
         }
-        public function CheckPromocode($promocode,$categoryid){
-            $res = Promocodes::where('name',$promocode)->where('category_id',$categoryid)->limit(1)->get()->toArray();
-            return $res;
-        }
+       
 }
 
 

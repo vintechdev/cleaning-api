@@ -149,7 +149,7 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
 
     Route::patch('card_update', 'CustomermetadataController@card_update')->name('api.Customermetadata.card_update')->middleware(['scope:customer']);
 
-     Route::patch('card_dataadd', 'CustomermetadataController@card_dataadd')->name('api.Customermetadata.card_dataadd')->middleware(['scope:customer']);
+    Route::patch('card_dataadd', 'CustomermetadataController@card_dataadd')->name('api.Customermetadata.card_dataadd')->middleware(['scope:customer']);
 
     Route::patch('card_updatedata', 'CustomermetadataController@index')->name('api.Customermetadata.index')->middleware(['scope:customer']);
 

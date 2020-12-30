@@ -54,6 +54,7 @@ class ServiceController extends Controller
 
         $validator = Validator::make($request->all(), [
             'serviceid' => 'required',
+           
             'servicetime'=>'nullable|array',
             'booking_provider_type'=>'nullable|string'
         ]);
@@ -72,7 +73,7 @@ class ServiceController extends Controller
             $providerid = app(UserRepository::class)->getAgencyData();
         }
         $servicetime = (is_array($id))?$request->get('servicetime'):$request->get('gettimeslot');
-        $result = app(TotalCostCalculation::class)->GetHighestTotalPrice($id,$providerid,$servicetime);
+        $result = app(TotalCostCalculation::class)->GetHighestTotalPrice($id,$providerid,$servicetime,$request->plan_id,$request->promocode,$request->categoryid);
        
         return Response::json($result);
         

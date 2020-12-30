@@ -91,6 +91,8 @@ class BookingService
                 $booking->promocode = $bookings['promocode'];
                 $booking->total_cost = $bookings['total_cost'];
                 $booking->discount = $bookings['discount'];
+                $booking->plan_discount = $bookings['plan_discount'];
+              
                 $booking->final_cost = $bookings['final_cost'];
                 $booking->final_hours = $bookings['final_hours'];
                 $booking->is_flexible = $bookings['is_flexible'];

@@ -420,6 +420,16 @@ public function loginlog($data)
      */
     public function logout(Request $request)
     {
+
+
+        $user = Auth::user();
+        $log = array('userid'=>$user->id,
+                'ip'=>$request->ip,
+                'user_agent'=>$request->user_agent,
+                'action'=>'logout',
+                'detail'=>'logout');
+        $this->loginlog($log);
+
         $request->user()->token()->revoke();
         //Auth::logout(); // logs out the user
         //Session::flush();

@@ -48,7 +48,7 @@ class Bookingstatus extends Model
      */
     public static function getStatusNameById($id)
     {
-        if (!self::$idNameMap) {
+        if (!self::$idNameMap){
             $statuses = Bookingstatus::all();
             foreach ($statuses as $status) {
                 self::$idNameMap[$status->id] = $status->status;

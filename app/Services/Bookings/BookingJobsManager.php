@@ -7,6 +7,7 @@ use App\Repository\BookingReqestProviderRepository;
 use App\Services\BookingEventService;
 use App\User;
 use Carbon\Carbon;
+use App\Bookingstatus;
 
 /**
  * Class BookingJobsManager
@@ -173,5 +174,107 @@ class BookingJobsManager
             'pending' => $pendingDetails,
             'accepted' => $acceptedDetails
         ];
+    }
+
+    //provider job listing
+    public function getAllPastBookingJobsByProvider(User $user, Carbon $fromDate = null, $totalPeriod = 30): array
+    {
+        if (!$fromDate) {
+            $fromDate = (Carbon::now())->subDays($totalPeriod);
+        } else if ($fromDate->greaterThanOrEqualTo(Carbon::now())) {
+            return [];
+        }
+
+        $toDate = (clone $fromDate)->addDays($totalPeriod);
+        if ($toDate->greaterThanOrEqualTo(Carbon::now())) {
+            $toDate = Carbon::now();
+        }
+
+        return $this->getAllJobsBetweenDatesProvider($user, $fromDate, $toDate);
+    }
+
+
+
+    public function getAllFutureBookingJobsByProvider(User $user, Carbon $fromDate = null, $totalPeriod = 30): array
+    {
+        $fromDate = ($fromDate && $fromDate->greaterThanOrEqualTo(Carbon::now())) ? $fromDate : Carbon::now();
+        $toDate = (clone $fromDate)->addDays($totalPeriod);
+        return $this->getAllJobsBetweenDatesProvider($user, $fromDate, $toDate);
+    }
+
+    public function getAllBookingJobsByProvider(User $user, Carbon $fromDate = null, $totalPeriod = 30): array
+    {
+       // $bookings = Booking::findByUserId($user->id);
+       $bookings = Booking::leftJoin('booking_request_providers','booking_request_providers.booking_id','=','bookings.id')->where('booking_request_providers.provider_user_id',$user->id)->get('bookings.*');
+        if (!$bookings->count()) {
+            return [];
+        }
+
+        if (!$fromDate) {
+            $fromDate = Carbon::now();
+        }
+        $toDate = (clone $fromDate)->addDays($totalPeriod);
+        return $this->getAllJobsBetweenDatesProvider($user, $fromDate, $toDate);
+    }
+
+
+    private function getAllJobsBetweenDatesProvider(User $user, Carbon $from, Carbon $to): array
+    {
+        $jobs = [];
+        $bookings = Booking::with(['users','bookingServices','bookingServices.service'])->leftJoin('booking_request_providers','booking_request_providers.booking_id','=','bookings.id')->where('booking_request_providers.provider_user_id',$user->id)->limit(15)->get('bookings.*');
+        if (!$bookings->count()) {
+            return $jobs;
+        }
+   
+        $bookingDates = [];
+        /** @var Booking $booking */
+        foreach ($bookings as $booking){
+           
+            $serviceInfo = $booking->getBookingServicesArr();
+            $dates = $this
+                ->bookingEventService
+                ->listBookingDatesBetween($booking, $from, $to);
+            $users = $booking->getUserDetails();
+
+            foreach ($dates as $date){
+                $date['booking_id'] = $booking->id;
+                $date['is_recurring_item'] = $booking->isRecurring();
+                $date['booking_status'] = $booking->getStatus();
+                $date['booking_status_name'] = Bookingstatus::getStatusNameById( $booking->booking_status_id);
+                $date['service'] = $serviceInfo;
+                $date['user'] = $users;
+                $date['booking']=$booking;
+                $bookingDates[] = $date;
+                
+            }
+        }
+   //     echo "<pre>";print_r($bookingDates);exit;
+        usort($bookingDates, function ($a, $b) {
+            $aDate = Carbon::createFromFormat('d-m-Y H:i:s', $a['from']);
+            $bDate = Carbon::createFromFormat('d-m-Y H:i:s', $b['from']);
+
+            if ($bDate->lessThan($aDate)) {
+                return true;
+            }
+
+            if ($bDate->equalTo($aDate)) {
+                return ($b['booking_id'] <= $a['booking_id']);
+            }
+
+            return false;
+        });
+        
+        return $bookingDates;
+    }
+    public function getBookingDetailsByProvider(User $user, $id){
+        
+        $jobs = [];
+        $bookings = Booking::with(['users','bookingServices','bookingServices.service','address','bookingstatus'])->where('bookings.id',$id)->get('bookings.*');
+
+        if(!$bookings->count()){
+            return $jobs;
+        }
+        return $bookings->toArray();
+
     }
 }

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Emadadly\LaravelUuid\Uuids;
 use Laravel\Passport\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
+use PhpParser\Node\Expr\Cast\String_;
 
 class Bookingservice extends Model
 {
@@ -32,6 +33,7 @@ class Bookingservice extends Model
         return $this->service;
     }
 
+    
     /**
      * @param int $hours
      * @return $this

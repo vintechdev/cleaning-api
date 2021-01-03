@@ -83,8 +83,6 @@ Route::group([
     Route::post('register', 'AuthController@register');
     Route::post('userexist', 'AuthController@UserExist')->name('userexist');
     Route::post('updatetoken', 'AuthController@UpdateToken')->name('updatetoken');
-    Route::post('logoutlog', 'AuthController@logoutlog')->name('logoutlog');
-    
     Route::get('logout', 'AuthController@logout')->middleware(['auth:api']);
 });
 // Route::post('/oauth/token', 'AuthController@login');
@@ -116,6 +114,7 @@ Route::middleware(['auth:api'])->namespace('Backend\API')->prefix('v1')->group(f
 });
 
 Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->prefix('v1/customer')->group(function () {
+    
     // Customeruser Route
 
     
@@ -214,6 +213,10 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
 
  Route::middleware(['auth:api', 'role:provider'])->namespace('Backend\API')->prefix('v1/provider')->group(function () {
     // provider Route
+
+    Route::get('/bookings/jobs', 'BookingJobsController@listAllProviderJobs')->middleware('scope:provider');
+    Route::get('bookingdetails/{id}', 'BookingJobsController@bookingdetails')->name('bookingdetails')->middleware(['scope:provider']);
+
 
     // yash api
     Route::patch('provider_accept_booking/{uuid}', 'BookingrequestprovidersController@provider_accept')->name('api.Bookingrequestproviders.edit')->middleware(['scope:provider']);

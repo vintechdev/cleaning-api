@@ -27,7 +27,7 @@ use Illuminate\Foundation\Auth\ThrottlesLogins;
 use Illuminate\Support\Facades\Lang;
 use Illuminate\Validation\ValidationException;
 use App\Loginactivitylogs;
-
+use Config;
 use Illuminate\Http\Response;
 
 class AuthController extends Controller
@@ -206,13 +206,13 @@ public function UpdateToken(Request $request)
      */
     public function maxAttempts(){
         //Lock out on 5th Login Attempt
-        return env('MAX_ATTEMPT');
+        return Config::get('auth.MAX_ATTEMPT');
     }
 
     public function decayMinutes()
     {
         //Lock for 1 minute
-        return env('DECAY_TIME');
+        return  Config::get('auth.DECAY_TIME');
     }
 
 protected function sendLockoutResponse(Request $request)
@@ -263,17 +263,14 @@ public function loginlog($data)
 
       //  dd($credentials);
         //lockout event
-        if($this->hasTooManyLoginAttempts($request)){
-            
-            
+         if($this->hasTooManyLoginAttempts($request)){
            
             $this->fireLockoutEvent($request);
             return $this->sendLockoutResponse($request);
         }
+
         if(!Auth::attempt($credentials)){
             $this->incrementLoginAttempts($request);
-
-
             return response()->json([
                 'message' => 'Unauthorized'
             ], 401);

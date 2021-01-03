@@ -28,6 +28,20 @@ class Booking extends Model
         return $this->belongsTo(Event::class);
     }
 
+    public function users()
+    {
+        return $this->belongsTo(Customeruser::class,'user_id','id');
+    }
+
+    public function address()
+    {
+        return $this->hasOne(Bookingaddress::class);
+    }
+    public function bookingstatus()
+    {
+        return $this->belongsTo(Bookingstatus::class,'booking_status_id','id');
+    }
+
     public function getEvent(): ?Event
     {
         return $this->event;
@@ -217,11 +231,17 @@ class Booking extends Model
     /**
      * @return Collection
      */
-    public function getBookingServices(): Collection
+    public function getBookingServices(): string
     {
         return $this->bookingServices;
     }
-
+    public function getBookingServicesArr(): array
+    {
+        return $this->bookingServices->toArray();
+    }
+    public function getUserDetails(){
+        return $this->users->toArray();
+    }
     /**
      * @return Collection
      */

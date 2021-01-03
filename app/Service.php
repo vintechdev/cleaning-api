@@ -35,6 +35,8 @@ class Service extends Model
         return $this->service_cost;
     }
 
+    
+
     /**
      * @param int $hours
      * @param int|null $cost

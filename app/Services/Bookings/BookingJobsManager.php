@@ -103,14 +103,14 @@ class BookingJobsManager
         }else{
             $bookings = Booking::with(['bookingServices','bookingServices.service'])->where('bookings.user_id',$user->id);//->findByUserId($user->id);
         }
-        if (!$bookings->count()) {
+        if (!$bookings->count()){
             return $jobs;
         }
       //  dd($bookings);
 
         $bookingDates = [];
         /** @var Booking $booking */
-        foreach ($bookings->get('bookings.*') as $booking) {
+        foreach ($bookings->get('bookings.*') as $booking){
             $providerDetails = $this->getProviderDetails($booking);
             $serviceInfo = $booking->getBookingServicesArr();
             $dates = $this

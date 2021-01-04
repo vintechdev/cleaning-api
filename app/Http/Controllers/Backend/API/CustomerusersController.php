@@ -251,9 +251,9 @@ class CustomerusersController extends Controller
     public function change_password(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'current_password' => 'required',
+            'old_password' => 'required',
             'new_password' => 'required',
-            'repeat_password' => 'required|same:new_password'
+            'confirm_password' => 'required|same:new_password'
         ]);
         
         if($validator->fails()){
@@ -270,13 +270,13 @@ class CustomerusersController extends Controller
         $Customeruser = Customeruser::firstOrNew(['id' => $user_id]);
         // $Customeruser->uuid = $users_uuid;
         
-        $current_password = $request->get('current_password');
+        $current_password = $request->get('old_password');
         $responseCode =  Hash::check($current_password, $user_password);
         // print_r($responseCode);exit;
         if($responseCode > 0){
 
             $new_password = $request->get('new_password');
-            $repeat_password = $request->get('repeat_password');
+            $repeat_password = $request->get('confirm_password');
 
             if($new_password == $repeat_password){
                 // echo "same";exit;
@@ -312,7 +312,7 @@ class CustomerusersController extends Controller
             'first_name' => 'required',
             'last_name' => 'required',
             'email' => 'required|email',
-            'mobile_number' => 'required|min:10|max:10',
+            'mobile_number' => 'required|min:9|max:12',
         ]);
 
         if($validator->fails()){

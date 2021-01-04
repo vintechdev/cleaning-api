@@ -110,7 +110,7 @@ class BookingJobsManager
 
         $bookingDates = [];
         /** @var Booking $booking */
-        foreach ($bookings->get('bookings.*') as $booking){
+        foreach ($bookings->limit(15)->get('bookings.*') as $booking){
             $providerDetails = $this->getProviderDetails($booking);
             $serviceInfo = $booking->getBookingServicesArr();
             $dates = $this

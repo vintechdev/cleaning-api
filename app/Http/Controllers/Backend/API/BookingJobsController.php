@@ -83,16 +83,16 @@ class BookingJobsController extends Controller
         $totalDays = $request->has('total_period') ? $request->get('total_period') : 30;
 
         if (!$request->has('type') || $request->get('type') == 'all') {
-            $jobs = $bookingManager->getAllBookingJobsByProvider(auth()->user(), $from, $totalDays);
+            $jobs = $bookingManager->getAllBookingJobsByUser(auth()->user(), $from, $totalDays,true);
             return response()->json($jobs, 200);
         }
 
         if ($request->get('type') == 'past') {
-            $jobs = $bookingManager->getAllPastBookingJobsByProvider(auth()->user(), $from, $totalDays);
+            $jobs = $bookingManager->getAllPastBookingJobsByUser(auth()->user(), $from, $totalDays,true);
             return response()->json($jobs, 200);
         }
 
-        $jobs = $bookingManager->getAllFutureBookingJobsByProvider(auth()->user(), $from, $totalDays);
+        $jobs = $bookingManager->getAllFutureBookingJobsByUser(auth()->user(), $from, $totalDays,true);
         return response()->json($jobs, 200);
     }
 

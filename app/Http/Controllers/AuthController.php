@@ -349,7 +349,7 @@ public function loginlog($data)
                         'created_at' => $user->created_at,
                         'updated_at' => $user->updated_at,
                         'deleted_at' => $user->deleted_at,
-                        'customer_stripe_id' => $Customermetadata->user_stripe_customer_id
+                       // 'customer_stripe_id' => $Customermetadata->user_stripe_customer_id
                     ];
     
                 $response->setContent(json_encode($json));

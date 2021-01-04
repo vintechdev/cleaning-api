@@ -231,7 +231,7 @@ class Booking extends Model
     /**
      * @return Collection
      */
-    public function getBookingServices(): string
+    public function getBookingServices(): collection
     {
         return $this->bookingServices;
     }

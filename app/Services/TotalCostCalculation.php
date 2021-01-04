@@ -102,6 +102,9 @@ class TotalCostCalculation{
                     $result['plan_discount']= $plan[0]['discount'];
                     $result['final_cost']=$finalprice;
                 }else{
+                    $result['plan_discount_price']= '';
+                    $result['plan_discount_type']= '';
+                    $result['plan_discount']= '';
                     $finalprice = $totalprice;
                 }
 

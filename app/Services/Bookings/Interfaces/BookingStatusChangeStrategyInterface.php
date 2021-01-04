@@ -8,6 +8,7 @@ use App\Exceptions\Booking\InvalidBookingStatusActionException;
 use App\Exceptions\Booking\RecurringBookingStatusChangeException;
 use App\Exceptions\Booking\UnauthorizedAccessException;
 use App\User;
+use Carbon\Carbon;
 
 /**
  * interface BookingStatusChangeStrategyInterface
@@ -18,13 +19,14 @@ interface BookingStatusChangeStrategyInterface
     /**
      * @param Booking $booking
      * @param User $user
-     * @return bool
+     * @param Carbon|null $recurredDate
+     * @return Booking | null
      * @throws InvalidBookingStatusActionException
      * @throws UnauthorizedAccessException
      * @throws BookingStatusChangeException
      * @throws RecurringBookingStatusChangeException
      */
-    public function changeStatus(Booking $booking, User $user): bool;
+    public function changeStatus(Booking $booking, User $user, Carbon $recurredDate = null): ?Booking;
 
     /**
      * @param string $message

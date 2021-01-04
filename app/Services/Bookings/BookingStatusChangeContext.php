@@ -10,6 +10,7 @@ use App\Exceptions\Booking\RecurringBookingStatusChangeException;
 use App\Exceptions\Booking\UnauthorizedAccessException;
 use App\Services\Bookings\Interfaces\BookingStatusChangeStrategyInterface;
 use App\User;
+use Carbon\Carbon;
 
 /**
  * Class BookingStatusChangeContext
@@ -34,20 +35,19 @@ class BookingStatusChangeContext
     /**
      * @param Booking $booking
      * @param User $user
-     * @return bool
-     * @throws InvalidBookingStatusActionException
-     * @throws UnauthorizedAccessException
-     * @throws BookingStatusChangeException
+     * @param Carbon|null $recurredDate
+     * @return Booking | null
      * @throws RecurringBookingStatusChangeException
+     * @throws UnauthorizedAccessException
      */
-    public function changeStatus(Booking $booking, User $user): bool
+    public function changeStatus(Booking $booking, User $user, Carbon $recurredDate = null): ?Booking
     {
         $oldStatus = $booking->getStatus();
-        if ($this->bookingStatusChangeStrategy->changeStatus($booking, $user)) {
+        $booking = $this->bookingStatusChangeStrategy->changeStatus($booking, $user, $recurredDate);
+        if ($booking) {
             event(new BookingStatusChanged($booking, $user, $oldStatus, $booking->getStatus()));
-            return true;
         }
 
-        return false;
+        return $booking;
     }
 }

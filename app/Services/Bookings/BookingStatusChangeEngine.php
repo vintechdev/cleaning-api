@@ -10,7 +10,6 @@ use App\Exceptions\Booking\RecurringBookingStatusChangeException;
 use App\Exceptions\Booking\UnauthorizedAccessException;
 use App\Exceptions\NoSavedCardException;
 use App\Exceptions\RecurringBookingCreationException;
-use App\Plan;
 use App\Services\Bookings\Builder\BookingStatusChangeContextBuilder;
 use App\Services\RecurringBookingService;
 use App\User;
@@ -118,55 +117,7 @@ class BookingStatusChangeEngine
      */
     public function changeStatus(string $status)
     {
-        if (!$this->booking->isRecurring() && !$this->booking->isRecurredBooking()) {
-            $this->runStatusChange($status);
-            return $this->booking;
-        }
-
-        if (
-            ($this->booking->isRecurredBooking() || ($this->booking->isRecurring() && $this->recurredDate)) &&
-            in_array($status, [BookingStatusChangeTypes::STATUS_ACCEPTED, BookingStatusChangeTypes::STATUS_REJECTED])
-        ) {
-            throw new RecurringBookingStatusChangeException('A recurred booking item cannot be accepted or rejected.');
-        }
-
-        if (
-            $this->booking->isRecurring() &&
-            $this->recurredDate &&
-            !in_array($this->booking->getStatus(), [Bookingstatus::BOOKING_STATUS_ACCEPTED])
-        ) {
-            throw new RecurringBookingStatusChangeException('The booking needs to be accepted before changing the status to anything else');
-        }
-
-        if ($this->recurredDate) {
-            $recurringBooking = $this
-                ->recurringBookingService
-                ->findOrCreateRecurringBooking($this->booking, $this->recurredDate);
-
-            return $this
-                ->setBooking($recurringBooking->getBooking())
-                ->setRecurredDate(null)
-                ->changeStatus($status);
-        }
-
-        $this->runStatusChange($status);
-        return $this->booking;
-    }
-
-    /**
-     * @param $status
-     * @return bool
-     * @throws RecurringBookingStatusChangeException
-     * @throws UnauthorizedAccessException
-     * @throws NoSavedCardException
-     * @throws InvalidBookingStatusException
-     * @throws InvalidBookingStatusActionException
-     * @throws RecurringBookingCreationException
-     * @throws \InvalidArgumentException
-     */
-    private function runStatusChange($status): bool
-    {
         $context = $this->statusChangeContextBuilder->buildContext($status, $this->statusChangeParameters);
-        return $context->changeStatus($this->booking, $this->user);
+        return $context->changeStatus($this->booking, $this->user, $this->recurredDate);
     }
 }

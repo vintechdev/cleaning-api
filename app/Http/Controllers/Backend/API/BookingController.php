@@ -671,6 +671,9 @@ class BookingController extends Controller
        
 
         $services = app(BookingServiceRepository::class)->getServiceDetails($id);
+        $bookingaddress = app(BookingServiceAlias::class)->GetBookingAddress($id);
+        $question = app(BookingServiceAlias::class)->getBookingQuestions($id);
+       
         $providerscount = app(BookingReqestProviderRepository::class)->getBookingProvidersCount($id);
         if( $providerscount[0]['accepted_count']>0){
             $providers = app(BookingReqestProviderRepository::class)->getBookingAccptedProvidersDetails($id);
@@ -683,12 +686,10 @@ class BookingController extends Controller
                 $providers[$key]['badges'] = app(ProviderBadgeReviewRepository::class)->getBadgeDetails($val['provider_user_id']);
                 $providers[$key]['review'] = app(ProviderBadgeReviewRepository::class)->getReviewDetails($val['provider_user_id']);
                 $providers[$key]['avgrate'] = app(ProviderBadgeReviewRepository::class)->getAvgRating($val['provider_user_id']);
-            
             }
-
         }
-      // dd($data);
-        return response()->json(['data' => $data,'services'=>$services,'providers'=>$providers,'providerscount'=>$providerscount]);
+     
+        return response()->json(['data' => $data,'services'=>$services,'providers'=>$providers,'providerscount'=>$providerscount,'bookingaddress'=>$bookingaddress,'question'=>$question]);
 
     }
 

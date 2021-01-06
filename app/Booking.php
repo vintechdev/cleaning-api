@@ -42,6 +42,11 @@ class Booking extends Model
         return $this->belongsTo(Bookingstatus::class,'booking_status_id','id');
     }
 
+    public function bookingquestions()
+    {
+        return $this->hasMany(Bookingquestion::class,'booking_id','id');
+    }
+
     public function getEvent(): ?Event
     {
         return $this->event;

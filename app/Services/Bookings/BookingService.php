@@ -228,4 +228,28 @@ class BookingService
             $booking
         );
     }
+
+    public function GetBookingAddress($id)
+    {
+        return $address = Bookingaddress::where('booking_id',$id)->get()->toArray();
+    }
+    public function getBookingQuestions($id)
+    {
+        $questions = Bookingquestion::with('service_questions','service_questions.service')->where('booking_id',$id)->get()->toArray();
+       
+        if(count($questions)>0){
+            $qst = [];
+            foreach($questions as $k=>$v){
+                $q =[];
+               // $questiondet = 
+                $q['question'] =$v['service_questions']['title'];
+                $q['answer'] =($v['answer']=='Y')?'Yes':$v['answer'];
+                $q['service_id'] = $v['service_questions']['service_id'];
+                $q['service_name'] = $v['service_questions']['service']['name'];
+                $qst[] = $q;
+            }
+
+        }
+        return $qst;
+    }
 }

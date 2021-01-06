@@ -13,4 +13,10 @@ class Bookingquestion extends Model
   use SoftDeletes;
   protected $fillable = ['id'];
   public $incrementing = false;
+
+  public function service_questions()
+    {
+        return $this->belongsTo(Servicequestion::class,'service_question_id','id');
+    }
+
 }

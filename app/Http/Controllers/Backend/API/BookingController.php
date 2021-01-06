@@ -658,8 +658,6 @@ class BookingController extends Controller
         if(!$request->has('id')){
            return  response()->json(['data' => 'id not found'], 404);
         }
-
-      
         $user = Auth::user();
         $user_id = $user->id;
         $id = $request->id;
@@ -667,7 +665,7 @@ class BookingController extends Controller
 
         $data = Booking::join('booking_status', 'bookings.booking_status_id', '=', 'booking_status.id')
                 ->join('plans','bookings.plan_type','=','plans.id')
-                ->select('bookings.*','plans.plan_name')
+                ->select('bookings.*','plans.plan_name','booking_status.status')
                 ->where('bookings.id', $id)
                 ->get();
        

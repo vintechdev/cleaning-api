@@ -59,7 +59,7 @@ class ResetPasswordController extends Controller
        
         if ($user && $passwordReset){
 
-           // $res =  $user->notify(new PasswordResetRequest($passwordReset->token));
+            $res =  $user->notify(new PasswordResetRequest($passwordReset->token));
         }
           
         //    dd($res);

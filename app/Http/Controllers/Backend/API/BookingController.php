@@ -310,7 +310,7 @@ class BookingController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'status' => 'required|in:cancelled,rejected,accepted,arrived,completed',
-            'status_change_message' => 'string',
+            'status_change_message' => 'nullable|string',
             'services' => 'array'
         ]);
 

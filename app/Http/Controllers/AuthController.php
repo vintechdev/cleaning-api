@@ -292,6 +292,11 @@ public function loginlog($data)
                 // return an error response
                 return response()->json(['message'=>'Email not found'], 401);
             }
+
+            if(!$user->hasRole($request->scope)){
+                return response()->json(['message'=>'You are not authorized!!'], 401);
+            }
+
         
             if (!Hash::check($login_password, $user->password)) {
                 // return an error response
@@ -305,7 +310,6 @@ public function loginlog($data)
             if (! $client) {
                 // Passport not setup properly
                 return response()->json(['message'=>'Passport not setup properly'], 401);
-               
             }
 
             if($user->email_verified_at !== NULL){
@@ -356,7 +360,7 @@ public function loginlog($data)
    
                 return $response;
             } else{
-                return response()->json(['message'=>'Please Verify Email'], 401);
+                return response()->json(['message'=>'Please Verify Email.'], 401);
             }
         }
 

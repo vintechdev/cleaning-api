@@ -238,24 +238,13 @@ class BookingJobsManager
             ->bookingRequestProviderRepo
             ->getBookingPendingProvidersDetails($booking->id);
 
-        $pendingDetails = [];
-        foreach ($pendingProviders as $provider) {
-            $pendingDetails['id'] = $provider['provider_first_name'] . ' ' . $provider['provider_last_name'];
-        }
-
         $acceptedProviders = $this
             ->bookingRequestProviderRepo
             ->getBookingAccptedProvidersDetails($booking->id);
 
-        $acceptedDetails = [];
-
-        foreach ($acceptedProviders as $provider) {
-            $acceptedDetails['id'] = $provider['provider_first_name'] . ' ' . $provider['provider_last_name'];
-        }
-
         return [
-            'pending' => $pendingDetails,
-            'accepted' => $acceptedDetails
+            'pending' => $pendingProviders,
+            'accepted' => $acceptedProviders
         ];
     }
 }

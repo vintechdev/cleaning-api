@@ -241,6 +241,12 @@ class BookingJobsManager
         $job['booking_id'] = $booking->getId();
         $job['plan_name'] = $booking->isChildBooking() ? $booking->getParentBooking()->getPlan()->plan_name : $booking->getPlan()->plan_name;
         $job['is_recurring_item'] = $booking->isRecurring();
+        //promocode, total_cost, discount,plan_discount,final_cost
+        $job['promo_code'] = $booking->promocode;
+        $job['total_cost'] = $booking->total_cost;
+        $job['discount'] = $booking->discount;
+        $job['plan_discount'] = $booking->plan_discount;
+        $job['final_cost'] = $booking->final_cost;
         $job['booking_status'] = $booking->getStatus();
         $job['providers'] = $providerDetails;
         $job['booking_service'] = $services;

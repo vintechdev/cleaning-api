@@ -50,7 +50,7 @@ use DB;
 use Input;
 use App\Services\TotalCostCalculation;
 use App\Repository\Eloquent\StripeUserMetadataRepository;
-use App\Repository\ProviderBadgeReviewRepository;
+use App\Repository\UserBadgeReviewRepository;
 use App\Services\MailService;
 use Storage;
 use App\Bookingactivitylogs;
@@ -701,9 +701,9 @@ class BookingController extends Controller
             $id = $request->id;
 
             $providers = app(UserRepository::class)->getProviderDetails($id); 
-            $providers[0]['badges'] = app(ProviderBadgeReviewRepository::class)->getBadgeDetails($id );
-            $providers[0]['review'] = app(ProviderBadgeReviewRepository::class)->getReviewDetails($id );
-            $providers[0]['avgrate'] = app(ProviderBadgeReviewRepository::class)->getAvgRating($id);
+            $providers[0]['badges'] = app(UserBadgeReviewRepository::class)->getBadgeDetails($id );
+            $providers[0]['review'] = app(UserBadgeReviewRepository::class)->getReviewDetails($id );
+            $providers[0]['avgrate'] = app(UserBadgeReviewRepository::class)->getAvgRating($id);
             return response()->json(['data' => $providers]);
         }
         # code...

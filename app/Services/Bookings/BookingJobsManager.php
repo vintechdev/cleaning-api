@@ -4,6 +4,7 @@ namespace App\Services\Bookings;
 
 use App\Booking;
 use App\Repository\BookingReqestProviderRepository;
+use App\Repository\UserBadgeReviewRepository;
 use App\Services\BookingEventService;
 use App\Services\RecurringBookingService;
 use App\User;
@@ -37,22 +38,30 @@ class BookingJobsManager
     private $bookingService;
 
     /**
+     * @var UserBadgeReviewRepository
+     */
+    private $badgeReviewRepo;
+
+    /**
      * BookingManager constructor.
      * @param BookingEventService $bookingEventService
      * @param BookingReqestProviderRepository $bookingReqestProviderRepository
      * @param RecurringBookingService $recurringBookingService
      * @param BookingService $bookingService
+     * @param UserBadgeReviewRepository $badgeReviewRepository
      */
     public function __construct(
         BookingEventService $bookingEventService,
         BookingReqestProviderRepository $bookingReqestProviderRepository,
         RecurringBookingService $recurringBookingService,
-        BookingService $bookingService
+        BookingService $bookingService,
+        UserBadgeReviewRepository $badgeReviewRepository
     ) {
         $this->bookingEventService = $bookingEventService;
         $this->bookingRequestProviderRepo = $bookingReqestProviderRepository;
         $this->recurringBookingService = $recurringBookingService;
         $this->bookingService = $bookingService;
+        $this->badgeReviewRepo = $badgeReviewRepository;
     }
 
     /**
@@ -264,14 +273,13 @@ class BookingJobsManager
      */
     private function getProviderDetails(Booking $booking): array
     {
-        $pendingProviders = $this
-            ->bookingRequestProviderRepo
-            ->getBookingPendingProvidersDetails($booking->id);
+        $providers = $this->bookingRequestProviderRepo->getBookingProvidersData($booking->getId());
+        foreach ($providers as &$provider) {
+            $provider['badges'] = $this->badgeReviewRepo->getBadgeDetails($provider['provider_user_id']);
+            $provider['review'] = $this->badgeReviewRepo->getReviewDetails($provider['provider_user_id']);
+            $provider['avgrate'] = $this->badgeReviewRepo->getAvgRating($provider['provider_user_id']);
+        }
 
-        $acceptedProviders = $this
-            ->bookingRequestProviderRepo
-            ->getBookingAccptedProvidersDetails($booking->id);
-
-        return array_merge($pendingProviders, $acceptedProviders);
+        return $providers;
     }
 }

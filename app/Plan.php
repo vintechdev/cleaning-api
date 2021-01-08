@@ -19,6 +19,10 @@ class Plan extends Model
     protected $fillable = ['id'];
     public $incrementing = false;
 
+    /**
+     * @param $planId
+     * @return bool
+     */
     public static function isValidPlan($planId) {
         if (
             !in_array(

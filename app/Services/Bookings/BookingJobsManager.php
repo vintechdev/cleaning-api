@@ -5,6 +5,7 @@ namespace App\Services\Bookings;
 use App\Booking;
 use App\Repository\BookingReqestProviderRepository;
 use App\Services\BookingEventService;
+use App\Services\RecurringBookingService;
 use App\User;
 use Carbon\Carbon;
 use App\Bookingstatus;
@@ -26,16 +27,32 @@ class BookingJobsManager
     private $bookingRequestProviderRepo;
 
     /**
+     * @var RecurringBookingService
+     */
+    private $recurringBookingService;
+
+    /**
+     * @var BookingService
+     */
+    private $bookingService;
+
+    /**
      * BookingManager constructor.
      * @param BookingEventService $bookingEventService
      * @param BookingReqestProviderRepository $bookingReqestProviderRepository
+     * @param RecurringBookingService $recurringBookingService
+     * @param BookingService $bookingService
      */
     public function __construct(
         BookingEventService $bookingEventService,
-        BookingReqestProviderRepository $bookingReqestProviderRepository
+        BookingReqestProviderRepository $bookingReqestProviderRepository,
+        RecurringBookingService $recurringBookingService,
+        BookingService $bookingService
     ) {
         $this->bookingEventService = $bookingEventService;
         $this->bookingRequestProviderRepo = $bookingReqestProviderRepository;
+        $this->recurringBookingService = $recurringBookingService;
+        $this->bookingService = $bookingService;
     }
 
     /**
@@ -89,9 +106,59 @@ class BookingJobsManager
     }
 
     /**
+     * @param Booking $booking
+     * @param Carbon|null $recurringDate
+     * @return array
+     */
+    public function getBookingJob(Booking $booking, Carbon $recurringDate = null)
+    {
+        if (!$recurringDate) {
+            if ($booking->isRecurring()) {
+                throw new \InvalidArgumentException('Booking is a recurring booking. Individual recurring date is required.');
+            }
+
+            return $this->buildJob(
+                $booking,
+                $this->getProviderDetails($booking),
+                [
+                    'from' => $booking->getStartDate(),
+                    'to' => $booking->getFinalBookingDateTime()
+                ]
+            );
+        }
+
+        $recurringBooking = $this->recurringBookingService->findByEventAndDate($booking->getEvent(), $recurringDate);
+
+        if ($recurringBooking) {
+            return $this->buildJob(
+                $recurringBooking->getBooking(),
+                $this->getProviderDetails($recurringBooking->getBooking()),
+                [
+                    'from' => $recurringBooking->getBooking()->getStartDate(),
+                    'to' => $recurringBooking->getBooking()->getFinalBookingDateTime()
+                ]
+            );
+        }
+
+        if (!$this->bookingEventService->isValidRecurringDate($booking, $recurringDate)) {
+            throw new \InvalidArgumentException('Not a valid recurring date received for the booking.');
+        }
+
+        return $this->buildJob(
+            $booking,
+            $this->getProviderDetails($booking),
+            [
+                'from' => $recurringDate,
+                'to' => Booking::calculateFinalBookingDateTime($recurringDate, $booking->getFinalHours())
+            ]
+        );
+    }
+
+    /**
      * @param User $user
      * @param Carbon $from
      * @param Carbon $to
+     * @param bool $isProvider
      * @return array
      */
     private function getAllJobsBetweenDates(User $user, Carbon $from, Carbon $to, bool $isProvider=false): array
@@ -106,31 +173,21 @@ class BookingJobsManager
         if (!$bookings->count()){
             return $jobs;
         }
-      //  dd($bookings);
 
-        $bookingDates = [];
+        $bookingJobs = [];
         /** @var Booking $booking */
         foreach ($bookings->limit(15)->get('bookings.*') as $booking){
             $providerDetails = $this->getProviderDetails($booking);
-            $serviceInfo = $booking->getBookingServicesArr();
             $dates = $this
                 ->bookingEventService
                 ->listBookingDatesBetween($booking, $from, $to);
-            $users = $booking->getUserDetails();
             foreach ($dates as $date) {
-                $date['booking_id'] = $booking->id;
-                $date['is_recurring_item'] = $booking->isRecurring();
-                $date['booking_status'] = $booking->getStatus();
-                $date['providers'] = $providerDetails;
-                $date['booking_service'] = $serviceInfo;
-                $date['booking_status_name'] = Bookingstatus::getStatusNameById( $booking->booking_status_id);
-                $date['user'] = $users;
-                $date['booking']=$booking;
-                $bookingDates[] = $date;
+                $job = $this->buildJob($booking, $providerDetails, $date);
+                $bookingJobs[] = $job;
             }
         }
 
-        usort($bookingDates, function ($a, $b) {
+        usort($bookingJobs, function ($a, $b) {
             $aDate = Carbon::createFromFormat('d-m-Y H:i:s', $a['from']);
             $bDate = Carbon::createFromFormat('d-m-Y H:i:s', $b['from']);
 
@@ -145,7 +202,30 @@ class BookingJobsManager
             return false;
         });
 
-        return $bookingDates;
+        return $bookingJobs;
+    }
+
+    /**
+     * @param Booking $booking
+     * @param array $providerDetails
+     * @param array $date
+     * @return array
+     */
+    private function buildJob(Booking $booking, array $providerDetails, array $date): array
+    {
+        $job = [];
+        $job = array_merge($job, $date);
+        $job['booking_id'] = $booking->getId();
+        $job['is_recurring_item'] = $booking->isRecurring();
+        $job['booking_status'] = $booking->getStatus();
+        $job['providers'] = $providerDetails;
+        $job['booking_service'] = $booking->getBookingServicesArr();;
+        $job['booking_status_name'] = Bookingstatus::getStatusNameById($booking->booking_status_id);
+        $job['user'] = $booking->getUserDetails();
+        $job['address'] = $this->bookingService->getBookingAddress($booking->getId());
+        $job['question'] = $this->bookingService->getBookingQuestions($booking->getId());
+
+        return $job;
     }
 
     /**
@@ -177,17 +257,5 @@ class BookingJobsManager
             'pending' => $pendingDetails,
             'accepted' => $acceptedDetails
         ];
-    }
-
-    public function getBookingDetailsByProvider(User $user, $id){
-        
-        $jobs = [];
-        $bookings = Booking::with(['users','bookingServices','bookingServices.service','address','bookingstatus'])->where('bookings.id',$id)->get('bookings.*');
-
-        if(!$bookings->count()){
-            return $jobs;
-        }
-        return $bookings->toArray();
-
     }
 }

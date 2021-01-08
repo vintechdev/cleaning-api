@@ -111,14 +111,13 @@ Route::post('getdashboard', 'HomeController@dashboard')->name('api.home.getdashb
 Route::middleware(['auth:api'])->namespace('Backend\API')->prefix('v1')->group(function () {
     Route::patch('bookings/{booking}', 'BookingController@updateBooking')->name('update_booking')->middleware(['can:update,booking']);
     Route::patch('bookings/{booking}/dates/{recurring_date}', 'BookingController@updateRecurredBooking')->name('update_recurred_booking')->middleware(['can:update,booking']);
+    Route::get('bookings/{booking}', 'BookingController@getbookingdetails')->name('getbookingdetails');
+    Route::get('bookings/{booking}/dates/{recurring_date}', 'BookingController@getbookingdetails')->name('getbookingdetails');
 });
 
 Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->prefix('v1/customer')->group(function () {
     
     // Customeruser Route
-
-    
-    Route::get('getbookingdetails', 'BookingController@getbookingdetails')->name('getbookingdetails')->middleware(['scope:customer']);
     //rakesh api
 
     Route::get('alternate_date/{booking_uuid}', 'BookingController@get_alternate_date')->name('customer_get_alternate_date')->middleware(['scope:customer']);
@@ -215,7 +214,6 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
     // provider Route
 
     Route::get('/bookings/jobs', 'BookingJobsController@listAllProviderJobs')->middleware('scope:provider');
-    Route::get('bookingdetails/{id}', 'BookingJobsController@bookingdetails')->name('bookingdetails')->middleware(['scope:provider']);
 
 
     // yash api

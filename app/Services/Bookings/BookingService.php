@@ -236,9 +236,9 @@ class BookingService
     public function getBookingQuestions($id)
     {
         $questions = Bookingquestion::with('service_questions','service_questions.service')->where('booking_id',$id)->get()->toArray();
-       
+        $qst = [];
         if(count($questions)>0){
-            $qst = [];
+          
             foreach($questions as $k=>$v){
                 $q =[];
                // $questiondet = 

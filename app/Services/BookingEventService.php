@@ -140,6 +140,19 @@ class BookingEventService
 
     /**
      * @param Booking $booking
+     * @param Carbon $recurringDate
+     * @return bool
+     */
+    public function isValidRecurringDate(Booking $booking, Carbon $recurringDate): bool
+    {
+        if (!$booking->isRecurring()) {
+            return false;
+        }
+        return $this->recurringPatternService->isValidRecurringDate($booking->getEvent(), $recurringDate);
+    }
+
+    /**
+     * @param Booking $booking
      * @param array $dates
      * @return array
      */
@@ -198,7 +211,7 @@ class BookingEventService
         /** @var Carbon $date */
         foreach ($dates as $date) {
             $from = $date->format('d-m-Y H:i:s');
-            $to = Booking::getFinalBookingDateTime($date, $booking->getFinalHours());
+            $to = Booking::calculateFinalBookingDateTime($date, $booking->getFinalHours());
             if ($to) {
                 $to = $to->format('d-m-Y H:i:s');
             }

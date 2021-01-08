@@ -95,14 +95,4 @@ class BookingJobsController extends Controller
         $jobs = $bookingManager->getAllFutureBookingJobsByUser(auth()->user(), $from, $totalDays,true);
         return response()->json($jobs, 200);
     }
-
-    public function bookingdetails(Request $request,BookingJobsManager $bookingManager ){
-      
-       
-        $id = $request->id;
-        $details = $bookingManager->getBookingDetailsByProvider(auth()->user(),$id);
-        $status = Bookingstatus::all()->toArray();
-        return response()->json(['details'=>$details,'statusRecords'=>$status], 200);
-
-    }
 }

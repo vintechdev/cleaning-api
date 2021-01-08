@@ -18,10 +18,12 @@ use App\Bookingaddress;
 use App\Bookingquestion;
 use App\Bookingservice;
 use App\Customermetadata;
+use App\Services\Bookings\BookingJobsManager;
 use App\Services\Bookings\BookingService as BookingServiceAlias;
 use App\Services\Bookings\BookingStatusChangeContext;
 use App\Services\Bookings\BookingStatusChangeEngine;
 use App\Services\Bookings\BookingStatusChangeFactory;
+use App\Services\Bookings\BookingVerificationService;
 use App\Services\Bookings\Builder\BookingStatusChangeContextBuilder;
 use App\Services\RecurringBookingService;
 use App\User;
@@ -31,6 +33,7 @@ use App\Bookingchange;
 use App\OnceBookingAlternateDate;
 use App\Bookingrequestprovider;
 use Carbon\Carbon;
+use Carbon\Exceptions\InvalidFormatException;
 use Illuminate\Http\Request;
 use App\Http\Requests\Backend\BookingRequest;
 use App\Http\Resources\BookingCollection;
@@ -47,7 +50,7 @@ use DB;
 use Input;
 use App\Services\TotalCostCalculation;
 use App\Repository\Eloquent\StripeUserMetadataRepository;
-use App\Repository\ProviderBadgeReviewRepository;
+use App\Repository\UserBadgeReviewRepository;
 use App\Services\MailService;
 use Storage;
 use App\Bookingactivitylogs;
@@ -283,7 +286,7 @@ class BookingController extends Controller
             $message = $validator3->messages()->all();
              return response()->json(['message' => $message], 400);
          }*/
-      
+
 
         try {
             $booking = $bookingService->createBooking($request->all(), $user);
@@ -653,44 +656,34 @@ class BookingController extends Controller
 
     }
 
-    public function getbookingdetails(Request $request){
-       
-        if(!$request->has('id')){
-           return  response()->json(['data' => 'id not found'], 404);
-        }
+    public function getbookingdetails(Request $request, Booking $booking, string $dateString = null) {
+        /** @var User $user */
         $user = Auth::user();
-        $user_id = $user->id;
-        $id = $request->id;
-        // print_r($user_id);exit;
 
-        $data = Booking::join('booking_status', 'bookings.booking_status_id', '=', 'booking_status.id')
-                ->join('plans','bookings.plan_type','=','plans.id')
-                ->select('bookings.*','plans.plan_name','booking_status.status')
-                ->where('bookings.id', $id)
-                ->get();
-       
-
-        $services = app(BookingServiceRepository::class)->getServiceDetails($id);
-        $bookingaddress = app(BookingServiceAlias::class)->GetBookingAddress($id);
-        $question = app(BookingServiceAlias::class)->getBookingQuestions($id);
-       
-        $providerscount = app(BookingReqestProviderRepository::class)->getBookingProvidersCount($id);
-        if( $providerscount[0]['accepted_count']>0){
-            $providers = app(BookingReqestProviderRepository::class)->getBookingAccptedProvidersDetails($id);
-        }else{
-            $providers = app(BookingReqestProviderRepository::class)->getBookingPendingProvidersDetails($id);
+        /** @var BookingVerificationService $bookingVerificationService */
+        $bookingVerificationService = app(BookingVerificationService::class);
+        if (
+            !$user->isAdmin() &&
+            !$bookingVerificationService->isUserTheBookingCustomer($user, $booking) &&
+            !$bookingVerificationService->isUserAChosenBookingProvider($user, $booking)
+        ) {
+            return response()->json(['message' => 'Access denied to view the booking details'], 403);
         }
 
-        if(count($providers)>0){
-            foreach($providers as $key=>$val){
-                $providers[$key]['badges'] = app(ProviderBadgeReviewRepository::class)->getBadgeDetails($val['provider_user_id']);
-                $providers[$key]['review'] = app(ProviderBadgeReviewRepository::class)->getReviewDetails($val['provider_user_id']);
-                $providers[$key]['avgrate'] = app(ProviderBadgeReviewRepository::class)->getAvgRating($val['provider_user_id']);
-            }
+        /** @var BookingJobsManager $bookingJobsManager */
+        $bookingJobsManager = app(BookingJobsManager::class);
+        try {
+            $date = !is_null($dateString) ? Carbon::createFromFormat('dmYHis', $dateString) : null;
+        } catch (InvalidFormatException $exception) {
+            return response()->json(['message' => 'Invalid date format received'], 400);
         }
-     
-        return response()->json(['data' => $data,'services'=>$services,'providers'=>$providers,'providerscount'=>$providerscount,'bookingaddress'=>$bookingaddress,'question'=>$question]);
 
+        try {
+            $job = $bookingJobsManager->getBookingJob($booking, $date);
+        } catch (\InvalidArgumentException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 400);
+        }
+        return response()->json(['details' => $job]);
     }
 
     public function providerdetails(Request $request)
@@ -708,9 +701,9 @@ class BookingController extends Controller
             $id = $request->id;
 
             $providers = app(UserRepository::class)->getProviderDetails($id); 
-            $providers[0]['badges'] = app(ProviderBadgeReviewRepository::class)->getBadgeDetails($id );
-            $providers[0]['review'] = app(ProviderBadgeReviewRepository::class)->getReviewDetails($id );
-            $providers[0]['avgrate'] = app(ProviderBadgeReviewRepository::class)->getAvgRating($id);
+            $providers[0]['badges'] = app(UserBadgeReviewRepository::class)->getBadgeDetails($id );
+            $providers[0]['review'] = app(UserBadgeReviewRepository::class)->getReviewDetails($id );
+            $providers[0]['avgrate'] = app(UserBadgeReviewRepository::class)->getAvgRating($id);
             return response()->json(['data' => $providers]);
         }
         # code...

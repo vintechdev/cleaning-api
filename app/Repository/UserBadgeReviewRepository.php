@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use App\Userreview;
 use App\UserBadge;
 use App\Badges;
-class ProviderBadgeReviewRepository{
+class UserBadgeReviewRepository{
 
     public function getBadgeDetails($providerid){
         $badges = UserBadge::leftJoin('badges', function($join){

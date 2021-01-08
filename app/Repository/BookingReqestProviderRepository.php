@@ -24,15 +24,19 @@ class BookingReqestProviderRepository{
         ->get(['booking_request_providers.*','users.first_name as provider_first_name','users.last_name as provider_last_name', 'users.profilepic as provider_profilepic','users.mobile_number as provider_mobile_number','users.email'])->toArray();
         return $result;
     }
-    public function CancelBooking($bookingid){
-        $result = Bookingrequestprovider::where('booking_id',$bookingid)->update(array('status' => 'rejected'));
-        return $result;
 
-    }
     public function getBookingProvidersData($bookingid){
-        $result = Bookingrequestprovider::leftJoin('users','users.id', '=','booking_request_providers.provider_user_id')->where('booking_request_providers.booking_id',$bookingid)->get(['booking_request_providers.*','users.email','users.first_name'])->toArray();
-        return $result;
-
+        return Bookingrequestprovider::leftJoin('users','users.id', '=','booking_request_providers.provider_user_id')
+            ->where('booking_request_providers.booking_id',$bookingid)
+            ->get([
+                'booking_request_providers.*',
+                'users.email',
+                'users.first_name as provider_first_name',
+                'users.last_name as provider_last_name',
+                'users.profilepic as provider_profilepic',
+                'users.mobile_number as provider_mobile_number',
+                'users.email'
+            ])->toArray();
   }
 
     /**

@@ -106,6 +106,16 @@ class RecurringBookingService
 
     /**
      * @param Event $event
+     * @param Carbon $date
+     * @return RecurringBooking|null
+     */
+    public function findByEventAndDate(Event $event, Carbon $date): ?RecurringBooking
+    {
+        return $this->recurringBookingRepo->findByEventAndDate($event, $date);
+    }
+
+    /**
+     * @param Event $event
      * @return Collection
      */
     public function findByEvent(Event $event): Collection

@@ -229,16 +229,24 @@ class BookingService
         );
     }
 
-    public function GetBookingAddress($id)
+    /**
+     * @param int $id
+     * @return array
+     */
+    public function getBookingAddress(int $id)
     {
-        return $address = Bookingaddress::where('booking_id',$id)->get()->toArray();
+        return Bookingaddress::where('booking_id',$id)->get()->toArray();
     }
-    public function getBookingQuestions($id)
+
+    /**
+     * @param int $id
+     * @return array
+     */
+    public function getBookingQuestions(int $id)
     {
         $questions = Bookingquestion::with('service_questions','service_questions.service')->where('booking_id',$id)->get()->toArray();
-       
+        $qst = [];
         if(count($questions)>0){
-            $qst = [];
             foreach($questions as $k=>$v){
                 $q =[];
                // $questiondet = 

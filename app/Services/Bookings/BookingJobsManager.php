@@ -122,10 +122,6 @@ class BookingJobsManager
     public function getBookingJob(Booking $booking, Carbon $recurringDate = null)
     {
         if (!$recurringDate) {
-            if ($booking->isRecurring()) {
-                throw new \InvalidArgumentException('Booking is a recurring booking. Individual recurring date is required.');
-            }
-
             return $this->buildJob(
                 $booking,
                 $this->getProviderDetails($booking),

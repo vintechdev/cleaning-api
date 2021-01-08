@@ -123,7 +123,8 @@ class BookingJobsManager
                 [
                     'from' => $booking->getStartDate(),
                     'to' => $booking->getFinalBookingDateTime()
-                ]
+                ],
+                $this->buildBookingServices($booking)
             );
         }
 
@@ -136,7 +137,8 @@ class BookingJobsManager
                 [
                     'from' => $recurringBooking->getBooking()->getStartDate(),
                     'to' => $recurringBooking->getBooking()->getFinalBookingDateTime()
-                ]
+                ],
+                $this->buildBookingServices($recurringBooking->getBooking())
             );
         }
 
@@ -150,8 +152,26 @@ class BookingJobsManager
             [
                 'from' => $recurringDate,
                 'to' => Booking::calculateFinalBookingDateTime($recurringDate, $booking->getFinalHours())
-            ]
+            ],
+            $this->buildBookingServices($booking)
         );
+    }
+
+    /**
+     * @param Booking $booking
+     * @return array
+     */
+    private function buildBookingServices(Booking $booking) : array
+    {
+        $services = [];
+        /** @var \App\Bookingservice $service */
+        foreach ($booking->getBookingServices() as $service) {
+            $serviceArray = $service->toArray();
+            $serviceArray['name'] = $service->getService()->name;
+            $services[] = $serviceArray;
+        }
+
+        return $services;
     }
 
     /**
@@ -178,11 +198,12 @@ class BookingJobsManager
         /** @var Booking $booking */
         foreach ($bookings->limit(15)->get('bookings.*') as $booking){
             $providerDetails = $this->getProviderDetails($booking);
+            $services = $this->buildBookingServices($booking);
             $dates = $this
                 ->bookingEventService
                 ->listBookingDatesBetween($booking, $from, $to);
             foreach ($dates as $date) {
-                $job = $this->buildJob($booking, $providerDetails, $date);
+                $job = $this->buildJob($booking, $providerDetails, $date, $services);
                 $bookingJobs[] = $job;
             }
         }
@@ -209,9 +230,10 @@ class BookingJobsManager
      * @param Booking $booking
      * @param array $providerDetails
      * @param array $date
+     * @param array $services
      * @return array
      */
-    private function buildJob(Booking $booking, array $providerDetails, array $date): array
+    private function buildJob(Booking $booking, array $providerDetails, array $date, array $services): array
     {
         $job = [];
         $job = array_merge($job, $date);
@@ -221,7 +243,7 @@ class BookingJobsManager
         $job['is_recurring_item'] = $booking->isRecurring();
         $job['booking_status'] = $booking->getStatus();
         $job['providers'] = $providerDetails;
-        $job['booking_service'] = $booking->getBookingServicesArr();;
+        $job['booking_service'] = $services;
         $job['booking_status_name'] = Bookingstatus::getStatusNameById($booking->booking_status_id);
         $job['user'] = $booking->getUserDetails();
         $job['address'] = $this->bookingService->getBookingAddress($booking->getId());

@@ -215,6 +215,7 @@ class BookingJobsManager
     {
         $job = [];
         $job = array_merge($job, $date);
+        $job['final_hours'] = $booking->getFinalHours();
         $job['booking_id'] = $booking->getId();
         $job['is_recurring_item'] = $booking->isRecurring();
         $job['booking_status'] = $booking->getStatus();

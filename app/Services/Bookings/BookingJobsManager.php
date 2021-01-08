@@ -242,9 +242,6 @@ class BookingJobsManager
             ->bookingRequestProviderRepo
             ->getBookingAccptedProvidersDetails($booking->id);
 
-        return [
-            'pending' => $pendingProviders,
-            'accepted' => $acceptedProviders
-        ];
+        return array_merge($pendingProviders, $acceptedProviders);
     }
 }

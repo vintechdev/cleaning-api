@@ -88,6 +88,7 @@ Route::middleware(['auth:api','scope:customer,provider'])->namespace('Backend\AP
     Route::patch('bookings/{booking}/dates/{recurring_date}', 'BookingController@updateRecurredBooking')->name('update_recurred_booking')->middleware(['can:update,booking']);
     Route::get('bookings/{booking}', 'BookingController@getbookingdetails')->name('getbookingdetails');
     Route::get('bookings/{booking}/dates/{recurring_date}', 'BookingController@getbookingdetails')->name('getbookingdetails');
+    Route::get('/bookings', 'BookingJobsController@listAllJobs')->middleware('scope:customer');
 });
 
 Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->prefix('v1/customer')->group(function () {
@@ -106,8 +107,6 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
     Route::get('/bookings/{bookingId}/times', 'BookingTimesController@listBookingTimesByBookingId')
         ->name('api.bookings.times')
         ->middleware('scope:customer');
-
-    Route::get('/bookings/jobs', 'BookingJobsController@listAllJobs')->middleware('scope:customer');
 
     Route::post('add_multipal_question', 'BookingquestionsController@add_multipal_question')->name('add_multipal_question')->middleware(['scope:customer']);
     Route::post('add_multipal_service', 'BookingserviceController@add_multipal_service')->name('add_multipal_service')->middleware(['scope:customer']);
@@ -187,9 +186,6 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
 
  Route::middleware(['auth:api', 'role:provider'])->namespace('Backend\API')->prefix('v1/provider')->group(function () {
     // provider Route
-
-    Route::get('/bookings/jobs', 'BookingJobsController@listAllProviderJobs')->middleware('scope:provider');
-
 
     // yash api
     Route::patch('provider_accept_booking/{uuid}', 'BookingrequestprovidersController@provider_accept')->name('api.Bookingrequestproviders.edit')->middleware(['scope:provider']);

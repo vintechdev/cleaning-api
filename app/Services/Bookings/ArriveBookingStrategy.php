@@ -38,7 +38,9 @@ class ArriveBookingStrategy extends AbstractBookingStatusChangeStrategy
                 );
             }
 
-            $booking = $this->recurringBookingService->findOrCreateRecurringBooking($booking, $recurredDate);
+            $booking = $this->recurringBookingService
+                ->findOrCreateRecurringBooking($booking, $recurredDate)
+                ->getBooking();
         }
 
         if (!$this->canUserArriveForBooking($booking, $user)) {

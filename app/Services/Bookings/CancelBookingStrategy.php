@@ -28,22 +28,35 @@ class CancelBookingStrategy extends AbstractBookingStatusChangeStrategy
      */
     protected function handleStatusChange(Booking $booking, User $user, Carbon $recurredDate = null): Booking
     {
-        if ($booking->isRecurring() && !$recurredDate) {
-            throw new RecurringBookingStatusChangeException(
-                'Status for recurring booking cannot be changed to cancelled. Individual recurred booking items need to be changed.'
-            );
+        if (!$this->getStatusChangeMessage()) {
+            throw new InvalidBookingStatusActionException('Notes are required for cancelling booking');
         }
 
         if (!$this->canUserCancelBooking($booking, $user)) {
             throw new UnauthorizedAccessException('User does not have permission to cancel this booking');
         }
 
-        if (!$this->getStatusChangeMessage()) {
-            throw new InvalidBookingStatusActionException('Notes are required for cancelling booking');
+        if ($booking->isRecurring() && !$recurredDate && $booking->getStatus() != Bookingstatus::BOOKING_STATUS_PENDING) {
+            throw new RecurringBookingStatusChangeException('A parent booking can only be cancelled if it is pending');
+        }
+
+        if ($booking->isRecurring() && $recurredDate && $booking->getStatus() == Bookingstatus::BOOKING_STATUS_ACCEPTED) {
+            $booking = $this
+                ->recurringBookingService
+                ->findOrCreateRecurringBooking($booking, $recurredDate)
+                ->getBooking();
         }
 
         if ($booking->getStatus() === Bookingstatus::BOOKING_STATUS_CANCELLED) {
             throw new InvalidBookingStatusActionException('Booking is already cancelled');
+        }
+
+        if (!in_array($booking->getStatus(), [
+            Bookingstatus::BOOKING_STATUS_PENDING,
+            Bookingstatus::BOOKING_STATUS_ACCEPTED,
+            Bookingstatus::BOOKING_STATUS_ARRIVED
+        ])) {
+            throw new BookingStatusChangeException('Status of this booking can not be changed to cancelled');
         }
 
         if (!$booking->setStatus(Bookingstatus::BOOKING_STATUS_CANCELLED)->save()) {
@@ -74,7 +87,6 @@ class CancelBookingStrategy extends AbstractBookingStatusChangeStrategy
             return false;
         }
 
-        // If admin and status is pending or accepted
         if ($user->isAdmin()) {
             return true;
         }
@@ -92,7 +104,7 @@ class CancelBookingStrategy extends AbstractBookingStatusChangeStrategy
         // If customer and status is pending
         if (
             $this->isUserTheBookingCustomer($user, $booking) &&
-            $booking->getStatus() == Bookingstatus::BOOKING_STATUS_PENDING
+            in_array($booking->getStatus(), [Bookingstatus::BOOKING_STATUS_PENDING, Bookingstatus::BOOKING_STATUS_ACCEPTED])
         ) {
             return true;
         }

@@ -203,7 +203,7 @@ class BookingJobsManager
 
         if ($addDetailsUrl) {
             if ($booking->isRecurring() && isset($date['to']) && !is_null($date['to'])) {
-                $job['details_url'] = route('getrecurredbookingdetails', [$booking->getId(), $date['to']->format('dmYHis')]);
+                $job['details_url'] = route('getrecurredbookingdetails', [$booking->getId(), $date['from']->format('dmYHis')]);
             } else {
                 $job['details_url' ] = route('getbookingdetails', [$booking->getId()]);
             }

@@ -172,6 +172,6 @@ abstract class AbstractBookingStatusChangeStrategy implements BookingStatusChang
      */
     public function getStatusChangeMessage(): string
     {
-        return (($this->statusChangeMessage!=null)?$this->statusChangeMessage:'');
+        return (($this->statusChangeMessage!=null) ? $this->statusChangeMessage : '');
     }
 }

@@ -48,6 +48,9 @@ class RecurringPatternService
 
         for ($i = 1; $i < $limit; $i++) {
             $date = $recurringPatternable->getNextValidDateRelativeTo($date);
+            if (!$date) {
+                break;
+            }
             $dates[] = clone $date;
         }
 
@@ -81,6 +84,9 @@ class RecurringPatternService
 
         for ($i = $j; $i < $limit; $i++) {
             $date = $recurringPatternable->getNextValidDateRelativeTo($date);
+            if (!$date) {
+                break;
+            }
             $dates[] = clone $date;
         }
 
@@ -105,7 +111,7 @@ class RecurringPatternService
 
         while (true) {
             $date = $recurringPatternable->getNextValidDateRelativeTo($date);
-            if (!$toDate->greaterThan($date)) {
+            if (!$date || !$toDate->greaterThan($date)) {
                 break;
             }
             $dates[] = clone $date;

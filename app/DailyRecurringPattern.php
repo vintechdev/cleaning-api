@@ -44,8 +44,12 @@ class DailyRecurringPattern extends Model implements RecurringDateInterface
      * @param Carbon $date
      * @return Carbon
      */
-    public function getNextValidDateRelativeTo(Carbon $date): Carbon
+    public function getNextValidDateRelativeTo(Carbon $date): ?Carbon
     {
+        $endDateTime = $this->getRecurringPattern()->getEvent()->getEndDateTime();
+        if ($date->greaterThan($endDateTime)) {
+            return null;
+        }
         $startDateTime = $this->getRecurringPattern()->getEvent()->getStartDateTime();
         if ($startDateTime->greaterThan($date)) {
             return $startDateTime;
@@ -54,15 +58,25 @@ class DailyRecurringPattern extends Model implements RecurringDateInterface
         $days = $date->floatDiffInDays($startDateTime);
         $separationCount = $this->getRecurringPattern()->getSeparationCount();
         if ($days < $separationCount) {
-            return $this->getNextRecurringDate($startDateTime);
+            $nextDate = $this->getNextRecurringDate($startDateTime);
+            if ($nextDate->greaterThan($endDateTime)) {
+                return null;
+            }
+            return $nextDate;
         }
 
         $daysToAdd = floor($days);
         $startDateTime->modify('+' . $daysToAdd . ' days');
 
-        return floor($days) !== $days ?
-            $this->getNextRecurringDate($startDateTime) :
-            $startDateTime;
+        if (floor($days) !== $days) {
+            $nextDate = $this->getNextRecurringDate($startDateTime);
+            if ($nextDate->greaterThan($endDateTime)) {
+                return null;
+            }
+            return $nextDate;
+        }
+
+        return $startDateTime;
     }
 
     /**

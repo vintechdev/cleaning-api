@@ -72,29 +72,13 @@ abstract class AbstractBookingList implements BookingListInterface
     }
 
     /**
-     * @return int
-     */
-    public function getMonth(): ?int
-    {
-        return $this->month;
-    }
-
-    /**
      * @param int|null $month
      * @return $this
      */
     public function setMonth(int $month = null)
     {
-        $this->month = $month;
+        $this->month = str_pad($month, 2, 0, STR_PAD_LEFT);
         return $this;
-    }
-
-    /**
-     * @return int
-     */
-    public function getYear(): ?int
-    {
-        return $this->year;
     }
 
     /**
@@ -115,6 +99,7 @@ abstract class AbstractBookingList implements BookingListInterface
         if (!$this->year && !$this->month) {
             return null;
         }
+
         return Carbon::createFromFormat('dmY', '01' . $this->month . $this->year);
     }
 
@@ -129,7 +114,7 @@ abstract class AbstractBookingList implements BookingListInterface
         }
 
         $to = clone $from;
-        return $to->addMonth();
+        return $to->addMonth()->subDay();
     }
 
     /**

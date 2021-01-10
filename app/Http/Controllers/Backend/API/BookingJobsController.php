@@ -44,13 +44,19 @@ class BookingJobsController extends Controller
         /** @var User $user */
         $user = auth()->user();
 
-        $jobs = $bookingManager->getBookingJobsByStatus(
-            Bookingstatus::getStatusIdByName($request->get('status')),
-            $user,
-            $user->isProvider(),
-            $request->get('month'),
-            $request->get('year')
-        );
+        try {
+            $jobs = $bookingManager->getBookingJobsByStatus(
+                Bookingstatus::getStatusIdByName($request->get('status')),
+                $user,
+                $user->isProvider(),
+                $request->get('month'),
+                $request->get('year')
+            );
+        } catch (\InvalidArgumentException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 400);
+        } catch (\Exception $exception) {
+            return response()->json(['message' => 'Something went wrong. Please contact administrator.'], 500);
+        }
 
         return response()->json($jobs, 200);
     }

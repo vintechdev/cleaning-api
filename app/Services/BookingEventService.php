@@ -210,11 +210,8 @@ class BookingEventService
         $returnDates = [];
         /** @var Carbon $date */
         foreach ($dates as $date) {
-            $from = $date->format('d-m-Y H:i:s');
+            $from = clone $date;
             $to = Booking::calculateFinalBookingDateTime($date, $booking->getFinalHours());
-            if ($to) {
-                $to = $to->format('d-m-Y H:i:s');
-            }
             $returnDates[] = ['from' => $from, 'to' => $to];
         }
 

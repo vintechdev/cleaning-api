@@ -50,6 +50,8 @@ class BookingStatusChangeFactory
                 return app(ArriveBookingStrategy::class);
             case BookingStatusChangeTypes::STATUS_COMPLETED:
                 return app(CompleteBookingStrategy::class);
+            case BookingStatusChangeTypes::STATUS_CANCEL_AFTER:
+                return app(CancelAfterBookingStrategy::class);
             default:
                 throw new InvalidBookingStatusException('Invalid booking status received');
         }

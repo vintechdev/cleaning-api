@@ -10,6 +10,7 @@ use App\Services\RecurringBookingService;
 use App\User;
 use Carbon\Carbon;
 use App\Bookingstatus;
+use Illuminate\Database\Eloquent\Collection;
 
 /**
  * Class BookingJobsManager
@@ -43,7 +44,13 @@ class BookingJobsManager
     private $badgeReviewRepo;
 
     /**
+     * @var BookingListFactory
+     */
+    private $bookingListFactory;
+
+    /**
      * BookingManager constructor.
+     * @param BookingListFactory $bookingListFactory
      * @param BookingEventService $bookingEventService
      * @param BookingReqestProviderRepository $bookingReqestProviderRepository
      * @param RecurringBookingService $recurringBookingService
@@ -51,12 +58,14 @@ class BookingJobsManager
      * @param UserBadgeReviewRepository $badgeReviewRepository
      */
     public function __construct(
+        BookingListFactory $bookingListFactory,
         BookingEventService $bookingEventService,
         BookingReqestProviderRepository $bookingReqestProviderRepository,
         RecurringBookingService $recurringBookingService,
         BookingService $bookingService,
         UserBadgeReviewRepository $badgeReviewRepository
     ) {
+        $this->bookingListFactory = $bookingListFactory;
         $this->bookingEventService = $bookingEventService;
         $this->bookingRequestProviderRepo = $bookingReqestProviderRepository;
         $this->recurringBookingService = $recurringBookingService;
@@ -65,53 +74,55 @@ class BookingJobsManager
     }
 
     /**
+     * @param int $statusId
      * @param User $user
-     * @param Carbon|null $fromDate
-     * @param int $totalPeriod
+     * @param bool $isProvider
+     * @param int|null $month
+     * @param int|null $year
      * @return array
      */
-    public function getAllPastBookingJobsByUser(User $user, Carbon $fromDate = null, $totalPeriod = 30, bool $isProvider=false): array
+    public function getBookingJobsByStatus(
+        int $statusId,
+        User $user,
+        bool $isProvider = false,
+        int $month = null,
+        int $year = null
+    ): array
     {
-        if (!$fromDate) {
-            $fromDate = (Carbon::now())->subDays($totalPeriod);
-        } else if ($fromDate->greaterThanOrEqualTo(Carbon::now())) {
+        $bookingList = $this
+            ->bookingListFactory
+            ->create($statusId);
+        $bookings = $bookingList
+            ->setUser($user)
+            ->setIsProvider($isProvider)
+            ->setMonth($month)
+            ->setYear($year)
+            ->getAllBookings();
+
+        if (!$bookings->count()) {
             return [];
         }
 
-        $toDate = (clone $fromDate)->addDays($totalPeriod);
-        if ($toDate->greaterThanOrEqualTo(Carbon::now())) {
-            $toDate = Carbon::now();
+        if ($statusId != Bookingstatus::BOOKING_STATUS_ACCEPTED) {
+            $bookingJobs = [];
+            /** @var Booking $booking */
+            foreach ($bookings as $booking) {
+                $providerDetails = $this->getProviderDetails($booking);
+                $services = $this->buildBookingServices($booking);
+                $bookingJobs[] = $this
+                    ->buildJob(
+                        $booking,
+                        $providerDetails,
+                        ['from' => $booking->getStartDate(), 'to' => $booking->getFinalBookingDateTime()],
+                        $services,
+                        true
+                    );
+            }
+
+            return $bookingJobs;
         }
 
-        return $this->getAllJobsBetweenDates($user, $fromDate, $toDate, $isProvider);
-    }
-
-    /**
-     * @param User $user
-     * @param Carbon|null $fromDate
-     * @param int $totalPeriod in days
-     * @return array
-     */
-    public function getAllFutureBookingJobsByUser(User $user, Carbon $fromDate = null, $totalPeriod = 30, bool $isProvider=false): array
-    {
-        $fromDate = ($fromDate && $fromDate->greaterThanOrEqualTo(Carbon::now())) ? $fromDate : Carbon::now();
-        $toDate = (clone $fromDate)->addDays($totalPeriod);
-        return $this->getAllJobsBetweenDates($user, $fromDate, $toDate, $isProvider);
-    }
-
-    /**
-     * @param User $user
-     * @param Carbon|null $fromDate
-     * @param int $totalPeriod in days
-     * @return array
-     */
-    public function getAllBookingJobsByUser(User $user, Carbon $fromDate = null, $totalPeriod = 30, bool $isProvider=false): array
-    {
-        if (!$fromDate) {
-            $fromDate = Carbon::now();
-        }
-        $toDate = (clone $fromDate)->addDays($totalPeriod);
-        return $this->getAllJobsBetweenDates($user, $fromDate, $toDate, $isProvider);
+        return $this->buildAcceptedBookingJobs($bookings, $bookingList->getFrom(), $bookingList->getTo());
     }
 
     /**
@@ -180,72 +191,28 @@ class BookingJobsManager
     }
 
     /**
-     * @param User $user
-     * @param Carbon $from
-     * @param Carbon $to
-     * @param bool $isProvider
-     * @return array
-     */
-    private function getAllJobsBetweenDates(User $user, Carbon $from, Carbon $to, bool $isProvider=false): array
-    {
-        $jobs = [];
-
-        if($isProvider){
-            $bookings = Booking::with(['users','bookingServices','bookingServices.service'])->leftJoin('booking_request_providers','booking_request_providers.booking_id','=','bookings.id')->where('booking_request_providers.provider_user_id',$user->id);
-        }else{
-            $bookings = Booking::with(['bookingServices','bookingServices.service'])->where('bookings.user_id',$user->id);//->findByUserId($user->id);
-        }
-        if (!$bookings->count()){
-            return $jobs;
-        }
-
-        $bookingJobs = [];
-        /** @var Booking $booking */
-        foreach ($bookings->limit(15)->get('bookings.*') as $booking){
-            $providerDetails = $this->getProviderDetails($booking);
-            $services = $this->buildBookingServices($booking);
-            $dates = $this
-                ->bookingEventService
-                ->listBookingDatesBetween($booking, $from, $to);
-            foreach ($dates as $date) {
-                $job = $this->buildJob($booking, $providerDetails, $date, $services);
-                $bookingJobs[] = $job;
-            }
-        }
-
-        usort($bookingJobs, function ($a, $b) {
-            $aDate = Carbon::createFromFormat('d-m-Y H:i:s', $a['from']);
-            $bDate = Carbon::createFromFormat('d-m-Y H:i:s', $b['from']);
-
-            if ($bDate->lessThan($aDate)) {
-                return true;
-            }
-
-            if ($bDate->equalTo($aDate)) {
-                return ($b['booking_id'] <= $a['booking_id']);
-            }
-
-            return false;
-        });
-
-        return $bookingJobs;
-    }
-
-    /**
      * @param Booking $booking
      * @param array $providerDetails
      * @param array $date
      * @param array $services
      * @return array
      */
-    private function buildJob(Booking $booking, array $providerDetails, array $date, array $services): array
+    private function buildJob(Booking $booking, array $providerDetails, array $date, array $services, bool $addDetailsUrl = false): array
     {
         $job = [];
+
+        if ($addDetailsUrl) {
+            if ($booking->isRecurring() && isset($date['to']) && !is_null($date['to'])) {
+                $job['details_url'] = route('getrecurredbookingdetails', [$booking->getId(), $date['from']->format('dmYHis')]);
+            } else {
+                $job['details_url' ] = route('getbookingdetails', [$booking->getId()]);
+            }
+        }
+
         $job = array_merge($job, $date);
         $job['final_hours'] = $booking->getFinalHours();
         $job['booking_id'] = $booking->getId();
         $job['plan_name'] = $booking->isChildBooking() ? $booking->getParentBooking()->getPlan()->plan_name : $booking->getPlan()->plan_name;
-        $job['is_recurring_item'] = $booking->isRecurring();
         $job['booking_provider_type'] = $booking->booking_provider_type;
         $job['promo_code'] = $booking->promocode;
         $job['total_cost'] = $booking->total_cost;
@@ -261,6 +228,37 @@ class BookingJobsManager
         $job['question'] = $this->bookingService->getBookingQuestions($booking->getId());
 
         return $job;
+    }
+
+    private function buildAcceptedBookingJobs(Collection $bookings, Carbon $from, Carbon $to): array
+    {
+        $bookingJobs = [];
+        /** @var Booking $booking */
+        foreach ($bookings as $booking) {
+            $providerDetails = $this->getProviderDetails($booking);
+            $services = $this->buildBookingServices($booking);
+            $dates = $this
+                ->bookingEventService
+                ->listBookingDatesBetween($booking, $from, $to);
+            foreach ($dates as $date) {
+                $job = $this->buildJob($booking, $providerDetails, $date, $services, true);
+                $bookingJobs[] = $job;
+            }
+        }
+
+        usort($bookingJobs, function ($a, $b) {
+            if ($b['from']->lessThan($a['from'])) {
+                return true;
+            }
+
+            if ($b['from']->equalTo($a['from'])) {
+                return ($b['booking_id'] <= $a['booking_id']);
+            }
+
+            return false;
+        });
+
+        return $bookingJobs;
     }
 
     /**

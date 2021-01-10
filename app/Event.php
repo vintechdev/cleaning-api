@@ -36,6 +36,28 @@ class Event extends Model
     }
 
     /**
+     * @param Carbon $date
+     * @return $this
+     */
+    public function setEndDateTime(Carbon $date)
+    {
+        $this->end_date = $date->format('Y-m-d H:i:s');
+        return $this;
+    }
+
+    /**
+     * @return Carbon|null
+     */
+    public function getEndDateTime(): ?Carbon
+    {
+        if ($this->end_date) {
+            return Carbon::createFromFormat('Y-m-d H:i:s', $this->end_date);
+        }
+
+        return null;
+    }
+
+    /**
      * @return HasOne
      */
     public function recurringPattern()

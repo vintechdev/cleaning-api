@@ -85,10 +85,13 @@ abstract class AbstractBookingStatusChangeStrategy implements BookingStatusChang
         DB::beginTransaction();
         try {
             if ($recurredDate) {
-                $booking = $this
+                $recurringBooking = $this
                     ->recurringBookingService
-                    ->findOrCreateRecurringBooking($booking, $recurredDate)
-                    ->getBooking();
+                    ->findByEventAndDate($booking->getEvent(), $recurredDate);
+
+                if ($recurringBooking) {
+                    $booking = $recurringBooking->getBooking();
+                }
             }
 
             $booking = $this->handleStatusChange($booking, $user, $recurredDate);
@@ -169,6 +172,6 @@ abstract class AbstractBookingStatusChangeStrategy implements BookingStatusChang
      */
     public function getStatusChangeMessage(): string
     {
-        return (($this->statusChangeMessage!=null)?$this->statusChangeMessage:'');
+        return (($this->statusChangeMessage!=null) ? $this->statusChangeMessage : '');
     }
 }

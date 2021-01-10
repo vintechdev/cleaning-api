@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Backend\API;
 
 use App\Booking;
 use App\Services\Bookings\BookingJobsManager;
+use App\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -24,15 +25,13 @@ class BookingJobsController extends Controller
      */
     public function listAllJobs(Request $request, BookingJobsManager $bookingManager)
     {
-
-     
         $validator = Validator::make(
             $request->all(),
             [
-                'from' => 'date_format:d-m-Y H:i:s',
-                'total_period' => 'int',
-                'type' => [
-                    Rule::in(['all', 'past', 'future'])
+                'month' => 'date_format:m',
+                'year' => 'date_format:Y',
+                'status' => [
+                    Rule::in(array_values(Bookingstatus::getAllStatusNames()))
                 ]
             ]
         );
@@ -42,57 +41,23 @@ class BookingJobsController extends Controller
             return response()->json(['message' => $message], 400);
         }
 
-        $from = $request->has('from') ? Carbon::createFromFormat('d-m-Y H:i:s', $request->get('from')) : null;
-        $totalDays = $request->has('total_period') ? $request->get('total_period') : 30;
+        /** @var User $user */
+        $user = auth()->user();
 
-        if (!$request->has('type') || $request->get('type') == 'all') {
-            $jobs = $bookingManager->getAllBookingJobsByUser(auth()->user(), $from, $totalDays);
-            return response()->json($jobs, 200);
+        try {
+            $jobs = $bookingManager->getBookingJobsByStatus(
+                Bookingstatus::getStatusIdByName($request->get('status')),
+                $user,
+                $user->isProvider(),
+                $request->get('month'),
+                $request->get('year')
+            );
+        } catch (\InvalidArgumentException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 400);
+        } catch (\Exception $exception) {
+            return response()->json(['message' => 'Something went wrong. Please contact administrator.'], 500);
         }
 
-        if ($request->get('type') == 'past') {
-            $jobs = $bookingManager->getAllPastBookingJobsByUser(auth()->user(), $from, $totalDays);
-            return response()->json($jobs, 200);
-        }
-
-        $jobs = $bookingManager->getAllFutureBookingJobsByUser(auth()->user(), $from, $totalDays);
-        return response()->json($jobs, 200);
-    }
-    //list all provider's job request
-    public function listAllProviderJobs(Request $request, BookingJobsManager $bookingManager)
-    {
-
-     
-        $validator = Validator::make(
-            $request->all(),
-            [
-                'from' => 'date_format:d-m-Y H:i:s',
-                'total_period' => 'int',
-                'type' => [
-                    Rule::in(['all', 'past', 'future'])
-                ]
-            ]
-        );
-
-        if ($validator->fails()) {
-            $message = $validator->messages()->all();
-            return response()->json(['message' => $message], 400);
-        }
-
-        $from = $request->has('from') ? Carbon::createFromFormat('d-m-Y H:i:s', $request->get('from')) : null;
-        $totalDays = $request->has('total_period') ? $request->get('total_period') : 30;
-
-        if (!$request->has('type') || $request->get('type') == 'all') {
-            $jobs = $bookingManager->getAllBookingJobsByUser(auth()->user(), $from, $totalDays,true);
-            return response()->json($jobs, 200);
-        }
-
-        if ($request->get('type') == 'past') {
-            $jobs = $bookingManager->getAllPastBookingJobsByUser(auth()->user(), $from, $totalDays,true);
-            return response()->json($jobs, 200);
-        }
-
-        $jobs = $bookingManager->getAllFutureBookingJobsByUser(auth()->user(), $from, $totalDays,true);
         return response()->json($jobs, 200);
     }
 }

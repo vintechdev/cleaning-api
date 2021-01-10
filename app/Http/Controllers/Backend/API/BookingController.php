@@ -312,7 +312,7 @@ class BookingController extends Controller
     public function updateBooking(Request $request, Booking $booking, BookingStatusChangeEngine $statusChangeEngine)
     {
         $validator = Validator::make($request->all(), [
-            'status' => 'required|in:cancelled,rejected,accepted,arrived,completed',
+            'status' => 'required|in:cancelled,rejected,accepted,arrived,completed,cancel_after',
             'status_change_message' => 'nullable|string',
             'services' => 'array'
         ]);
@@ -344,7 +344,7 @@ class BookingController extends Controller
         BookingStatusChangeEngine $statusChangeEngine
     ) {
         $validator = Validator::make($request->all(), [
-            'status' => 'required|in:cancelled,rejected,accepted,arrived,completed',
+            'status' => 'required|in:cancelled,rejected,accepted,arrived,completed,cancel_after',
             'status_change_message' => 'string',
             'services' => 'array'
         ]);
@@ -383,7 +383,6 @@ class BookingController extends Controller
         } catch (RecurringBookingCreationException $exception) {
             return response()->json(['message' => $exception->getMessage()], 400);
         } catch (\Exception $exception) {
-            throw $exception;
             return response()->json(['message' => 'Something went wrong. Please contact administrator.'], 500);
         }
 

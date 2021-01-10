@@ -13,4 +13,5 @@ class BookingStatusChangeTypes
     const STATUS_CANCELLED = 'cancelled';
     const STATUS_ARRIVED = 'arrived';
     const STATUS_COMPLETED = 'completed';
+    const STATUS_CANCEL_AFTER = 'cancel_after';
 }

@@ -23,28 +23,33 @@ class AcceptedBookingList extends AbstractBookingList
         $bookingQuery
             ->where('booking_status_id', Bookingstatus::BOOKING_STATUS_ACCEPTED);
 
-        if ($this->getTo()) {
-            $bookingQuery
-                ->leftJoin('events', 'bookings.event_id', '=', 'events.id')
-                ->where(function($query) {
-                    $query
-                        ->where('bookings.plan_type', Plan::ONCEOFF)
-                        ->where('parent_booking_id', null)
-                        ->where('booking_date', '>=' ,$this->getfrom()->format('Y-m-d'))
-                        ->where('booking_date', '<=', $this->getTo()->format('Y-m-d'));
-                })
-                ->orWhere(function($query) {
-                    $query
-                        ->where('booking_date', '<=', $this->getTo()->format('d-m-Y'))
-                        ->where(function($query) {
-                            $query
-                                ->where('events.end_date', null)
-                                ->orWhere('events.end_date', '>=', $this->getFrom()->format('Y-m-d H:i:s'));
-                        });
-                });
+        if (!$this->getTo()) {
+            throw new \InvalidArgumentException('There should be an end date specified for accepted bookings.');
         }
 
-        return $bookingQuery->orderBy('booking_date', 'desc')->get();
+        $bookingQuery
+            ->leftJoin('events', 'bookings.event_id', '=', 'events.id')
+            ->where(function ($query) {
+                $query
+                    ->where(function($query) {
+                        $query
+                            ->where('bookings.plan_type', Plan::ONCEOFF)
+                            ->where('parent_booking_id', null)
+                            ->where('booking_date', '>=' ,$this->getfrom()->format('Y-m-d'))
+                            ->where('booking_date', '<=', $this->getTo()->format('Y-m-d'));
+                    })
+                    ->orWhere(function($query) {
+                        $query
+                            ->where('booking_date', '<=', $this->getTo()->format('Y-m-d'))
+                            ->where(function($query) {
+                                $query
+                                    ->where('events.end_date', null)
+                                    ->orWhere('events.end_date', '>=', $this->getFrom()->format('Y-m-d 00:00:00'));
+                            });
+                    });
+            });
+
+        return $bookingQuery->orderBy('booking_date', 'desc')->get('bookings.*');
     }
 
     /**

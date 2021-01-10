@@ -114,7 +114,8 @@ class BookingJobsManager
                         $booking,
                         $providerDetails,
                         ['from' => $booking->getStartDate(), 'to' => $booking->getFinalBookingDateTime()],
-                        $services
+                        $services,
+                        true
                     );
             }
 
@@ -196,14 +197,22 @@ class BookingJobsManager
      * @param array $services
      * @return array
      */
-    private function buildJob(Booking $booking, array $providerDetails, array $date, array $services): array
+    private function buildJob(Booking $booking, array $providerDetails, array $date, array $services, bool $addDetailsUrl = false): array
     {
         $job = [];
+
+        if ($addDetailsUrl) {
+            if ($booking->isRecurring() && isset($date['to']) && !is_null($date['to'])) {
+                $job['details_url'] = route('getrecurredbookingdetails', [$booking->getId(), $date['to']->format('dmYHis')]);
+            } else {
+                $job['details_url' ] = route('getbookingdetails', [$booking->getId()]);
+            }
+        }
+
         $job = array_merge($job, $date);
         $job['final_hours'] = $booking->getFinalHours();
         $job['booking_id'] = $booking->getId();
         $job['plan_name'] = $booking->isChildBooking() ? $booking->getParentBooking()->getPlan()->plan_name : $booking->getPlan()->plan_name;
-        $job['is_recurring_item'] = $booking->isRecurring();
         $job['booking_provider_type'] = $booking->booking_provider_type;
         $job['promo_code'] = $booking->promocode;
         $job['total_cost'] = $booking->total_cost;
@@ -232,20 +241,17 @@ class BookingJobsManager
                 ->bookingEventService
                 ->listBookingDatesBetween($booking, $from, $to);
             foreach ($dates as $date) {
-                $job = $this->buildJob($booking, $providerDetails, $date, $services);
+                $job = $this->buildJob($booking, $providerDetails, $date, $services, true);
                 $bookingJobs[] = $job;
             }
         }
 
         usort($bookingJobs, function ($a, $b) {
-            $aDate = Carbon::createFromFormat('d-m-Y H:i:s', $a['from']);
-            $bDate = Carbon::createFromFormat('d-m-Y H:i:s', $b['from']);
-
-            if ($bDate->lessThan($aDate)) {
+            if ($b['from']->lessThan($a['from'])) {
                 return true;
             }
 
-            if ($bDate->equalTo($aDate)) {
+            if ($b['from']->equalTo($a['from'])) {
                 return ($b['booking_id'] <= $a['booking_id']);
             }
 

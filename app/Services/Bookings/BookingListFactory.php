@@ -33,6 +33,9 @@ class BookingListFactory
             case Bookingstatus::BOOKING_STATUS_CANCELLED:
                 return app(CancelledBookingList::class);
 
+            case BookingStatus::BOOKING_STATUS_ARRIVED:
+                return (app(ArrivedBookingList::class));
+
             default:
                 throw new \InvalidArgumentException('Invalid booking status received');
         }

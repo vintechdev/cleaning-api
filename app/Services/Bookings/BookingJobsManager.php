@@ -107,7 +107,7 @@ class BookingJobsManager
             $bookingJobs = [];
             /** @var Booking $booking */
             foreach ($bookings as $booking) {
-                $providerDetails = $this->getProviderDetails($booking);
+                $providerDetails = $this->getProviderDetails($booking, true);
                 $services = $this->buildBookingServices($booking);
                 $bookingJobs[] = $this
                     ->buildJob(
@@ -115,6 +115,7 @@ class BookingJobsManager
                         $providerDetails,
                         ['from' => $booking->getStartDate(), 'to' => $booking->getFinalBookingDateTime()],
                         $services,
+                        true,
                         true
                     );
             }
@@ -195,9 +196,18 @@ class BookingJobsManager
      * @param array $providerDetails
      * @param array $date
      * @param array $services
+     * @param bool $addDetailsUrl
+     * @param bool $isList
      * @return array
      */
-    private function buildJob(Booking $booking, array $providerDetails, array $date, array $services, bool $addDetailsUrl = false): array
+    private function buildJob(
+        Booking $booking,
+        array $providerDetails,
+        array $date,
+        array $services,
+        bool $addDetailsUrl = false,
+        bool $isList = false
+    ): array
     {
         $job = [];
 
@@ -211,6 +221,7 @@ class BookingJobsManager
 
         $job = array_merge($job, $date);
         $job['final_hours'] = $booking->getFinalHours();
+        $job['is_recurring'] = $booking->isRecurring();
         $job['booking_id'] = $booking->getId();
         $job['plan_name'] = $booking->isChildBooking() ? $booking->getParentBooking()->getPlan()->plan_name : $booking->getPlan()->plan_name;
         $job['booking_provider_type'] = $booking->booking_provider_type;
@@ -224,8 +235,10 @@ class BookingJobsManager
         $job['booking_service'] = $services;
         $job['booking_status_name'] = Bookingstatus::getStatusNameById($booking->booking_status_id);
         $job['user'] = $booking->getUserDetails();
-        $job['address'] = $this->bookingService->getBookingAddress($booking->getId());
-        $job['question'] = $this->bookingService->getBookingQuestions($booking->getId());
+        if (!$isList) {
+            $job['address'] = $this->bookingService->getBookingAddress($booking->getId());
+            $job['question'] = $this->bookingService->getBookingQuestions($booking->getId());
+        }
 
         return $job;
     }
@@ -235,13 +248,13 @@ class BookingJobsManager
         $bookingJobs = [];
         /** @var Booking $booking */
         foreach ($bookings as $booking) {
-            $providerDetails = $this->getProviderDetails($booking);
+            $providerDetails = $this->getProviderDetails($booking, true);
             $services = $this->buildBookingServices($booking);
             $dates = $this
                 ->bookingEventService
                 ->listBookingDatesBetween($booking, $from, $to);
             foreach ($dates as $date) {
-                $job = $this->buildJob($booking, $providerDetails, $date, $services, true);
+                $job = $this->buildJob($booking, $providerDetails, $date, $services, true, true);
                 $bookingJobs[] = $job;
             }
         }
@@ -263,15 +276,19 @@ class BookingJobsManager
 
     /**
      * @param Booking $booking
+     * @param bool $isList
      * @return array
      */
-    private function getProviderDetails(Booking $booking): array
+    private function getProviderDetails(Booking $booking, bool $isList = false): array
     {
         $providers = $this->bookingRequestProviderRepo->getBookingProvidersData($booking->getId());
-        foreach ($providers as &$provider) {
-            $provider['badges'] = $this->badgeReviewRepo->getBadgeDetails($provider['provider_user_id']);
-            $provider['review'] = $this->badgeReviewRepo->getReviewDetails($provider['provider_user_id']);
-            $provider['avgrate'] = $this->badgeReviewRepo->getAvgRating($provider['provider_user_id']);
+
+        if (!$isList) {
+            foreach ($providers as &$provider) {
+                $provider['badges'] = $this->badgeReviewRepo->getBadgeDetails($provider['provider_user_id']);
+                $provider['review'] = $this->badgeReviewRepo->getReviewDetails($provider['provider_user_id']);
+                $provider['avgrate'] = $this->badgeReviewRepo->getAvgRating($provider['provider_user_id']);
+            }
         }
 
         return $providers;

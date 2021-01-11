@@ -155,10 +155,11 @@ class Booking extends Model
      */
     public static function calculateFinalBookingDateTime(Carbon $dateTime, float $finalHours): Carbon
     {
+        $clonedDateTime = clone $dateTime;
         $hours = floor($finalHours);
         $mins = round(($finalHours - $hours) * 60);
         $timeInMinutes = ($hours * 60) + $mins;
-        return $dateTime->addMinutes($timeInMinutes);
+        return $clonedDateTime->addMinutes($timeInMinutes);
     }
 
     /**

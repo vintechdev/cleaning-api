@@ -58,6 +58,6 @@ class AcceptedBookingList extends AbstractBookingList
     protected function getProviderBookingQuery(): Builder
     {
         return parent::getProviderBookingQuery()
-            ->where('booking_request_provider.status', Bookingrequestprovider::STATUS_ACCEPTED);
+            ->where('booking_request_providers.status', Bookingrequestprovider::STATUS_ACCEPTED);
     }
 }

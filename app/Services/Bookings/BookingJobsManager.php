@@ -181,13 +181,18 @@ class BookingJobsManager
     private function buildBookingServices(Booking $booking) : array
     {
         $services = [];
+        $serviceCategory = '';
         /** @var \App\Bookingservice $service */
         foreach ($booking->getBookingServices() as $service) {
+            if ($service->getService()->isDefaultService()) {
+                $serviceCategory = $service->getService()->getServicecategory()->getName();
+            }
             $serviceArray = $service->toArray();
             $serviceArray['name'] = $service->getService()->name;
             $services[] = $serviceArray;
         }
 
+        $services['category_name'] = $serviceCategory;
         return $services;
     }
 
@@ -243,6 +248,12 @@ class BookingJobsManager
         return $job;
     }
 
+    /**
+     * @param Collection $bookings
+     * @param Carbon $from
+     * @param Carbon $to
+     * @return array
+     */
     private function buildAcceptedBookingJobs(Collection $bookings, Carbon $from, Carbon $to): array
     {
         $bookingJobs = [];

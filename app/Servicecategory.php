@@ -19,8 +19,9 @@ class Servicecategory extends Model
     public function __construct(){
         parent::__construct();
     }
-    
-  /*   public function getAllCategory(){
-        return  $result = Servicecategory::where('active',1)->get()->toArray();
-    } */
+
+    public function getName()
+    {
+        return $this->name;
+    }
 }

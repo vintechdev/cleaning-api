@@ -56,6 +56,11 @@ use Storage;
 use App\Bookingactivitylogs;
 class BookingController extends Controller
 {
+
+    public function listAllStatus()
+    {
+        return Bookingstatus::all()->toArray();
+    }
     /**
      * Display a listing of the resource.
      *

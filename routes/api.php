@@ -88,8 +88,8 @@ Route::middleware(['auth:api','scope:customer,provider'])->namespace('Backend\AP
     Route::patch('bookings/{booking}/dates/{recurring_date}', 'BookingController@updateRecurredBooking')->name('update_recurred_booking')->middleware(['can:update,booking']);
     Route::get('bookings/{booking}', 'BookingController@getbookingdetails')->name('getbookingdetails');
     Route::get('bookings/{booking}/dates/{recurring_date}', 'BookingController@getbookingdetails')->name('getrecurredbookingdetails');
-    Route::get('/bookings', 'BookingJobsController@listAllJobs')->middleware('scope:customer');
-    Route::get('/allstatus', 'BookingController@listAllStatus')->middleware('scope:customer');
+    Route::get('/bookings', 'BookingJobsController@listAllJobs');//->middleware('scope:customer');
+    Route::get('/allstatus', 'BookingController@listAllStatus');//->middleware('scope:customer,provider');
 });
 
 Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->prefix('v1/customer')->group(function () {

@@ -257,7 +257,6 @@ class BookingService
                 $q['service_name'] = $v['service_questions']['service']['name'];
                 $qst[] = $q;
             }
-
         }
         return $qst;
     }

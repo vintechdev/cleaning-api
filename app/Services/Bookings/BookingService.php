@@ -110,6 +110,7 @@ class BookingService
                         $bookingAddress = Bookingaddress::where(['booking_id' => $parent->getId()])->get();
                         if ($bookingAddress) {
                             $address = $bookingAddress->toArray();
+                            $address =  $address[0];
                         }
                     } else {
                         $addresses = Useraddress::where('id', $bookings['addressid'])->get()->toarray();
@@ -118,16 +119,18 @@ class BookingService
                         }
                     }
 
-
-
+//dd($address);
+//echo $parent;exit;
                     if (count($address) > 0) {
+                      
                         $bookingaddress = new Bookingaddress();
                         $bookingaddress->booking_id = $last_insert_id;
                         $bookingaddress->address_line1 = $address['address_line1'];
                         $bookingaddress->address_line2 = $address['address_line2'];
-                        $bookingaddress->subrub = $address['suburb'];
+                        $bookingaddress->suburb = $address['suburb'];
                         $bookingaddress->state = $address['state'];
                         $bookingaddress->postcode = $address['postcode'];
+                       
                         if (!$bookingaddress->save()) {
                             DB::rollBack();
                             throw new BookingCreationException('Booking address could not be saved');

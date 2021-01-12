@@ -86,7 +86,9 @@ Route::post('getdashboard', 'HomeController@dashboard')->name('api.home.getdashb
 Route::middleware(['auth:api','scope:customer,provider'])->namespace('Backend\API')->prefix('v1')->group(function () {
     
     Route::patch('bookings/{booking}', 'BookingController@updateBooking')->name('update_booking')->middleware(['can:update,booking']);
+   
     Route::patch('bookings/{booking}/dates/{recurring_date}', 'BookingController@updateRecurredBooking')->name('update_recurred_booking')->middleware(['can:update,booking']);
+   
     Route::get('/bookings/{booking}', 'BookingController@getbookingdetails')->name('getbookingdetails');
     Route::get('bookings/{booking}/dates/{recurring_date}', 'BookingController@getbookingdetails')->name('getrecurredbookingdetails');
     Route::get('/bookings', 'BookingJobsController@listAllJobs');

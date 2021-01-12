@@ -388,6 +388,7 @@ class BookingController extends Controller
         } catch (RecurringBookingCreationException $exception) {
             return response()->json(['message' => $exception->getMessage()], 400);
         } catch (\Exception $exception) {
+            throw $exception;
             return response()->json(['message' => 'Something went wrong. Please contact administrator.'], 500);
         }
 

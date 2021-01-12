@@ -77,7 +77,7 @@ class RecurringBookingService
             return $recurringBooking;
         }
 
-        if ($date->lessThan(Carbon::now())) {
+        if ($date->lessThan(Carbon::now()->floorDay())) {
             throw new RecurringBookingCreationException('Recurring booking can not be created for past date');
         }
 

@@ -35,6 +35,10 @@ class Service extends Model
         return $this->service_cost;
     }
 
+    public function getName() {
+        return $this->name;
+    }
+
     /**
      * @param int $hours
      * @param int|null $cost

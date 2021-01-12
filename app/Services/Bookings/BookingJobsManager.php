@@ -184,10 +184,8 @@ class BookingJobsManager
         /** @var \App\Bookingservice $service */
         foreach ($booking->getBookingServices() as $service) {
             $serviceArray = $service->toArray();
-            $serviceArray['service'] = $service->getService();
-            if ($service->getService()->isDefaultService()) {
-                $serviceArray['category'] = $service->getService()->getServicecategory();
-            }
+            $serviceArray['name'] = $service->getService()->getName();
+            $serviceArray['category'] = $service->getService()->getServicecategory();
             $services[] = $serviceArray;
         }
 

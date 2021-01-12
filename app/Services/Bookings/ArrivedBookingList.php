@@ -33,7 +33,7 @@ class ArrivedBookingList extends AbstractBookingList
                 ->where('booking_date', '<=', $to->format('Y-m-d'));
         }
 
-        return $bookingQuery->orderBy('booking_date', 'desc')->get();
+        return $bookingQuery->orderBy('booking_date', 'desc')->get('bookings.*');
     }
 
     /**

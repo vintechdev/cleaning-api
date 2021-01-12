@@ -119,10 +119,8 @@ class BookingService
                         }
                     }
 
-//dd($address);
-//echo $parent;exit;
+
                     if (count($address) > 0) {
-                      
                         $bookingaddress = new Bookingaddress();
                         $bookingaddress->booking_id = $last_insert_id;
                         $bookingaddress->address_line1 = $address['address_line1'];

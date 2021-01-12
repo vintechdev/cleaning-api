@@ -1,6 +1,7 @@
 <?php
 
 namespace App;
+use App\Service;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -16,7 +17,10 @@ class Providerservicemaps extends Model
     use SoftDeletes;
     protected $fillable = ['id'];
     // public $incrementing = false;
-
+    public function service()
+    {
+        return $this->belongsTo(Service::class,'service_id','id');
+    }
             
     public function GetTotal(){
         $priceperprovider  =[];

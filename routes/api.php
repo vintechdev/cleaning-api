@@ -191,9 +191,9 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
  Route::middleware(['auth:api', 'role:provider'])->namespace('Backend\API')->prefix('v1/provider')->group(function () {
     // provider Route
 
-    // yash api
-    Route::patch('provider_accept_booking/{uuid}', 'BookingrequestprovidersController@provider_accept')->name('api.Bookingrequestproviders.edit')->middleware(['scope:provider']);
-    Route::patch('provider_reject_booking/{uuid}', 'BookingrequestprovidersController@provider_reject')->name('api.Bookingrequestproviders.edit')->middleware(['scope:provider']);
+    
+    Route::get('getservicebyprovider/{pid}', 'BookingController@GetServiceByProvider')->middleware(['scope:provider']);
+
     Route::get('getappointment/{uuid}', 'BookingController@provider_getappointment')->name('api.Booking.provider_getappointment')->middleware(['scope:provider']);
     Route::patch('change_booking_status/{uuid}', 'BookingController@change_booking_status')->name('api.Booking.change_booking_status')->middleware(['scope:provider']);
 

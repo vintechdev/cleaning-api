@@ -54,12 +54,18 @@ use App\Repository\UserBadgeReviewRepository;
 use App\Services\MailService;
 use Storage;
 use App\Bookingactivitylogs;
+use App\Repository\ProviderServiceMapRespository;
 class BookingController extends Controller
 {
 
     public function listAllStatus()
     {
         return Bookingstatus::all()->toArray();
+    }
+    public function GetServiceByProvider($pid)
+    {
+       $arr = app(ProviderServiceMapRespository::class)->GetServicesByProvider($pid);
+       return response()->json(['services'=>$arr]);
     }
     /**
      * Display a listing of the resource.

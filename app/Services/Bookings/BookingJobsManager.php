@@ -222,7 +222,7 @@ class BookingJobsManager
 
         $job = array_merge($job, $date);
         $job['final_hours'] = $booking->getFinalHours();
-        $job['is_recurring'] = $booking->isRecurring();
+        $job['is_recurring'] = $booking->isRecurring() || $booking->isChildBooking();
         $job['booking_id'] = $booking->getId();
         $job['plan_name'] = $booking->isChildBooking() ? $booking->getParentBooking()->getPlan()->plan_name : $booking->getPlan()->plan_name;
         $job['booking_provider_type'] = $booking->booking_provider_type;

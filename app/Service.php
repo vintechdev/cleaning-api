@@ -35,8 +35,6 @@ class Service extends Model
         return $this->service_cost;
     }
 
-    
-
     /**
      * @param int $hours
      * @param int|null $cost
@@ -58,5 +56,21 @@ class Service extends Model
     public function isDefaultService(): bool
     {
         return $this->is_default_service;
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function servicecategory()
+    {
+        return $this->belongsTo(Servicecategory::class, 'category_id', 'id');
+    }
+
+    /**
+     * @return Service|null
+     */
+    public function getServicecategory(): ?Servicecategory
+    {
+        return $this->servicecategory;
     }
 }

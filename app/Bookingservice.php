@@ -32,7 +32,6 @@ class Bookingservice extends Model
     {
         return $this->service;
     }
-
     
     /**
      * @param int $hours

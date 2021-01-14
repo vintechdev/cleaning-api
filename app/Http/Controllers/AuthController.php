@@ -9,7 +9,6 @@ use App\User;
 use App\Role;
 use App\Register;
 use App\RoleUser;
-use App\Customermetadata;
 use App\Http\Resources\LoginActivityLog;
 use Route;
 use DB;
@@ -172,7 +171,6 @@ public function UpdateToken(Request $request)
                 ];
                 $user_id = $User->id;
                 //$stripeCustomer = $User->createAsStripeCustomer();
-                $Customermetadata = new Customermetadata();
                 
             }
 

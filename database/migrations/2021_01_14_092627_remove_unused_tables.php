@@ -37,6 +37,7 @@ class RemoveUnusedTables extends Migration
         Schema::dropIfExists('subscription_items');
         Schema::dropIfExists('support_tickets');
         Schema::dropIfExists('support_ticket_histories');
+        Schema::dropIfExists('once_booking_alternate_dates');
     }
 
     /**

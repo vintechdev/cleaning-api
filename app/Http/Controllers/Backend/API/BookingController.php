@@ -322,10 +322,11 @@ class BookingController extends Controller
      */
     public function updateBooking(Request $request, Booking $booking, BookingStatusChangeEngine $statusChangeEngine)
     {
+      
         $validator = Validator::make($request->all(), [
-            'status' => 'required|in:cancelled,rejected,accepted,arrived,completed,cancel_after',
+            'status' => 'in:cancelled,rejected,accepted,arrived,completed,cancel_after',
             'status_change_message' => 'nullable|string',
-            'services' => 'array'
+            'services' => 'nullable|array'
         ]);
 
         if($validator->fails()){
@@ -354,10 +355,11 @@ class BookingController extends Controller
         string $date,
         BookingStatusChangeEngine $statusChangeEngine
     ) {
+        
         $validator = Validator::make($request->all(), [
-            'status' => 'required|in:cancelled,rejected,accepted,arrived,completed,cancel_after',
+            'status' => 'in:cancelled,rejected,accepted,arrived,completed,cancel_after',
             'status_change_message' => 'string',
-            'services' => 'array'
+            'services' => 'nullable|array'
         ]);
 
         if($validator->fails()) {

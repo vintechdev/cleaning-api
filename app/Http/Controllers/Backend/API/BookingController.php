@@ -23,6 +23,7 @@ use App\Services\Bookings\BookingService as BookingServiceAlias;
 use App\Services\Bookings\BookingStatusChangeContext;
 use App\Services\Bookings\BookingStatusChangeEngine;
 use App\Services\Bookings\BookingStatusChangeFactory;
+use App\Services\Bookings\BookingStatusChangeTypes;
 use App\Services\Bookings\BookingVerificationService;
 use App\Services\Bookings\Builder\BookingStatusChangeContextBuilder;
 use App\Services\RecurringBookingService;
@@ -322,9 +323,8 @@ class BookingController extends Controller
      */
     public function updateBooking(Request $request, Booking $booking, BookingStatusChangeEngine $statusChangeEngine)
     {
-      
         $validator = Validator::make($request->all(), [
-            'status' => 'in:cancelled,rejected,accepted,arrived,completed,cancel_after',
+            'status' => 'in:' . implode(',', BookingStatusChangeTypes::getAll()),
             'status_change_message' => 'nullable|string',
             'services' => 'nullable|array'
         ]);
@@ -357,7 +357,7 @@ class BookingController extends Controller
     ) {
         
         $validator = Validator::make($request->all(), [
-            'status' => 'in:cancelled,rejected,accepted,arrived,completed,cancel_after',
+            'status' => 'in:' . implode(',', BookingStatusChangeTypes::getAll()),
             'status_change_message' => 'string',
             'services' => 'nullable|array'
         ]);

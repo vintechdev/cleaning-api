@@ -106,17 +106,16 @@ class StripeService
         if (!$metadata || !$metadata->stripe_payment_method_id) {
             return [];
         }
-        $customerId = $metadata->stripe_customer_id;
 
-        return PaymentMethod::all(['customer' => $customerId, 'type' => 'card'])
-            ->retrieve($metadata->stripe_payment_method_id)
+        return $this
+            ->retrieveStoredPaymentMethodByPaymentMethodId($metadata->stripe_payment_method_id, $userId)
             ->toArray();
     }
 
     /**
      * @param string $paymentMethodId
      * @param int $userId
-     * @return array
+     * @return array|\Stripe\StripeObject
      * @throws \Stripe\Exception\ApiErrorException
      */
     public function retrieveStoredPaymentMethodByPaymentMethodId(string $paymentMethodId, int $userId)
@@ -127,8 +126,7 @@ class StripeService
         }
         $customerId = $metadata->stripe_customer_id;
         return PaymentMethod::all(['customer' => $customerId, 'type' => 'card'])
-            ->retrieve($paymentMethodId)
-            ->toArray();
+            ->retrieve($paymentMethodId);
     }
 
     /**
@@ -140,7 +138,7 @@ class StripeService
     public function associatePaymentMethod(string $paymentMethodId, User $user) : bool
     {
         $paymentMethods = $this->retrieveStoredPaymentMethodByPaymentMethodId($paymentMethodId, $user->getId());
-        if (!$paymentMethods) {
+        if (!$paymentMethods->count()) {
             throw new \RuntimeException('Payment method id does not belong to the user.');
         }
 
@@ -150,8 +148,21 @@ class StripeService
             throw new StripeMetadataUpdateException('Metadata not found for user');
         }
 
+        $existingPaymentMethod = $metadata->stripe_payment_method_id;
         $metadata->stripe_payment_method_id = $paymentMethodId;
-        return $metadata->save();
+        if ($metadata->save()) {
+            //TodO: Remove existing payment method
+            return true;
+            // Remove exsiting payment method from customer
+//            if ($existingPaymentMethod) {
+//                $paymentMethod = $this->retrieveStoredPaymentMethodByPaymentMethodId($existingPaymentMethod, $user->getId());
+//                if ($paymentMethod->count()) {
+//                    $paymentMethod->getObject()->detach();
+//                }
+//            }
+        }
+
+        return false;
     }
 
     /**

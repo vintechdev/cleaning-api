@@ -83,6 +83,8 @@ Route::middleware(['auth:api', 'role:admin'])->namespace('Backend\API')->prefix(
 });
 Route::post('getdashboard', 'HomeController@dashboard')->name('api.home.getdashboard')->middleware(['auth:api'])->middleware(['scope:customer']);
 
+
+
 Route::middleware(['auth:api','scope:customer,provider'])->namespace('Backend\API')->prefix('v1')->group(function () {
     
     Route::patch('bookings/{booking}', 'BookingController@updateBooking')->name('update_booking')->middleware(['can:update,booking']);
@@ -93,6 +95,8 @@ Route::middleware(['auth:api','scope:customer,provider'])->namespace('Backend\AP
     Route::get('bookings/{booking}/dates/{recurring_date}', 'BookingController@getbookingdetails')->name('getrecurredbookingdetails');
     Route::get('/bookings', 'BookingJobsController@listAllJobs');
     Route::get('/allstatus', 'BookingController@listAllStatus');
+    Route::post('addreview/{id}', 'UserreviewController@addreview')->name('addreview');
+
 });
 
 Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->prefix('v1/customer')->group(function () {
@@ -164,8 +168,7 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
     Route::get('getuserreviewdata/{uuid}',
      'UserreviewController@getuserreviewdata')->name('api.Userreview.getuserreviewdata')->middleware(['scope:customer']);
 
-    Route::post('addproviderreview/{uuid}', 'UserreviewController@addproviderreview')->name('api.Userreview.addproviderreview')->middleware(['scope:customer']);
-
+    
     Route::get('getratingreview', 'UserreviewController@getratingreview')->name('api.Userreview.getratingreview')->middleware(['scope:customer']);
 
     Route::get('getcancelbookingdata/{uuid}', 'UserreviewController@getcancelbookingdata')->name('api.Userreview.getcancelbookingdata')->middleware(['scope:customer']);

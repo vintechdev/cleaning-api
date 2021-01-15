@@ -46,6 +46,7 @@ Route::namespace('Backend\API')->prefix('v1/payments')->group(function(){
     Route::post('stripe/sessions', 'PaymentsController@createStripeSession')->name('api.payments.stripe.session')->middleware(['auth:api']);
     Route::get('stripe/cards', 'PaymentsController@retrieveStripeCard')->name('api.payments.stripe.cards')->middleware(['auth:api']);
     Route::post('stripe/cards', 'PaymentsController@addStripeCard')->name('api.payments.stripe.cards')->middleware(['auth:api']);
+    Route::post('stripe/paymentmethods/intents', 'PaymentsController@createStripePaymentMethodIntent')->name('api.payments.stripe.payment_methods.intents')->middleware(['auth:api']);
 });
 
 // for passport

@@ -4,6 +4,7 @@ namespace App\Services\Payments;
 
 use App\Repository\Eloquent\StripeUserMetadataRepository;
 use App\Services\Payments\Exceptions\StripeMetadataUpdateException;
+use App\User;
 use Carbon\Carbon;
 use Stripe\Checkout\Session;
 use Stripe\Customer;
@@ -34,13 +35,26 @@ class StripeService
     }
 
     /**
+     * @param User $user
+     * @return string|null
+     * @throws \Stripe\Exception\ApiErrorException
+     */
+    public function createPaymentMethodSetupIntent(User $user)
+    {
+        $customerId = $this->createCustomerIfNotExists($user->getId());
+        return SetupIntent::create([
+            'customer' => $customerId
+        ])->client_secret;
+    }
+
+    /**
      * @param array $data
      * @return int
      * @throws \Stripe\Exception\ApiErrorException
      */
-    public function createIntent(array $data) : string
+    public function createPaymentIntent(array $data) : string
     {
-        if (!$this->isValidIntentData($data)) {
+        if (!$this->isValidPaymentIntentData($data)) {
             throw new \InvalidArgumentException('Invalid data received for initialising payment');
         }
 
@@ -100,30 +114,43 @@ class StripeService
     }
 
     /**
-     * @param string $sessionId
+     * @param string $paymentMethodId
      * @param int $userId
+     * @return array
+     * @throws \Stripe\Exception\ApiErrorException
+     */
+    public function retrieveStoredPaymentMethodByPaymentMethodId(string $paymentMethodId, int $userId)
+    {
+        $metadata = $this->metadataRepo->findByUserId($userId);
+        if (!$metadata) {
+            return [];
+        }
+        $customerId = $metadata->stripe_customer_id;
+        return PaymentMethod::all(['customer' => $customerId, 'type' => 'card'])
+            ->retrieve($paymentMethodId)
+            ->toArray();
+    }
+
+    /**
+     * @param string $sessionId
+     * @param User $user
      * @return bool
      * @throws \Stripe\Exception\ApiErrorException
      */
-    public function associatePaymentMethod(string $sessionId, int $userId) : bool
+    public function associatePaymentMethod(string $paymentMethodId, User $user) : bool
     {
-        $session = Session::retrieve($sessionId)->toArray();
-        if (!isset($session['setup_intent'])) {
-            throw new \RuntimeException('Setup intent not found');
+        $paymentMethods = $this->retrieveStoredPaymentMethodByPaymentMethodId($paymentMethodId, $user->getId());
+        if (!$paymentMethods) {
+            throw new \RuntimeException('Payment method id does not belong to the user.');
         }
 
-        $setupIntent = SetupIntent::retrieve($session['setup_intent']);
-        if (!isset($setupIntent['payment_method'])) {
-            throw new \RuntimeException('Payment method not found in set up intent');
-        }
-
-        $metadata = $this->metadataRepo->findByUserId($userId);
+        $metadata = $this->metadataRepo->findByUserId($user->getId());
 
         if (!$metadata) {
             throw new StripeMetadataUpdateException('Metadata not found for user');
         }
 
-        $metadata->stripe_payment_method_id = $setupIntent['payment_method'];
+        $metadata->stripe_payment_method_id = $paymentMethodId;
         return $metadata->save();
     }
 
@@ -131,7 +158,7 @@ class StripeService
      * @param array $data
      * @return bool
      */
-    private function isValidIntentData(array $data) : bool
+    private function isValidPaymentIntentData(array $data) : bool
     {
         //TODO: Add validation
         return true;

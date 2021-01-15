@@ -83,6 +83,24 @@ class PaymentsController extends Controller
     }
 
     /**
+     * @param Request $request
+     * @param StripeService $stripeService
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function createStripePaymentMethodIntent(Request $request, StripeService $stripeService)
+    {
+        try {
+            $id = $stripeService->createPaymentMethodSetupIntent(auth()->user());
+        } catch (\Exception $exception) {
+            return response()->json(['message' => 'Something went wrong. Please contact Administrator.'], 500);
+        }
+
+        return response()->json([
+            'client_secret' => $id, 'publishable_key' => \Config::get('payment.STRIPE_KEY')
+        ], 200);
+    }
+
+    /**
      * @param StripeService $stripeService
      * @return \Illuminate\Http\JsonResponse
      * @throws ApiErrorException
@@ -113,12 +131,12 @@ class PaymentsController extends Controller
      */
     public function addStripeCard(Request $request, StripeService $stripeService)
     {
-        if (!$request->has('session_id')) {
+        if (!$request->has('payment_method_id')) {
             return response()->json(['message' => 'Invalid parameters received'], 400);
         }
 
         try {
-            $associated = $stripeService->associatePaymentMethod($request->get('session_id'), auth()->user()->id);
+            $associated = $stripeService->associatePaymentMethod($request->get('payment_method_id'), auth()->user());
         } catch (\Exception $exception) {
             return response()->json(['message' => 'Something went wrong while adding card. Please contact administrator'], 500);
         }

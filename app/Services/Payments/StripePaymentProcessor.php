@@ -45,7 +45,7 @@ class StripePaymentProcessor implements PaymentProcessorInterface, PaymentInitia
     public function intialisePayment(): bool
     {
         try {
-            $id = $this->stripeService->createIntent($this->data);
+            $id = $this->stripeService->createPaymentIntent($this->data);
         } catch (\InvalidArgumentException $exception) {
             throw new InvalidPaymentInitialisationDataException($exception->getMessage());
         } catch (\RuntimeException $exception) {

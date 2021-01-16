@@ -88,14 +88,14 @@ Route::post('getdashboard', 'HomeController@dashboard')->name('api.home.getdashb
 Route::middleware(['auth:api','scope:customer,provider'])->namespace('Backend\API')->prefix('v1')->group(function () {
     
     Route::patch('bookings/{booking}', 'BookingController@updateBooking')->name('update_booking')->middleware(['can:update,booking']);
-   
     Route::patch('bookings/{booking}/dates/{recurring_date}', 'BookingController@updateRecurredBooking')->name('update_recurred_booking')->middleware(['can:update,booking']);
-   
     Route::get('/bookings/{booking}', 'BookingController@getbookingdetails')->name('getbookingdetails');
     Route::get('bookings/{booking}/dates/{recurring_date}', 'BookingController@getbookingdetails')->name('getrecurredbookingdetails');
     Route::get('/bookings', 'BookingJobsController@listAllJobs');
     Route::get('/allstatus', 'BookingController@listAllStatus');
     Route::post('addreview/{id}', 'UserreviewController@addreview')->name('addreview');
+    Route::post('chats/{bookingid}', 'ChatsController@addmessage')->name('addmessage');
+    Route::get('getchat/{bookingid}', 'ChatsController@getchat')->name('getchat');
 
 });
 
@@ -402,14 +402,6 @@ Route::middleware(['auth:api','scope:admin'])->namespace('Backend\API')->prefix(
     Route::post('/settings/{setting}/delete', 'SettingsController@delete')->name('api.setting.delete');
     Route::post('/settings/{setting}/restore', 'SettingsController@restore')->name('api.setting.restore');
     Route::post('/settings/{setting}/force-delete', 'SettingsController@forceDelete')->name('api.setting.force-delete');
-
-    // Chat Route
-    Route::get('chats', 'ChatsController@index')->name('api.chat.index');
-    Route::get('/chats/{chat}', 'ChatsController@form')->name('api.chat.form');
-    Route::post('/chats/save', 'ChatsController@post')->name('api.chat.save');
-    Route::post('/chats/{chat}/delete', 'ChatsController@delete')->name('api.chat.delete');
-    Route::post('/chats/{chat}/restore', 'ChatsController@restore')->name('api.chat.restore');
-    Route::post('/chats/{chat}/force-delete', 'ChatsController@forceDelete')->name('api.chat.force-delete');
 
     // Admin Route
     Route::get('admins', 'AdminsController@index')->name('api.admin.index');

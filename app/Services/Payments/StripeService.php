@@ -3,9 +3,13 @@
 namespace App\Services\Payments;
 
 use App\Repository\Eloquent\StripeUserMetadataRepository;
+use App\Services\Payments\Exceptions\InvalidUserException;
 use App\Services\Payments\Exceptions\StripeMetadataUpdateException;
+use App\StripeUserMetadata;
 use App\User;
 use Carbon\Carbon;
+use Stripe\Account;
+use Stripe\AccountLink;
 use Stripe\Checkout\Session;
 use Stripe\Customer;
 use Stripe\PaymentIntent;
@@ -52,7 +56,7 @@ class StripeService
      * @return int
      * @throws \Stripe\Exception\ApiErrorException
      */
-    public function createPaymentIntent(array $data) : string
+    public function createPaymentIntent(array $data): string
     {
         if (!$this->isValidPaymentIntentData($data)) {
             throw new \InvalidArgumentException('Invalid data received for initialising payment');
@@ -73,7 +77,7 @@ class StripeService
      * @throws \Stripe\Exception\ApiErrorException
      * @throws StripeMetadataUpdateException
      */
-    public function createSession(string $successUrl, string $cancelUrl, int $userId) : string
+    public function createSession(string $successUrl, string $cancelUrl, int $userId): string
     {
         $customerId = $this->createCustomerIfNotExists($userId);
         $query = parse_url($successUrl, PHP_URL_QUERY);
@@ -99,7 +103,7 @@ class StripeService
      * @return array
      * @throws \Stripe\Exception\ApiErrorException
      */
-    public function retrieveStoredPaymentMethod(int $userId) : array
+    public function retrieveStoredPaymentMethod(int $userId): array
     {
         $metadata = $this->metadataRepo->findByUserId($userId);
 
@@ -135,7 +139,7 @@ class StripeService
      * @return bool
      * @throws \Stripe\Exception\ApiErrorException
      */
-    public function associatePaymentMethod(string $paymentMethodId, User $user) : bool
+    public function associatePaymentMethod(string $paymentMethodId, User $user): bool
     {
         $paymentMethods = $this->retrieveStoredPaymentMethodByPaymentMethodId($paymentMethodId, $user->getId());
         if (!$paymentMethods->count()) {
@@ -166,6 +170,106 @@ class StripeService
     }
 
     /**
+     * @param User $user
+     * @param string $returnUrl
+     * @param string $refreshUrl
+     * @return array
+     * @throws InvalidUserException
+     * @throws \Stripe\Exception\ApiErrorException
+     */
+    public function createAccountLink(User $user, string $returnUrl, string $refreshUrl): array
+    {
+        $accountId = $this->findOrCreateStripeConnectAccount($user);
+        return AccountLink::create([
+            'account' => $accountId,
+            'refresh_url' => $refreshUrl,
+            'return_url' => $returnUrl,
+            'type' => 'account_onboarding',
+        ])->toArray();
+    }
+
+    /**
+     * @param User $user
+     * @return string
+     * @throws InvalidUserException
+     * @throws \Stripe\Exception\ApiErrorException
+     */
+    public function findOrCreateStripeConnectAccount(User $user): string
+    {
+        if (!$user->isProvider()) {
+            throw new InvalidUserException('Stripe connect account can only be created for providers');
+        }
+
+        $metadata = $this->findOrCreateMetadata($user->getId());
+
+        if (!$metadata->stripe_connect_account_id) {
+            $account = Account::create(
+                [
+                    'country' => 'AU',
+                    'type' => 'express',
+                    'capabilities' => [
+                        'transfers' => [
+                            'requested' => true,
+                        ],
+                    ]
+                ]
+            );
+
+            if (!$account->id) {
+                throw new \RuntimeException('Unable to create stripe connect account');
+            }
+            $metadata->stripe_connect_account_id = $account->id;
+
+            if (!$metadata->save()) {
+                throw new \RuntimeException('Unable to save stripe connect account');
+            }
+        }
+
+        return $metadata->stripe_connect_account_id;
+    }
+
+    /**
+     * @param User $user
+     * @return bool
+     * @throws InvalidUserException
+     * @throws \Stripe\Exception\ApiErrorException
+     */
+    public function verifyStripeConnectedAccount(User $user)
+    {
+        $metadata = $this->metadataRepo->findByUserId($user->getId());
+        if ($metadata->stripe_connect_account_verified) {
+            return true;
+        }
+        $account = $this->getAccountStatus($user);
+        if (isset($account['details_submitted']) === true) {
+            $metadata->stripe_connect_account_verified = true;
+            if (!$metadata->save()) {
+                throw new StripeMetadataUpdateException('Stripe user metadata could not be updated');
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param User $user
+     * @return array
+     * @throws InvalidUserException
+     * @throws \Stripe\Exception\ApiErrorException
+     */
+    public function getAccountStatus(User $user): array
+    {
+        $metadata = $this->metadataRepo->findByUserId($user->getId());
+
+        if (!$metadata || !$metadata->stripe_connect_account_id) {
+            throw new InvalidUserException('User does not have stripe account');
+        }
+
+        $account = Account::retrieve(['id' => $metadata->stripe_connect_account_id]);
+        return $account->toArray();
+    }
+
+    /**
      * @param array $data
      * @return bool
      */
@@ -183,18 +287,30 @@ class StripeService
      */
     private function createCustomerIfNotExists(string $userId) : string
     {
-        $metadata = $this->metadataRepo->findByUserId($userId);
-
-        if (!$metadata) {
+        $metadata = $this->findOrCreateMetadata($userId);
+        if (!$metadata->stripe_customer_id) {
             $customerId = Customer::create()->id;
             if (!$customerId) {
                 throw new \RuntimeException('Unable to create stripe customer');
             }
 
-            $this->metadataRepo->create(['user_id' => $userId, 'stripe_customer_id' => $customerId]);
-            return $customerId;
+            $metadata->stripe_customer_id = $customerId;
+
+            if (!$metadata->save()) {
+                throw new \RuntimeException('Unable to save stripe customer');
+            }
         }
 
         return $metadata->stripe_customer_id;
+    }
+
+    private function findOrCreateMetadata(string $userId): StripeUserMetadata
+    {
+        $metadata = $this->metadataRepo->findByUserId($userId);
+        if (!$metadata) {
+            $this->metadataRepo->create(['user_id' => $userId]);
+        }
+
+        return $metadata;
     }
 }

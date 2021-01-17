@@ -337,7 +337,7 @@ public function loginlog($data)
                             'detail'=>'login');
                 $this->loginlog($log);
                 $this->clearLoginAttempts($request);
-                $Customermetadata = Customermetadata::where('user_id', $user->id)->first();
+                //$Customermetadata = Customermetadata::where('user_id', $user->id)->first();
                 // dd($Customermetadata);
 
                 $json['userdata'] =

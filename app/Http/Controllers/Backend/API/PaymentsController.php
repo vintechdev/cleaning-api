@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Backend\API;
 
 use App\Http\Controllers\Controller;
 use App\PaymentGateway;
+use App\Services\Payments\Exceptions\InvalidUserException;
 use App\Services\Payments\PaymentIntitialisationService;
 use App\Services\Payments\StripeService;
+use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Stripe\Exception\ApiErrorException;
@@ -27,7 +29,7 @@ class PaymentsController extends Controller
             'amount' => 'required',
         ]);
 
-        if($validator->fails()) {
+        if ($validator->fails()) {
             $message = $validator->messages()->all();
             return response()->json(['message' => $message], 400);
         }
@@ -146,5 +148,59 @@ class PaymentsController extends Controller
         }
 
         return response()->json(['message' => 'Something went wrong while adding card. Please contact administrator'], 500);
+    }
+
+    /**
+     * @param Request $request
+     * @param StripeService $stripeService
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function createStripeAccountLink(Request $request, StripeService $stripeService)
+    {
+        $validator = Validator::make($request->all(), [
+            'return_url' => 'required',
+            'refresh_url' => 'required'
+        ]);
+
+        if ($validator->fails()) {
+            $message = $validator->messages()->all();
+            return response()->json(['message' => $message], 400);
+        }
+
+        try {
+            $accountLink = $stripeService
+                ->createAccountLink(auth()->user(), $request->get('return_url'), $request->get('refresh_url'));
+        } catch (InvalidUserException $exception) {
+            return response()->json(['message' => 'User is unauthorized to perform this action'], 403);
+        } catch (\Exception $exception) {
+            return response()->json(['message' => 'Something went wrong. Please contact administrator'], 500);
+        }
+
+        return response()
+            ->json($accountLink, 201);
+    }
+
+    public function verifyStripeAccount(Request $request, StripeService $stripeService)
+    {
+        /** @var User $loggedinUser */
+        $loggedinUser = auth()->user();
+        if ($request->has('userid')) {
+            $user = User::find($request->get('userid'));
+            if ($user->getId() != $loggedinUser->getId() && !$loggedinUser->isAdmin()) {
+                return response()->json(['message' => 'User is unauthorized to perform this action'], 403);
+            }
+        } else {
+            $user = $loggedinUser;
+        }
+
+        try {
+            $verified = $stripeService->verifyStripeConnectedAccount($user);
+        } catch (InvalidUserException $exception) {
+            return response()->json(['message' => 'User does not have a stripe account'], 404);
+        } catch (\Exception $exception) {
+            return response()->json(['message' => 'Something went wrong. Please contact administrator'], 500);
+        }
+
+        return response()->json(['verified' => $verified], 200);
     }
 }

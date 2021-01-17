@@ -180,17 +180,12 @@ class PaymentsController extends Controller
             ->json($accountLink, 201);
     }
 
-    public function verifyStripeAccount(Request $request, StripeService $stripeService)
+    public function verifyStripeAccount(Request $request, StripeService $stripeService, User $user)
     {
         /** @var User $loggedinUser */
         $loggedinUser = auth()->user();
-        if ($request->has('userid')) {
-            $user = User::find($request->get('userid'));
-            if ($user->getId() != $loggedinUser->getId() && !$loggedinUser->isAdmin()) {
-                return response()->json(['message' => 'User is unauthorized to perform this action'], 403);
-            }
-        } else {
-            $user = $loggedinUser;
+        if ($user->getId() != $loggedinUser->getId() && !$loggedinUser->isAdmin()) {
+            return response()->json(['message' => 'User is unauthorized to perform this action'], 403);
         }
 
         try {
@@ -202,5 +197,37 @@ class PaymentsController extends Controller
         }
 
         return response()->json(['verified' => $verified], 200);
+    }
+
+    /**
+     * @param Request $request
+     * @param StripeService $stripeService
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getAccountLoginLink(Request $request, StripeService $stripeService, User $user)
+    {
+        $validator = Validator::make($request->all(), [
+            'redirect_url' => 'required'
+        ]);
+
+        if ($validator->fails()) {
+            $message = $validator->messages()->all();
+            return response()->json(['message' => $message], 400);
+        }
+        /** @var User $loggedinUser */
+        $loggedinUser = auth()->user();
+        if ($user->getId() != $loggedinUser->getId() && !$loggedinUser->isAdmin()) {
+            return response()->json(['message' => 'User is unauthorized to perform this action'], 403);
+        }
+
+        try {
+            $url = $stripeService->createAccountLoginLink($user, $request->get('redirect_url'));
+        } catch (InvalidUserException $exception) {
+            return response()->json(['message' => 'User does not have a stripe account'], 404);
+        } catch (\Exception $exception) {
+            return response()->json(['message' => 'Something went wrong. Please contact administrator'], 500);
+        }
+
+        return response()->json(['url' => $url], 201);
     }
 }

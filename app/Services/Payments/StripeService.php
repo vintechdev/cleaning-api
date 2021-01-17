@@ -190,6 +190,26 @@ class StripeService
 
     /**
      * @param User $user
+     * @param string $redirectUrl
+     * @return string
+     * @throws InvalidUserException
+     * @throws \Stripe\Exception\ApiErrorException
+     */
+    public function createAccountLoginLink(User $user, string $redirectUrl): string
+    {
+        $metadata = $this->metadataRepo->findByUserId($user->getId());
+
+        if (!$metadata || !$metadata->stripe_connect_account_id) {
+            throw new InvalidUserException('Stripe account not found for the user.');
+        }
+
+        return Account::createLoginLink($metadata->stripe_connect_account_id, [
+            'redirect_url' => $redirectUrl
+        ])->url;
+    }
+
+    /**
+     * @param User $user
      * @return string
      * @throws InvalidUserException
      * @throws \Stripe\Exception\ApiErrorException
@@ -237,7 +257,7 @@ class StripeService
     public function verifyStripeConnectedAccount(User $user)
     {
         $metadata = $this->metadataRepo->findByUserId($user->getId());
-        if ($metadata->stripe_connect_account_verified) {
+        if ($metadata && $metadata->stripe_connect_account_verified) {
             return true;
         }
         $account = $this->getAccountStatus($user);

@@ -7,9 +7,9 @@ use App\Services\Payments\Exceptions\InvalidUserException;
 use App\Services\Payments\Exceptions\StripeMetadataUpdateException;
 use App\StripeUserMetadata;
 use App\User;
-use Carbon\Carbon;
 use Stripe\Account;
 use Stripe\AccountLink;
+use Stripe\Balance;
 use Stripe\Checkout\Session;
 use Stripe\Customer;
 use Stripe\PaymentIntent;
@@ -287,6 +287,22 @@ class StripeService
 
         $account = Account::retrieve(['id' => $metadata->stripe_connect_account_id]);
         return $account->toArray();
+    }
+
+    /**
+     * @param User $user
+     * @return array
+     * @throws InvalidUserException
+     * @throws \Stripe\Exception\ApiErrorException
+     */
+    public function getAccountBalance(User $user)
+    {
+        $metadata = $this->metadataRepo->findByUserId($user->getId());
+
+        if (!$metadata || !$metadata->stripe_connect_account_id) {
+            throw new InvalidUserException('User does not have stripe account');
+        }
+        return Balance::retrieve(['id' => $metadata->stripe_connect_account_id])->toArray();
     }
 
     /**

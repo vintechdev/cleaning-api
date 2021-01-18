@@ -230,4 +230,30 @@ class PaymentsController extends Controller
 
         return response()->json(['url' => $url], 201);
     }
+
+    /**
+     * @param Request $request
+     * @param StripeService $stripeService
+     * @param User $user
+     * @return \Illuminate\Http\JsonResponse
+     * @throws ApiErrorException
+     * @throws InvalidUserException
+     */
+    public function getStripeAccountBalance(Request $request, StripeService $stripeService, User $user)
+    {
+        /** @var User $loggedinUser */
+        $loggedinUser = auth()->user();
+        if ($user->getId() != $loggedinUser->getId() && !$loggedinUser->isAdmin()) {
+            return response()->json(['message' => 'User is unauthorized to perform this action'], 403);
+        }
+
+        try {
+            $balance = $stripeService->getAccountBalance($user);
+            return response()->json($balance, 200);
+        } catch (InvalidUserException $exception) {
+            return response()->json(['message' => 'User does not have a stripe account'], 404);
+        } catch (\Exception $exception) {
+            return response()->json(['message' => 'Something went wrong. Please contact administrator'], 500);
+        }
+    }
 }

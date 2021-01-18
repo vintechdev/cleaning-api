@@ -50,6 +50,7 @@ Route::namespace('Backend\API')->prefix('v1/payments')->group(function(){
     Route::post('stripe/account-links', 'PaymentsController@createStripeAccountLink')->name('api.payments.stripe.account_link')->middleware(['auth:api', 'scope:provider']);
     Route::post('stripe/accounts/{user}/verification', 'PaymentsController@verifyStripeAccount')->name('api.payments.stripe.accounts.verify')->middleware(['auth:api', 'scope:provider']);
     Route::post('stripe/accounts/{user}/login-links', 'PaymentsController@getAccountLoginLink')->name('api.payments.stripe.accounts.verify')->middleware(['auth:api', 'scope:provider']);
+    Route::get('stripe/accounts/{user}/balances', 'PaymentsController@getStripeAccountBalance')->name('api.payments.stripe.account.balance')->middleware(['auth:api', 'scope:provider']);
 });
 
 // for passport

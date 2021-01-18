@@ -8,20 +8,11 @@ use Emadadly\LaravelUuid\Uuids;
 use Laravel\Passport\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
 
-class Userreview extends Model
+class Chats extends Model
 {
     use HasApiTokens, Notifiable;
     use Uuids;
-    protected $table = 'user_reviews';
+    protected $table = 'chats';
     use SoftDeletes;
     protected $fillable = ['id'];
-
-    public function reviewby()
-    {
-        return $this->belongsTo(User::class,'user_review_by','id');
-    }
-    public function reviewfor()
-    {
-        return $this->belongsTo(User::class,'user_review_for','id');
-    }
 }

@@ -11,6 +11,7 @@ use App\User;
 use Carbon\Carbon;
 use App\Bookingstatus;
 use Illuminate\Database\Eloquent\Collection;
+use App\Userreview;
 
 /**
  * Class BookingJobsManager
@@ -234,6 +235,7 @@ class BookingJobsManager
         $job['booking_status'] = $booking->getStatus();
         $job['providers'] = $providerDetails;
         $job['booking_service'] = $services;
+        $job['booking_review'] = app(UserBadgeReviewRepository::class)->getreviewbybooking($booking->getId());
         $job['booking_status_name'] = Bookingstatus::getStatusNameById($booking->booking_status_id);
         $job['user'] = $booking->getUserDetails();
         if (!$isList) {

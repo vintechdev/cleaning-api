@@ -20,8 +20,7 @@ class PendingBookingList extends AbstractBookingList
     {
         $bookingQuery = $this->getBookingQuery()
             ->where('booking_status_id', Bookingstatus::BOOKING_STATUS_PENDING)
-            ->where('parent_booking_id', null)
-            ->where('booking_request_providers.id', '<>', null);
+            ->where('parent_booking_id', null);
 
         $from = $this->getFrom();
         $to = $this->getTo();
@@ -40,6 +39,7 @@ class PendingBookingList extends AbstractBookingList
     protected function getProviderBookingQuery(): Builder
     {
         return parent::getProviderBookingQuery()
-            ->where('booking_request_providers.status', '<>', Bookingrequestprovider::STATUS_REJECTED);
+            ->where('booking_request_providers.status', '<>', Bookingrequestprovider::STATUS_REJECTED)
+            ->where('booking_request_providers.id', '<>', null);
     }
 }

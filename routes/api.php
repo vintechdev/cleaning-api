@@ -95,7 +95,7 @@ Route::middleware(['auth:api','scope:customer,provider'])->namespace('Backend\AP
     Route::get('/allstatus', 'BookingController@listAllStatus');
     Route::post('addreview/{id}', 'UserreviewController@addreview')->name('addreview');
     Route::post('chats/{bookingid}', 'ChatsController@addmessage')->name('addmessage');
-    Route::get('getchat/{bookingid}', 'ChatsController@getchat')->name('getchat');
+    Route::post('getchat/{bookingid}', 'ChatsController@getchat')->name('getchat');
 
 });
 

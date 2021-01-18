@@ -14,6 +14,7 @@ use Stripe\Checkout\Session;
 use Stripe\Customer;
 use Stripe\PaymentIntent;
 use Stripe\PaymentMethod;
+use Stripe\Payout;
 use Stripe\SetupIntent;
 use Stripe\Stripe;
 
@@ -344,7 +345,7 @@ class StripeService
     {
         $metadata = $this->metadataRepo->findByUserId($userId);
         if (!$metadata) {
-            $this->metadataRepo->create(['user_id' => $userId]);
+            $metadata = $this->metadataRepo->create(['user_id' => $userId]);
         }
 
         return $metadata;

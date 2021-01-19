@@ -194,7 +194,7 @@ class BookingController extends Controller
 
         
         $result = app(TotalCostCalculation::class)->PromoCodeDiscount($request);
-        return response()->json($result);
+        return $result;
 
     }
 

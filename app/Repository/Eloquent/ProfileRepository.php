@@ -3,7 +3,7 @@
 namespace App\Repository\Eloquent;
 
 use App\Working_hours;
-
+use App\Providerpostcodemap;
 use App\Http\Resources\Chat;
 use Illuminate\Http\Request;
 use Auth;
@@ -16,6 +16,32 @@ class ProfileRepository extends AbstractBaseRepository
         return Working_hours::class;
     }
 
+    public function getproviderpostcode()
+    {
+        $user_id = Auth::user()->id;
+        return  Providerpostcodemap::with('postcode')->where('provider_id',$user_id)->get()->toArray();
+    }
+    public function addproviderpostcode($postcode){
+        $user_id = Auth::user()->id;
+        $Providerpostcodemap = Providerpostcodemap::firstOrNew(['provider_id' =>$user_id,'postcode_id'=>$postcode]);
+        $Providerpostcodemap->provider_id = $user_id;
+        $Providerpostcodemap->postcode_id = $postcode;
+        if($Providerpostcodemap->save()){
+            return Providerpostcodemap::with('postcode')->where('id',$Providerpostcodemap->id)->get()->toArray();
+        }else{
+            return false;
+        }
+    }
+    public function deleteproviderpostcode($postcode)
+    {
+        # code...
+        $arr =   Providerpostcodemap::where('id',$postcode)->delete();
+        if($arr){
+            return true;
+        }else{
+            return false;
+        }
+    }
     public function createworkinghours($data)
     {
         $user_id = Auth::user()->id;

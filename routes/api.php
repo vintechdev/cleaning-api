@@ -193,6 +193,13 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
 
  Route::middleware(['auth:api', 'role:provider'])->namespace('Backend\API')->prefix('v1/provider')->group(function () {
     // provider Route
+    Route::post('addworking_hours', 'Working_hoursController@addworking_hours')->name('api.Working_hours.addworking_hours')->middleware(['scope:provider']);
+    Route::get('getworking_hours', 'Working_hoursController@getworking_hours')->name('api.Working_hours.getworking_hours')->middleware(['scope:provider']);
+    Route::post('addproviderpostcode', 'PostcodesController@addproviderpostcode')->name('addproviderpostcode')->middleware(['scope:provider']);
+    Route::get('getproviderpostcode', 'PostcodesController@getproviderpostcode')->name('getproviderpostcode')->middleware(['scope:provider']);
+    Route::post('deleteproviderpostcode', 'PostcodesController@deleteproviderpostcode')->name('deleteproviderpostcode')->middleware(['scope:provider']);
+    
+    
 
     
     Route::get('getservicebyprovider/{pid}', 'BookingController@GetServiceByProvider')->middleware(['scope:provider']);
@@ -235,10 +242,7 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
      Route::patch('profile_update', 'CustomerusersController@profile_update')->name('api.Customeruser.profile_update')->middleware(['scope:provider']);
 
 
-     Route::post('addworking_hours', 'Working_hoursController@addworking_hours')->name('api.Working_hours.addworking_hours')->middleware(['scope:provider']);
-
-     Route::get('getworking_hours', 'Working_hoursController@getworking_hours')->name('api.Working_hours.getworking_hours')->middleware(['scope:provider']);
-
+     
      Route::patch('editworking_hours/{uuid}', 'Working_hoursController@editworking_hours')->name('api.Working_hours.editworking_hours')->middleware(['scope:provider']);
 
 

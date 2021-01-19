@@ -10,6 +10,8 @@ use App\Exceptions\Booking\BookingStatusChangeException;
 use App\Exceptions\Booking\InvalidBookingStatusActionException;
 use App\Exceptions\Booking\RecurringBookingStatusChangeException;
 use App\Exceptions\Booking\UnauthorizedAccessException;
+use App\Repository\BookingReqestProviderRepository;
+use App\Services\RecurringBookingService;
 use App\User;
 use Carbon\Carbon;
 
@@ -23,6 +25,14 @@ class CompleteBookingStrategy extends AbstractBookingStatusChangeStrategy
      * @var array
      */
     private $services = [];
+
+    public function __construct(
+        BookingReqestProviderRepository $bookingRequestProviderRepository,
+        BookingVerificationService $bookingVerificationService,
+        RecurringBookingService $recurringBookingService
+    ) {
+        parent::__construct($bookingRequestProviderRepository, $bookingVerificationService, $recurringBookingService);
+    }
 
     /**
      * @param Booking $booking

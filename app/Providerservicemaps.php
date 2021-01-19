@@ -21,7 +21,24 @@ class Providerservicemaps extends Model
     {
         return $this->belongsTo(Service::class,'service_id','id');
     }
-            
+
+    /**
+     * @return Service
+     */
+    public function getService()
+    {
+        return $this->service;
+    }
+
+    /**
+     * @param int $hours
+     * @return int
+     */
+    public function getProviderTotal(int $hours)
+    {
+        return $this->getService()->getTotalCost($hours, $this->amount);
+    }
+
     public function GetTotal(){
         $priceperprovider  =[];
         $id = $request->get('serviceid');

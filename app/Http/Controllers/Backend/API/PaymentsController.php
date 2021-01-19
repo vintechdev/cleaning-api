@@ -249,7 +249,11 @@ class PaymentsController extends Controller
 
         try {
             $balance = $stripeService->getAccountBalance($user);
-            return response()->json($balance, 200);
+            $return = [
+                'pending' => '$' . $balance['pending'][0]['amount']/100,
+                'available' => '$' . $balance['available'][0]['amount']/100,
+            ];
+            return response()->json($return, 200);
         } catch (InvalidUserException $exception) {
             return response()->json(['message' => 'User does not have a stripe account'], 404);
         } catch (\Exception $exception) {

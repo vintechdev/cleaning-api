@@ -262,11 +262,13 @@ class StripeService
             return true;
         }
         $account = $this->getAccountStatus($user);
-        if (isset($account['details_submitted']) === true) {
+        if (isset($account['details_submitted']) && $account['details_submitted'] === true) {
             $metadata->stripe_connect_account_verified = true;
             if (!$metadata->save()) {
                 throw new StripeMetadataUpdateException('Stripe user metadata could not be updated');
             }
+
+            return true;
         }
 
         return false;
@@ -303,7 +305,7 @@ class StripeService
         if (!$metadata || !$metadata->stripe_connect_account_id) {
             throw new InvalidUserException('User does not have stripe account');
         }
-        return Balance::retrieve(['id' => $metadata->stripe_connect_account_id])->toArray();
+        return Balance::retrieve(['stripe_account' => $metadata->stripe_connect_account_id])->toArray();
     }
 
     /**

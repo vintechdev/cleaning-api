@@ -39,7 +39,7 @@ class Bookingservice extends Model
      */
     public function setService(Service $service)
     {
-        $this->service = $service;
+        $this->service()->associate($service);
         return $this;
     }
     
@@ -66,9 +66,6 @@ class Bookingservice extends Model
      */
     public function updateFinalTotal(): Bookingservice
     {
-        if (is_null($this->getFinalNumberOfHours())) {
-            return $this;
-        }
         $this->final_service_cost = $this
             ->getService()
             ->getTotalCost($this->getFinalNumberOfHours());
@@ -99,10 +96,6 @@ class Bookingservice extends Model
      */
     public function updateInitialTotal()
     {
-        if (is_null($this->getInitialNumberOfHours())) {
-            return $this;
-        }
-
         $this->initial_service_cost = $this
             ->getService()
             ->getTotalCost($this->getInitialNumberOfHours());
@@ -164,7 +157,7 @@ class Bookingservice extends Model
      * @return bool
      */
     public function isInitiallyAdded(): bool {
-        return $this->is_initiallly_added;
+        return $this->is_initially_added;
     }
 
     /**
@@ -173,7 +166,7 @@ class Bookingservice extends Model
      */
     public function setInitiallyAdded(bool $isInitiallyAdded)
     {
-        $this->is_initiallly_added = $isInitiallyAdded;
+        $this->is_initially_added = $isInitiallyAdded;
         return $this;
     }
 

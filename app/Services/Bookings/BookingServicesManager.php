@@ -44,7 +44,7 @@ class BookingServicesManager
      */
     public function addBookingServices(Booking $booking, array $bookingServices): bool
     {
-        if ($booking->getBookingServices()) {
+        if ($booking->getBookingServices()->count()) {
             throw new BookingServicesExistException('Services can not be added because the booking already has services.');
         }
 
@@ -71,18 +71,28 @@ class BookingServicesManager
         foreach ($actualBookingServices as $bookingService) {
             if (in_array($bookingService->getService()->getId(), $serviceIds)) {
                 $service = $newBookingServices[$bookingService->getService()->getId()];
-                if (!$service->getFinalNumberOfHours()) {
-                    throw new BookingServicesManagerException('Final number of hours missing for booking service');
+                if (!$service->getFinalServiceCost()) {
+                    if (!$service->getFinalNumberOfHours()) {
+                        throw new BookingServicesManagerException('Final number of hours missing for service');
+                    }
+                    throw new BookingServicesManagerException('Final service cost can not be calculated');
+                }
+
+                if ($service->getFinalNumberOfHours()) {
+                    $bookingService
+                        ->setFinalNumberOfHours($service->getFinalNumberOfHours());
                 }
 
                 $bookingService
-                    ->setFinalNumberOfHours($service->getFinalNumberOfHours())
                     ->setFinalServiceCost($service->getFinalServiceCost());
 
                 unset($newBookingServices[$bookingService->getService()->getId()]);
                 continue;
             }
 
+            if ($bookingService->getService()->isDefaultService()) {
+                throw new BookingServicesManagerException('Default service cannot be removed');
+            }
             $bookingService->setRemoved(true)->save();
         }
 
@@ -108,19 +118,20 @@ class BookingServicesManager
      */
     public function updateBookingServicesFromArray(Booking $booking, array $bookingServicesData): bool
     {
-        return $this->updateBookingServices($booking, $this->buildBookingServices($bookingServicesData));
+        return $this->updateBookingServices($booking, $this->buildBookingServices($bookingServicesData, true));
     }
 
     /**
      * @param array $bookingServicesData
+     * @param bool $calculateFinalTotal
      * @return array
      * @throws Exceptions\BookingserviceBuilderException
      */
-    public function buildBookingServices(array $bookingServicesData): array
+    public function buildBookingServices(array $bookingServicesData, bool $calculateFinalTotal = false): array
     {
         $bookingServices = [];
         foreach ($bookingServicesData as $bookingServiceDatum) {
-            $bookingServices[] = $this->buildBookingService($bookingServiceDatum);
+            $bookingServices[] = $this->buildBookingService($bookingServiceDatum, $calculateFinalTotal);
         }
 
         return $bookingServices;
@@ -128,12 +139,13 @@ class BookingServicesManager
 
     /**
      * @param array $data
+     * @param bool $calculateFinalTotal
      * @return Bookingservice
      * @throws Exceptions\BookingserviceBuilderException
      */
-    public function buildBookingService(array $data)
+    public function buildBookingService(array $data, bool $calculateFinalTotal = false)
     {
-        return $this->bookingserviceBuilder->fromArray($data);
+        return $this->bookingserviceBuilder->fromArray($data, $calculateFinalTotal);
     }
 
     /**
@@ -145,12 +157,13 @@ class BookingServicesManager
     private function add(Booking $booking, array $bookingServices, bool $isInitiallyAdded = true)
     {
         foreach ($bookingServices as $bookingService) {
-            if ($isInitiallyAdded && !$bookingService->getInitialNumberOfHours()) {
-                throw new BookingServicesManagerException('Initial number of hours missing for booking service');
+            if ($isInitiallyAdded && is_null($bookingService->getInitialServiceCost())
+            ) {
+                $bookingService->updateInitialTotal();
             }
 
-            if (!$isInitiallyAdded && !$bookingService->getFinalNumberOfHours()) {
-                throw new BookingServicesManagerException('Final number of hours missing for booking service');
+            if (!$isInitiallyAdded && is_null($bookingService->getFinalServiceCost())) {
+                $bookingService->updateFinalTotal();
             }
 
             $bookingService

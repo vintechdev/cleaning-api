@@ -39,13 +39,14 @@ class BookingServicesArrayValidator implements ValidatorInterface
         $previousCategoryId = null;
         foreach ($this->bookingServices as $bookingService) {
             $service = $bookingService->getService();
-            $categoryId = $service->getServicecategory()->getId();
+            $categoryId = $service->getServicecategory()->id;
             if ($previousCategoryId && $previousCategoryId != $categoryId) {
                 throw new BookingServicesDifferentCategoryException('Services should belong to the same category');
             }
-
             $previousCategoryId = $categoryId;
-            $hasDefaultService = $service->isDefaultService();
+            if (!$hasDefaultService) {
+                $hasDefaultService = $service->isDefaultService();
+            }
         }
 
         if (!$hasDefaultService) {

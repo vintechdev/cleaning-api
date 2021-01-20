@@ -34,7 +34,7 @@ class Providerservicemaps extends Model
      * @param int $hours
      * @return int
      */
-    public function getProviderTotal(int $hours)
+    public function getProviderTotal(int $hours = null)
     {
         return $this->getService()->getTotalCost($hours, $this->amount);
     }

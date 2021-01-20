@@ -11,6 +11,8 @@ use App\Exceptions\Booking\InvalidBookingStatusActionException;
 use App\Exceptions\Booking\RecurringBookingStatusChangeException;
 use App\Exceptions\Booking\UnauthorizedAccessException;
 use App\Repository\BookingReqestProviderRepository;
+use App\Services\Bookings\Exceptions\BookingserviceBuilderException;
+use App\Services\Bookings\Exceptions\BookingServicesManagerException;
 use App\Services\RecurringBookingService;
 use App\User;
 use Carbon\Carbon;
@@ -26,12 +28,19 @@ class CompleteBookingStrategy extends AbstractBookingStatusChangeStrategy
      */
     private $services = [];
 
+    /**
+     * @var BookingServicesManager
+     */
+    private $bookingServicesManager;
+
     public function __construct(
         BookingReqestProviderRepository $bookingRequestProviderRepository,
         BookingVerificationService $bookingVerificationService,
-        RecurringBookingService $recurringBookingService
+        RecurringBookingService $recurringBookingService,
+        BookingServicesManager $bookingServicesManager
     ) {
         parent::__construct($bookingRequestProviderRepository, $bookingVerificationService, $recurringBookingService);
+        $this->bookingServicesManager = $bookingServicesManager;
     }
 
     /**
@@ -54,7 +63,7 @@ class CompleteBookingStrategy extends AbstractBookingStatusChangeStrategy
             throw new UnauthorizedAccessException('User does not have access to this function');
         }
 
-        $this->updateBookingServices($booking);
+        $this->updateBookingServices($booking, $user);
 
         if (!$booking->setStatus(Bookingstatus::BOOKING_STATUS_COMPLETED)->save()) {
             throw new BookingStatusChangeException('Unable to save booking status');
@@ -105,38 +114,22 @@ class CompleteBookingStrategy extends AbstractBookingStatusChangeStrategy
      * @param Booking $booking
      * @return bool
      */
-    private function updateBookingServices(Booking $booking): bool
+    private function updateBookingServices(Booking $booking, User $user): bool
     {
         if (!$this->services) {
             throw new InvalidBookingStatusActionException('Can not change status for booking without providing any services details');
         }
 
-        if (!$booking->getBookingServices()->count()) {
-            throw new BookingStatusChangeException('No services found for this booking');
+        foreach ($this->services as &$service) {
+            $service['provider_id'] = $user->getId();
         }
 
-        $bookingServices = $booking->getBookingServices();
-
-        $serviceIds = array_map(function ($service) {
-            return $service['service_id'];
-        }, $this->services);
-
-        $services = array_combine($serviceIds, $this->services);
-
-        /** @var Bookingservice $bookingService */
-        foreach ($bookingServices as $bookingService) {
-            if (in_array($bookingService->getService()->getId(), $serviceIds)) {
-                $service = $services[$bookingService->getService()->getId()];
-                if (isset($service['final_number_of_hours'])) {
-                    $bookingService->setFinalNumberOfHours($service['final_number_of_hours'])->save();
-                }
-                continue;
-            }
-
-            if ($bookingService->getService()->isDefaultService()) {
-                throw new InvalidBookingStatusActionException('Default service can not be removed');
-            }
-            $bookingService->setRemoved(true)->save();
+        try {
+            $this->bookingServicesManager->updateBookingServicesFromArray($booking, $this->services);
+        } catch (BookingserviceBuilderException $exception) {
+            throw new InvalidBookingStatusActionException($exception->getMessage());
+        } catch (BookingServicesManagerException $exception) {
+            throw new InvalidBookingStatusActionException($exception->getMessage());
         }
 
         return true;

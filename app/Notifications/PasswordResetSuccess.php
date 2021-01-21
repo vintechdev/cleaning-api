@@ -16,7 +16,7 @@ class PasswordResetSuccess extends Notification implements ShouldQueue
     public function __construct()
     {
         //
-        echo "success";
+     //   echo "success";
     }
     /**
     * Get the notification's delivery channels.

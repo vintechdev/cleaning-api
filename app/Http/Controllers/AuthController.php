@@ -9,7 +9,6 @@ use App\User;
 use App\Role;
 use App\Register;
 use App\RoleUser;
-use App\Customermetadata;
 use App\Http\Resources\LoginActivityLog;
 use Route;
 use DB;
@@ -152,8 +151,6 @@ public function UpdateToken(Request $request)
             }
 
         }else{
-
-     
                 try { 
                     // $User = new Register();
                     $User = User::firstOrNew(['id' => $request->get('id')]);
@@ -357,7 +354,7 @@ public function loginlog($data)
                             'detail'=>'login');
                 $this->loginlog($log);
                 $this->clearLoginAttempts($request);
-                $Customermetadata = Customermetadata::where('user_id', $user->id)->first();
+
                 // dd($Customermetadata);
 
                 $json['userdata'] =
@@ -373,7 +370,6 @@ public function loginlog($data)
                         'created_at' => $user->created_at,
                         'updated_at' => $user->updated_at,
                         'deleted_at' => $user->deleted_at,
-                       // 'customer_stripe_id' => $Customermetadata->user_stripe_customer_id
                     ];
     
                 $response->setContent(json_encode($json));

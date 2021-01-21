@@ -228,6 +228,15 @@ class StripeService
                 [
                     'country' => 'AU',
                     'type' => 'express',
+                    'business_type' => 'individual',
+                    'individual' => [
+                        'email' => $user->email,
+                        'first_name' => $user->first_name,
+                        'last_name' => $user->last_name
+                    ],
+                    'metadata' => [
+                        'user_id' => $user->getId()
+                    ],
                     'capabilities' => [
                         'transfers' => [
                             'requested' => true,
@@ -262,7 +271,14 @@ class StripeService
             return true;
         }
         $account = $this->getAccountStatus($user);
-        if (isset($account['details_submitted']) && $account['details_submitted'] === true) {
+        if (
+            isset($account['details_submitted']) &&
+            $account['details_submitted'] === true
+        ) {
+            if (isset($account['requirements']['errors']) && count($account['requirements']['errors'])) {
+                return  false;
+            }
+
             $metadata->stripe_connect_account_verified = true;
             if (!$metadata->save()) {
                 throw new StripeMetadataUpdateException('Stripe user metadata could not be updated');

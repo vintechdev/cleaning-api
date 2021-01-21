@@ -307,9 +307,9 @@ class BookingController extends Controller
         } catch (NoSavedCardException $exception) {
             return response()->json(['message' => 'No saved card found.'], 402);
         } catch (BookingCreationException $exception) {
-            return response()->json(['message' => 'Something went wrong. Please contact administrator.'], 500);
+            return response()->json(['message' => $exception->getMessage()], 500);
         } catch (\Exception $exception) {
-            return response()->json(['message' => 'Something went wrong. Please contact administrator.'], 500);
+            return response()->json(['message' => $exception->getMessage()], 500);
         }
 
         return response()->json(['booking' => new BookingResource($booking)], 201);

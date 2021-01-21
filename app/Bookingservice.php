@@ -32,6 +32,16 @@ class Bookingservice extends Model
     {
         return $this->service;
     }
+
+    /**
+     * @param Service $service
+     * @return $this
+     */
+    public function setService(Service $service)
+    {
+        $this->service()->associate($service);
+        return $this;
+    }
     
     /**
      * @param int $hours
@@ -56,12 +66,59 @@ class Bookingservice extends Model
      */
     public function updateFinalTotal(): Bookingservice
     {
-        if (is_null($this->getFinalNumberOfHours())) {
-            return $this;
-        }
         $this->final_service_cost = $this
             ->getService()
-            ->getTotalCost($this->getFinalNumberOfHours(), $this->getInitialServiceCost());
+            ->getTotalCost($this->getFinalNumberOfHours());
+        return $this;
+    }
+
+    /**
+     * @param int $intitialNumberOfHours
+     * @return $this
+     */
+    public function setInitialNumberOfHours(int $intitialNumberOfHours)
+    {
+        $this->initial_number_of_hours = $intitialNumberOfHours;
+        $this->updateInitialTotal();
+        return $this;
+    }
+
+    /**
+     * @return int|null
+     */
+    public function getInitialNumberOfHours(): ?int
+    {
+        return $this->initial_number_of_hours;
+    }
+
+    /**
+     * @return $this
+     */
+    public function updateInitialTotal()
+    {
+        $this->initial_service_cost = $this
+            ->getService()
+            ->getTotalCost($this->getInitialNumberOfHours());
+        return $this;
+    }
+
+    /**
+     * @param int $intialServiceCost
+     * @return $this
+     */
+    public function setInitialServiceCost(int $intialServiceCost)
+    {
+        $this->initial_service_cost = $intialServiceCost;
+        return $this;
+    }
+
+    /**
+     * @param int $finalServiceCost
+     * @return $this
+     */
+    public function setFinalServiceCost(int $finalServiceCost)
+    {
+        $this->final_service_cost = $finalServiceCost;
         return $this;
     }
 
@@ -73,7 +130,7 @@ class Bookingservice extends Model
         return $this->initial_service_cost;
     }
 
-    public function getFinalTotal(): ?int
+    public function getFinalServiceCost(): ?int
     {
         return $this->final_service_cost;
     }
@@ -94,5 +151,40 @@ class Bookingservice extends Model
     {
         $this->is_removed = $isRemoved;
         return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isInitiallyAdded(): bool {
+        return $this->is_initially_added;
+    }
+
+    /**
+     * @param bool $isInitiallyAdded
+     * @return $this
+     */
+    public function setInitiallyAdded(bool $isInitiallyAdded)
+    {
+        $this->is_initially_added = $isInitiallyAdded;
+        return $this;
+    }
+
+    /**
+     * @param int $bookingId
+     * @return $this
+     */
+    public function setBookingId(int $bookingId)
+    {
+        $this->booking_id = $bookingId;
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getBookingId(): int
+    {
+        return $this->booking_id;
     }
 }

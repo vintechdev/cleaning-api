@@ -44,14 +44,14 @@ class Service extends Model
      * @param int|null $cost
      * @return int
      */
-    public function getTotalCost(int $hours, int $cost = null): int
+    public function getTotalCost(int $hours = null, int $cost = null): int
     {
         $cost = $cost ?: $this->getServiceCost();
         if ($this->service_type === self::SERVICE_TYPE_ONCE_OFF) {
             return $cost;
         }
 
-        return $cost * $hours;
+        return $cost * ($hours ?: 0);
     }
 
     /**
@@ -59,7 +59,7 @@ class Service extends Model
      */
     public function isDefaultService(): bool
     {
-        return $this->is_default_service;
+        return (bool) $this->is_default_service;
     }
 
     /**

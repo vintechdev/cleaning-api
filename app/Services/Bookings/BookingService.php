@@ -13,8 +13,10 @@ use App\Exceptions\NoSavedCardException;
 use App\Plan;
 use App\Repository\BookingReqestProviderRepository;
 use App\Repository\Eloquent\StripeUserMetadataRepository;
+use App\Services\Bookings\Exceptions\BookingserviceBuilderException;
 use App\User;
 use App\Useraddress;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -34,17 +36,25 @@ class BookingService
     private $requestProviderRepo;
 
     /**
+     * @var BookingServicesManager
+     */
+    private $bookingServicesManager;
+
+    /**
      * BookingService constructor.
      * @param StripeUserMetadataRepository $stripeUserMetadataRepository
      * @param BookingReqestProviderRepository $reqestProviderRepository
+     * @param BookingServicesManager $bookingServicesManager
      */
     public function __construct(
         StripeUserMetadataRepository $stripeUserMetadataRepository,
-        BookingReqestProviderRepository $reqestProviderRepository
+        BookingReqestProviderRepository $reqestProviderRepository,
+        BookingServicesManager $bookingServicesManager
     )
     {
         $this->stripeUserMetadataRepository = $stripeUserMetadataRepository;
         $this->requestProviderRepo = $reqestProviderRepository;
+        $this->bookingServicesManager = $bookingServicesManager;
     }
 
     /**
@@ -157,21 +167,31 @@ class BookingService
                         }
                     }
 
-                    //TODO: Validate if they service belongs to the category chosen
-                    if (count($service) > 0) {
-                        foreach ($service as $key => $serv) {
-                            $bookingservice = new \App\Bookingservice;
-                            $bookingservice->booking_id = $last_insert_id;
-                            $bookingservice->service_id = $serv['service_id'];
-                            $bookingservice->initial_number_of_hours = $serv['initial_number_of_hours'];
-                            $bookingservice->initial_service_cost = $serv['initial_service_cost'];
-                            $bookingservice->final_number_of_hours = $serv['final_number_of_hours'];
-                            $bookingservice->final_service_cost = $serv['final_service_cost'];
-                            if (!$bookingservice->save()) {
-                                DB::rollBack();
+                    try {
+                        if (!$parent) {
+                            if (!$service) {
+                                // TODO: log error saying that invalid services type received.
+                                throw new BookingCreationException('Booking could not be saved without services');
+                            }
+                            $this->bookingServicesManager->addBookingServicesFromArray($booking, $service);
+                        } else {
+                            if (!($service instanceof Collection) || !$service->count()) {
+                                // TODO: log error saying that invalid services type received.
                                 throw new BookingCreationException('Booking service could not be saved');
                             }
+                            $services = [];
+
+                            foreach ($service as $serv) {
+                                $services[] = $serv->replicate();
+                            }
+                            $this->bookingServicesManager->addBookingServices($booking, $services);
                         }
+                    } catch (BookingserviceBuilderException $exception) {
+                        DB::rollBack();
+                        throw new BookingCreationException($exception->getMessage());
+                    } catch (\Exception $exception) {
+                        DB::rollBack();
+                        throw new BookingCreationException('Booking service could not be saved');
                     }
 
                     if (!empty($question)) {
@@ -215,7 +235,7 @@ class BookingService
         $booking->setPlanType(Plan::ONCEOFF);
         $booking->setRecurring(false);
         $bookingDetails = $booking->toArray();
-        $services = $booking->getBookingServices()->toArray();
+        $services = $booking->getBookingServices();
         $providers = $this->requestProviderRepo->getAllByBookingId($booking->getId())->toArray();
         $questions = Bookingquestion::where(['booking_id' => $booking->getId()])->get()->toArray();
     

@@ -118,77 +118,96 @@ public function UpdateToken(Request $request)
             $message = $validator->messages()->all();
             return response()->json(['message' => $message], 400);
         }
-        $count = User::where(['email' => $request->get('email')])->count();
-        if($count>0){
-                return response()->json(['error'=>'Email already Exists. Please try again with another Email.']);
+        $role = $request->role;
+        $usercount = User::where(['email' => $request->get('email')])->get()->toarray();
+
+        if(count($usercount)>0){
+            $res = User::whereHas(
+                'roles', function($q)use ( $role){
+                    $q->where('name',  $role);
+                }
+            )->where(['email' => $request->get('email')])->get()->toArray();
+
+            if(count($res)>0){
+                return response()->json(['error'=>'Email already Exists. Please try again with another Email.'],401);
+            }else{
+                $user_id = $usercount[0]['id'];
+                //add another role for same email
+                $RoleUser = new RoleUser();
+                $RoleUser->user_id = $user_id;
+                $rl = new Role();
+                $rls = $rl->where('name', $role)->first();
+                $RoleUser->role_id = $rls->id;
+                $RoleUser->save();
+
+                if($role == 'provider'){
+                    $User = User::firstOrNew(['id' => $user_id]);
+                    $User->providertype = $request->get('provider_type');
+                    $User->save();
+                }
+                $success['message'] = 'Please confirm yourself by clicking on verify user button sent to you on your email';
+                return response()->json(['success' => $success], 200);
+
+            }
+
         }else{
-
-     
-        try { 
-            // $User = new Register();
-            $User = User::firstOrNew(['id' => $request->get('id')]);
-            $User->id = $request->get('id');
-            $User->uuid = $request->get('uuid');
-            $User->first_name = $request->get('first_name');
-            $User->last_name = $request->get('last_name');
-            $User->email = $request->get('email');
-            $User->password = bcrypt($request->get('password'));
-            $User->mobile_number = $request->get('mobile_number');
-            $User->social_login = $request->get('social_login');
-            $User->remember_token = $request->get('remember_token');
-            $User->status = "email_verification";
-            $User->fcm_token = $request->get('fcm_token');
-            $roles = explode(',', $request->get('role'));
-            // dd($roles);
-            $User->save();
-            $success['saved'] = true;
-        } catch(\Illuminate\Database\QueryException $ex){ 
-            dd($ex->getMessage()); 
-            // Note any method of class PDOException can be called on $ex.
-        }
-        
-        $lastinsertid = $User->id;
-
-
-        // for email verify
-        $User->sendApiEmailVerificationNotification();
-        $success['message'] = 'Please confirm yourself by clicking on verify user button sent to you on your email';
-        
-        foreach($roles as $r){
-            // print_r($r);
-            $RoleUser = new RoleUser();
-            $RoleUser->user_id = $lastinsertid;
-
-            $rl = new Role();
-            $rls = $rl->where('name', $r)->first();
-       
-            $RoleUser->role_id = $rls->id;
-            $RoleUser->save();
-
-            if($r == 'customer'){
-                $options = [
-                    "email" => $User->email
-                ];
-                $user_id = $User->id;
-                //$stripeCustomer = $User->createAsStripeCustomer();
+                try { 
+                    // $User = new Register();
+                    $User = User::firstOrNew(['id' => $request->get('id')]);
+                    $User->id = $request->get('id');
+                    $User->uuid = $request->get('uuid');
+                    $User->first_name = $request->get('first_name');
+                    $User->last_name = $request->get('last_name');
+                    $User->email = $request->get('email');
+                    $User->password = bcrypt($request->get('password'));
+                    $User->mobile_number = $request->get('mobile_number');
+                    $User->social_login = $request->get('social_login');
+                    $User->remember_token = $request->get('remember_token');
+                    $User->status = "email_verification";
+                    $User->fcm_token = $request->get('fcm_token');
+                    $roles = explode(',', $request->get('role'));
+                    // dd($roles);
+                    $User->save();
+                    $success['saved'] = true;
+                } catch(\Illuminate\Database\QueryException $ex){ 
+                    dd($ex->getMessage()); 
+                    // Note any method of class PDOException can be called on $ex.
+                }
                 
-            }
+                $lastinsertid = $User->id;
 
-            if($r == 'provider'){
-                $User = User::firstOrNew(['id' => $lastinsertid]);
-                $User->providertype = $request->get('provider_type');
-                $User->save();
-            }
-        }
-        
-        // $email = $request->get('email');
+                // for email verify
+                $User->sendApiEmailVerificationNotification();
+                $success['message'] = 'Please confirm yourself by clicking on verify user button sent to you on your email';
+                
+                foreach($roles as $r){
+                    // print_r($r);
+                    $RoleUser = new RoleUser();
+                    $RoleUser->user_id = $lastinsertid;
 
-      
+                    $rl = new Role();
+                    $rls = $rl->where('name', $r)->first();
+            
+                    $RoleUser->role_id = $rls->id;
+                    $RoleUser->save();
 
-        // Mail::to($email)->send(new WelcomeMail($data));
-    
-        $responseCode = $request->get('id') ? 200 : 201;
-        return response()->json(['success' => $success], $responseCode);
+                    if($r == 'customer'){
+                        $options = [
+                            "email" => $User->email
+                        ];
+                        $user_id = $User->id;
+                        //$stripeCustomer = $User->createAsStripeCustomer();
+                        $Customermetadata = new Customermetadata();
+                    }
+
+                    if($r == 'provider'){
+                        $User = User::firstOrNew(['id' => $lastinsertid]);
+                        $User->providertype = $request->get('provider_type');
+                        $User->save();
+                    }
+                }
+                $responseCode = $request->get('id') ? 200 : 201;
+                return response()->json(['success' => $success], $responseCode);
     }
     }
   

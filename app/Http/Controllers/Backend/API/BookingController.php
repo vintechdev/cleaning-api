@@ -23,6 +23,7 @@ use App\Services\Bookings\BookingService as BookingServiceAlias;
 use App\Services\Bookings\BookingStatusChangeContext;
 use App\Services\Bookings\BookingStatusChangeEngine;
 use App\Services\Bookings\BookingStatusChangeFactory;
+use App\Services\Bookings\BookingStatusChangeTypes;
 use App\Services\Bookings\BookingVerificationService;
 use App\Services\Bookings\Builder\BookingStatusChangeContextBuilder;
 use App\Services\RecurringBookingService;
@@ -193,7 +194,7 @@ class BookingController extends Controller
 
         
         $result = app(TotalCostCalculation::class)->PromoCodeDiscount($request);
-        return response()->json($result);
+        return $result;
 
     }
 
@@ -306,9 +307,9 @@ class BookingController extends Controller
         } catch (NoSavedCardException $exception) {
             return response()->json(['message' => 'No saved card found.'], 402);
         } catch (BookingCreationException $exception) {
-            return response()->json(['message' => 'Something went wrong. Please contact administrator.'], 500);
+            return response()->json(['message' => $exception->getMessage()], 500);
         } catch (\Exception $exception) {
-            return response()->json(['message' => 'Something went wrong. Please contact administrator.'], 500);
+            return response()->json(['message' => $exception->getMessage()], 500);
         }
 
         return response()->json(['booking' => new BookingResource($booking)], 201);
@@ -323,9 +324,9 @@ class BookingController extends Controller
     public function updateBooking(Request $request, Booking $booking, BookingStatusChangeEngine $statusChangeEngine)
     {
         $validator = Validator::make($request->all(), [
-            'status' => 'required|in:cancelled,rejected,accepted,arrived,completed,cancel_after',
+            'status' => 'in:' . implode(',', BookingStatusChangeTypes::getAll()),
             'status_change_message' => 'nullable|string',
-            'services' => 'array'
+            'services' => 'nullable|array'
         ]);
 
         if($validator->fails()){
@@ -354,10 +355,11 @@ class BookingController extends Controller
         string $date,
         BookingStatusChangeEngine $statusChangeEngine
     ) {
+        
         $validator = Validator::make($request->all(), [
-            'status' => 'required|in:cancelled,rejected,accepted,arrived,completed,cancel_after',
+            'status' => 'in:' . implode(',', BookingStatusChangeTypes::getAll()),
             'status_change_message' => 'string',
-            'services' => 'array'
+            'services' => 'nullable|array'
         ]);
 
         if($validator->fails()) {

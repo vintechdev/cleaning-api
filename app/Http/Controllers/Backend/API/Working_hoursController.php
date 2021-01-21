@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Validator;
 use Auth;
 use Hash;
 use DB;
+use App\Repository\Eloquent\ProfileRepository;
 
 class Working_hoursController extends Controller
 {
@@ -71,10 +72,7 @@ class Working_hoursController extends Controller
     {
 
         $validator = Validator::make($request->all(), [
-            'provider_id' => 'required',
-            'working_days' => 'required',
-            'start_time' => 'required',
-            'end_time' => 'required'
+            'data' => 'required|array',
         ]);
         
         if($validator->fails()){
@@ -82,23 +80,16 @@ class Working_hoursController extends Controller
             return response()->json(['message' => $message], 401);
         }
 
-       
+        $data = $request->data;
 
-        $user = Auth::user();
-        $user_id = $user->id;
-      
-            $Working_hours = Working_hours::firstOrNew(['id' => $request->get('id')]);
-            $Working_hours->id = $request->get('id');
-            $Working_hours->uuid = $request->get('uuid');
-            $Working_hours->provider_id = $user_id;
-            $Working_hours->working_days = $request->get('working_days');
-            $Working_hours->start_time = $request->get('start_time');
-            $Working_hours->end_time = $request->get('end_time');
-            $Working_hours->save();
-
-            $responseCode = $request->get('id') ? 200 : 201;
-            return response()->json(['saved' => true], $responseCode);
+        $res = app(ProfileRepository::class)->createworkinghours($data);
         
+        if($res){
+            return response()->json(['success' => true], 200);
+        }else{
+            return response()->json(['error' => true], 201); 
+        }
+
     }
 
     //for update address by uuid
@@ -139,16 +130,9 @@ class Working_hoursController extends Controller
     {
         $user = Auth::user();
         $user_id = $user->id;
-        // print_r($user_id);exit;
-
-        $working_hours = Working_hours::query();
-        
-		if ($user_id) {
-			$working_hours = $working_hours->where('provider_id', 'LIKE', '%'.$user_id);
-		}
-		
-        $working_hours = $working_hours->paginate(20);
-        return (new Working_hoursCollection($working_hours));
+        $working_hours = Working_hours::where('provider_id',$user_id)->get()->toArray();
+        return response()->json(['data' => $working_hours], 200);
+       
     }
 
     /**

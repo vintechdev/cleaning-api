@@ -7,21 +7,18 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Emadadly\LaravelUuid\Uuids;
 use Laravel\Passport\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
+use App\Postcode;
 
-class Userreview extends Model
+class Providerpostcodemap extends Model
 {
     use HasApiTokens, Notifiable;
     use Uuids;
-    protected $table = 'user_reviews';
+    protected $table = 'provider_postcode_maps';
     use SoftDeletes;
     protected $fillable = ['id'];
 
-    public function reviewby()
+    public function postcode()
     {
-        return $this->belongsTo(User::class,'user_review_by','id');
-    }
-    public function reviewfor()
-    {
-        return $this->belongsTo(User::class,'user_review_for','id');
+        return $this->belongsTo(Postcode::class,'postcode_id','id');
     }
 }

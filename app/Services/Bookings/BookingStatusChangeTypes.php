@@ -14,4 +14,20 @@ class BookingStatusChangeTypes
     const STATUS_ARRIVED = 'arrived';
     const STATUS_COMPLETED = 'completed';
     const STATUS_CANCEL_AFTER = 'cancel_after';
+
+    /**
+     * @return string[]
+     */
+    public static function getAll(): array
+    {
+        return [
+            self::STATUS_ACCEPTED,
+            self::STATUS_REJECTED,
+            self::STATUS_CANCELLED,
+            self::STATUS_ARRIVED,
+            self::STATUS_COMPLETED,
+            self::STATUS_CANCEL_AFTER
+        ];
+    }
+    
 }

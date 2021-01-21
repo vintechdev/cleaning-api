@@ -46,6 +46,11 @@ Route::namespace('Backend\API')->prefix('v1/payments')->group(function(){
     Route::post('stripe/sessions', 'PaymentsController@createStripeSession')->name('api.payments.stripe.session')->middleware(['auth:api']);
     Route::get('stripe/cards', 'PaymentsController@retrieveStripeCard')->name('api.payments.stripe.cards')->middleware(['auth:api']);
     Route::post('stripe/cards', 'PaymentsController@addStripeCard')->name('api.payments.stripe.cards')->middleware(['auth:api']);
+    Route::post('stripe/paymentmethods/intents', 'PaymentsController@createStripePaymentMethodIntent')->name('api.payments.stripe.payment_methods.intents')->middleware(['auth:api']);
+    Route::post('stripe/account-links', 'PaymentsController@createStripeAccountLink')->name('api.payments.stripe.account_link')->middleware(['auth:api', 'scope:provider']);
+    Route::post('stripe/accounts/{user}/verification', 'PaymentsController@verifyStripeAccount')->name('api.payments.stripe.accounts.verify')->middleware(['auth:api', 'scope:provider']);
+    Route::post('stripe/accounts/{user}/login-links', 'PaymentsController@getAccountLoginLink')->name('api.payments.stripe.accounts.verify')->middleware(['auth:api', 'scope:provider']);
+    Route::get('stripe/accounts/{user}/balances', 'PaymentsController@getStripeAccountBalance')->name('api.payments.stripe.account.balance')->middleware(['auth:api', 'scope:provider']);
 });
 
 // for passport
@@ -83,16 +88,20 @@ Route::middleware(['auth:api', 'role:admin'])->namespace('Backend\API')->prefix(
 });
 Route::post('getdashboard', 'HomeController@dashboard')->name('api.home.getdashboard')->middleware(['auth:api'])->middleware(['scope:customer']);
 
+
+
 Route::middleware(['auth:api','scope:customer,provider'])->namespace('Backend\API')->prefix('v1')->group(function () {
     
     Route::patch('bookings/{booking}', 'BookingController@updateBooking')->name('update_booking')->middleware(['can:update,booking']);
-   
     Route::patch('bookings/{booking}/dates/{recurring_date}', 'BookingController@updateRecurredBooking')->name('update_recurred_booking')->middleware(['can:update,booking']);
-   
     Route::get('/bookings/{booking}', 'BookingController@getbookingdetails')->name('getbookingdetails');
     Route::get('bookings/{booking}/dates/{recurring_date}', 'BookingController@getbookingdetails')->name('getrecurredbookingdetails');
     Route::get('/bookings', 'BookingJobsController@listAllJobs');
     Route::get('/allstatus', 'BookingController@listAllStatus');
+    Route::post('addreview/{id}', 'UserreviewController@addreview')->name('addreview');
+    Route::post('chats/{bookingid}', 'ChatsController@addmessage')->name('addmessage');
+    Route::post('getchat/{bookingid}', 'ChatsController@getchat')->name('getchat');
+
 });
 
 Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->prefix('v1/customer')->group(function () {
@@ -164,8 +173,7 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
     Route::get('getuserreviewdata/{uuid}',
      'UserreviewController@getuserreviewdata')->name('api.Userreview.getuserreviewdata')->middleware(['scope:customer']);
 
-    Route::post('addproviderreview/{uuid}', 'UserreviewController@addproviderreview')->name('api.Userreview.addproviderreview')->middleware(['scope:customer']);
-
+    
     Route::get('getratingreview', 'UserreviewController@getratingreview')->name('api.Userreview.getratingreview')->middleware(['scope:customer']);
 
     Route::get('getcancelbookingdata/{uuid}', 'UserreviewController@getcancelbookingdata')->name('api.Userreview.getcancelbookingdata')->middleware(['scope:customer']);
@@ -190,6 +198,13 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
 
  Route::middleware(['auth:api', 'role:provider'])->namespace('Backend\API')->prefix('v1/provider')->group(function () {
     // provider Route
+    Route::post('addworking_hours', 'Working_hoursController@addworking_hours')->name('api.Working_hours.addworking_hours')->middleware(['scope:provider']);
+    Route::get('getworking_hours', 'Working_hoursController@getworking_hours')->name('api.Working_hours.getworking_hours')->middleware(['scope:provider']);
+    Route::post('addproviderpostcode', 'PostcodesController@addproviderpostcode')->name('addproviderpostcode')->middleware(['scope:provider']);
+    Route::get('getproviderpostcode', 'PostcodesController@getproviderpostcode')->name('getproviderpostcode')->middleware(['scope:provider']);
+    Route::post('deleteproviderpostcode', 'PostcodesController@deleteproviderpostcode')->name('deleteproviderpostcode')->middleware(['scope:provider']);
+    
+    
 
     
     Route::get('getservicebyprovider/{pid}', 'BookingController@GetServiceByProvider')->middleware(['scope:provider']);
@@ -232,10 +247,7 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
      Route::patch('profile_update', 'CustomerusersController@profile_update')->name('api.Customeruser.profile_update')->middleware(['scope:provider']);
 
 
-     Route::post('addworking_hours', 'Working_hoursController@addworking_hours')->name('api.Working_hours.addworking_hours')->middleware(['scope:provider']);
-
-     Route::get('getworking_hours', 'Working_hoursController@getworking_hours')->name('api.Working_hours.getworking_hours')->middleware(['scope:provider']);
-
+     
      Route::patch('editworking_hours/{uuid}', 'Working_hoursController@editworking_hours')->name('api.Working_hours.editworking_hours')->middleware(['scope:provider']);
 
 
@@ -399,14 +411,6 @@ Route::middleware(['auth:api','scope:admin'])->namespace('Backend\API')->prefix(
     Route::post('/settings/{setting}/delete', 'SettingsController@delete')->name('api.setting.delete');
     Route::post('/settings/{setting}/restore', 'SettingsController@restore')->name('api.setting.restore');
     Route::post('/settings/{setting}/force-delete', 'SettingsController@forceDelete')->name('api.setting.force-delete');
-
-    // Chat Route
-    Route::get('chats', 'ChatsController@index')->name('api.chat.index');
-    Route::get('/chats/{chat}', 'ChatsController@form')->name('api.chat.form');
-    Route::post('/chats/save', 'ChatsController@post')->name('api.chat.save');
-    Route::post('/chats/{chat}/delete', 'ChatsController@delete')->name('api.chat.delete');
-    Route::post('/chats/{chat}/restore', 'ChatsController@restore')->name('api.chat.restore');
-    Route::post('/chats/{chat}/force-delete', 'ChatsController@forceDelete')->name('api.chat.force-delete');
 
     // Admin Route
     Route::get('admins', 'AdminsController@index')->name('api.admin.index');

@@ -2,8 +2,10 @@
 
 namespace App\Services\Bookings;
 
+use App\Bookingrequestprovider;
 use App\Bookingstatus;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Class PendingBookingList
@@ -29,5 +31,15 @@ class PendingBookingList extends AbstractBookingList
         }
 
         return $bookingQuery->orderBy('booking_date', 'desc')->get('bookings.*');
+    }
+
+    /**
+     * @return Builder
+     */
+    protected function getProviderBookingQuery(): Builder
+    {
+        return parent::getProviderBookingQuery()
+            ->where('booking_request_providers.status', '<>', Bookingrequestprovider::STATUS_REJECTED)
+            ->where('booking_request_providers.id', '<>', null);
     }
 }

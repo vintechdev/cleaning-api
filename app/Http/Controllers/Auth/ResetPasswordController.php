@@ -12,6 +12,7 @@ use App\Notifications\PasswordResetRequest;
 use App\Notifications\PasswordResetSuccess;
 use App\User;
 use App\PasswordReset;
+use Illuminate\Support\Facades\Validator;
 class ResetPasswordController extends Controller
 {
     /*
@@ -35,12 +36,18 @@ class ResetPasswordController extends Controller
     protected $redirectTo = RouteServiceProvider::HOME;
     public function forgetpassword(Request $request)
     {
-       // echo "<pre>";print_r($request->headers->all());exit;
+     
 
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'email' => 'required|string|email',
+            'url' => 'required|string',
         ]);
+       
         
+        if($validator->fails()){
+            $message = $validator->messages()->all();
+            return response()->json(['message' => $message], 401);
+        }
         $user = User::where('email', $request->email)->first();
        
         if (!$user)
@@ -59,10 +66,10 @@ class ResetPasswordController extends Controller
        
         if ($user && $passwordReset){
 
-            $res =  $user->notify(new PasswordResetRequest($passwordReset->token));
+            $res =  $user->notify(new PasswordResetRequest($passwordReset->token,$request->url));
         }
           
-        //    dd($res);
+      
          return response()->json([
             'message' => 'We have e-mailed your password reset link!'
          ],200);
@@ -76,6 +83,14 @@ class ResetPasswordController extends Controller
      */
     public function verifytoken(Request $request)
     {
+
+        $validator = Validator::make($request->all(), [
+            'token' => 'required|string',
+        ]);
+        if($validator->fails()){
+            $message = $validator->messages()->all();
+            return response()->json(['message' => $message], 401);
+        }
 
         $token = $request->token;
         $passwordReset = PasswordReset::where('token', $token)
@@ -106,11 +121,17 @@ class ResetPasswordController extends Controller
      */
     public function reset(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'email' => 'required|string|email',
             'password' => 'required|string',
             'token' => 'required|string'
         ]);
+        if($validator->fails()){
+            $message = $validator->messages()->all();
+            return response()->json(['message' => $message], 401);
+        }
+
+        
         $passwordReset = PasswordReset::where([
             ['token', $request->token],
             ['email', $request->email]

@@ -7,6 +7,9 @@ use App\Service;
 use App\Promocodes;
 use App\User;
 use App\Customeruser;
+use App\Working_hours;
+use App\Providerpostcodemap;
+
 class UserRepository{
 
     public function getProviderDetails($id)
@@ -46,6 +49,12 @@ class UserRepository{
           # code...
           $users = Customeruser::where('providertype','agency')->pluck('id')->toArray();
           return $users;
+        }
+
+        public function CheckProfileCompleted()
+        {
+          
+          
         }
 }
 

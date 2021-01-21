@@ -57,14 +57,13 @@ Route::namespace('Backend\API')->prefix('v1/payments')->group(function(){
 Route::group([
     'prefix' => 'auth'
 ], function () {
-  
     Route::post('login', 'AuthController@login');
     Route::post('register', 'AuthController@register');
     Route::post('userexist', 'AuthController@UserExist')->name('userexist');
     Route::post('updatetoken', 'AuthController@UpdateToken')->name('updatetoken');
     Route::get('logout', 'AuthController@logout')->middleware(['auth:api']);
 });
-// Route::post('/oauth/token', 'AuthController@login');
+
 
 // for email verify
 Route::get('email/verify/{id}', 'VerificationApiController@verify')->name('verificationapi.verify');
@@ -74,8 +73,8 @@ Route::namespace('Auth')->prefix('auth')->group(function(){
     Route::post('forgetpassword', 'ResetPasswordController@forgetpassword')->name('forgetpassword');
     Route::post('verifytoken', 'ResetPasswordController@verifytoken');
     Route::post('reset', 'ResetPasswordController@reset');
-//forgot password
-    });
+
+});
 
 Route::middleware(['auth:api', 'role:admin'])->namespace('Backend\API')->prefix('v1/admin')->group(function () {
    // Admin Route
@@ -107,8 +106,7 @@ Route::middleware(['auth:api','scope:customer,provider'])->namespace('Backend\AP
 Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->prefix('v1/customer')->group(function () {
     
     // Customeruser Route
-    //rakesh api
-
+   
     Route::get('alternate_date/{booking_uuid}', 'BookingController@get_alternate_date')->name('customer_get_alternate_date')->middleware(['scope:customer']);
     Route::post('add_alternate_date', 'BookingController@add_alternate_date')->name('add_alternate_date')->middleware(['scope:customer']);
     Route::delete('delete_alternate_date/{uuid}', 'BookingController@delete_alternate_date')->name('delete_alternate_date')->middleware(['scope:customer']);
@@ -204,6 +202,9 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
     Route::get('getproviderpostcode', 'PostcodesController@getproviderpostcode')->name('getproviderpostcode')->middleware(['scope:provider']);
     Route::post('deleteproviderpostcode', 'PostcodesController@deleteproviderpostcode')->name('deleteproviderpostcode')->middleware(['scope:provider']);
     
+     //check profile data
+     Route::get('checkprofilecompleted', 'CustomerusersController@CheckProfileCompleted')->name('checkprofilecompleted');
+
     
 
     
@@ -555,6 +556,8 @@ Route::middleware(['auth:api','scope:admin'])->namespace('Backend\API')->prefix(
 
 //provider api
 Route::namespace('Backend\API')->prefix('v1/provider')->middleware(['scope:provider'])->group(function () {
+
+   
 
      // Providermetadata Route
 

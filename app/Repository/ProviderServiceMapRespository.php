@@ -28,7 +28,7 @@ class ProviderServiceMapRespository{
 
         public function GetServicesByProvider($pid)
         {
-         return Providerservicemaps::with('service')->where('provider_service_maps.provider_id',$pid)->get()->toarray();
+         return Providerservicemaps::with('service')->where('provider_service_maps.provider_id',$pid)->where('provider_service_maps.status',1)->get()->toarray();
         }
        
 }

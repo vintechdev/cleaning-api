@@ -4,6 +4,8 @@ namespace App\Repository\Eloquent;
 
 use App\Working_hours;
 use App\Providerpostcodemap;
+use App\Providerservicemaps;
+use App\StripeUserMetadata;
 use App\Http\Resources\Chat;
 use Illuminate\Http\Request;
 use Auth;
@@ -11,6 +13,28 @@ use Auth;
 
 class ProfileRepository extends AbstractBaseRepository
 {
+
+
+    public function CheckProfileCompleted()
+    {
+        $user_id = Auth::user()->id;
+
+        //check working hours 
+        $wh  = Working_hours::where('provider_id',$user_id)->get()->count();
+        
+        //service mapping
+        $ps  = Providerservicemaps::where('provider_id',$user_id)->get()->count();
+
+        //post code mapping
+        $pc  = Providerpostcodemap::where('provider_id',$user_id)->get()->count();
+
+        //stripe payment 
+        $payment = StripeUserMetadata::where('user_id',$user_id)->get()->count();
+
+        return ['working_hour'=>$wh,'provider_service'=>$ps,'postcode'=>$pc,'payment'=>$payment];
+
+    }
+
     protected function getModelClass(): string
     {
         return Working_hours::class;
@@ -35,7 +59,7 @@ class ProfileRepository extends AbstractBaseRepository
     public function deleteproviderpostcode($postcode)
     {
         # code...
-        $arr =   Providerpostcodemap::where('id',$postcode)->delete();
+        $arr = Providerpostcodemap::where('id',$postcode)->delete();
         if($arr){
             return true;
         }else{
@@ -69,4 +93,7 @@ class ProfileRepository extends AbstractBaseRepository
         }
         return $arr;
     }
+
+
+
 }

@@ -17,13 +17,23 @@ use App\Userreview;
 use Session;
 use File;
 use Config;
+use App\Repository\Eloquent\ProfileRepository;
 class CustomerusersController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
+    protected $profileRepository;
+    public function __construct(ProfileRepository $profileRepository){
+        $this->profileRepository = new ProfileRepository();
+    }
+
+    public function CheckProfileCompleted(Request $request)
+    {
+        $res = $this->profileRepository->CheckProfileCompleted();
+       // if()
+        
+    }
+
+
+
     
     public function index(Request $request)
     {
@@ -93,8 +103,7 @@ class CustomerusersController extends Controller
         return (new CustomeruserCollection($Customerusers));
     }
     public function getallprovider(Request $request){
-    //    $sub = DB::table('user_reviews')->select('user_review_for',DB::raw('AVG(rating) as ratings_average'))->groupBy('user_reviews.user_review_for');
-       
+    
         $rules = array(
             'postcode' => 'required|numeric',
             'serviceid'=>'required|string',

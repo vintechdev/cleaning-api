@@ -25,16 +25,21 @@ class ChatsRepository extends AbstractBaseRepository
         //$chat->isread =1;
 
         if($chat->save()){
-            return true;
+            return $chat;
         }else{
             return false;
         }
     }
 
-    public function chat($bookingid)
+    public function chat($bookingid,$history)
     {
-        $arr = Chats::where('booking_id',$bookingid)->where('sender_id',Auth::user()->id)->where('isread',0)->get()->toArray();
-     //   Chats::where('booking_id',$bookingid)->where('sender_id',Auth::user()->id)->where('isread',0)->update(['isread'=>1]);
+        if($history){
+            $arr = Chats::where('booking_id',$bookingid)->orderBy('created_at','asc')->get()->toArray();
+        }else{
+
+            $arr = Chats::where('booking_id',$bookingid)->where('receiver_id',Auth::user()->id)->where('isread',0)->orderBy('created_at','asc')->get()->toArray();//
+            Chats::where('booking_id',$bookingid)->where('sender_id','!=',Auth::user()->id)->where('isread',0)->update(['isread'=>1]);
+        }
         return $arr;
     }
 }

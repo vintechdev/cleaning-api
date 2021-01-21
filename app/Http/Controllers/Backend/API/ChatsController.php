@@ -36,20 +36,19 @@ class ChatsController extends Controller
     $res = app(ChatsRepository::class)->addmessage($request,$bookingid);
 
     if($res){
-        return response()->json(['success'=>true],200);
+        return response()->json(['success'=>true,'data'=>$res],200);
     }else{
         return response()->json(['message'=>'message has not been sent. Please try again!!'],401);
     }
 
    }
 
-   public function getchat($bookingid){
-        $res = app(ChatsRepository::class)->chat($bookingid);
+   public function getchat(Request $request,$bookingid){
 
-        if($res){
-            return response()->json(['success'=>true],200);
-        }else{
-            return response()->json(['message'=>'message has not been sent. Please try again!!'],401);
-        }
+        $history = $request->history;
+       
+        $res = app(ChatsRepository::class)->chat($bookingid,$history);
+        $res = (count($res)>0)?$res:[];
+        return response()->json(['chat'=>$res],200);
    }
 }

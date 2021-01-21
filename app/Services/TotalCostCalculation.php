@@ -179,39 +179,9 @@ class TotalCostCalculation{
        
         $arr = $this->discountRepository->CheckPromocode($promocode,$categoryid);
         if(!empty($arr)){
-
-              /*  if($request->get('booking_provider_type')=='agency'){
-                    $providerid = app(UserRepository::class)->getAgencyData();
-                }else{
-                    $providerid = $request->get('providerid');
-                }
-    
-                $res = $this->GetHighestTotalPrice($id,$providerid,$servicetime,$plan_id);
-            
-                if(isset($res['plan_discount']) && $res['plan_discount']!=''){
-                    $total_amount = $res['final_cost'];
-                }else{
-                    $total_amount = $res['total_cost'];
-                }
-           
-                    
-                if($total_amount>0){
-                        if($arr[0]['discount_type']=='flat'){
-                            $discounted_amount=$arr[0]['discount'];
-                        }else{
-                            $discounted_amount=($total_amount*$arr[0]['discount'])/100;
-                        }
-                        $final_amount = $total_amount-$discounted_amount;
-                        $result['total_cost']=$total_amount;
-                        $result['discount']=$discounted_amount;
-                        $result['final_cost']=$final_amount;
-                        return ['data' => $result];
-                }else{
-                    return ['data' => 'Something went wrong. Please contact administrator.'];
-                }*/
-                return response()->json(['data' => 'success'],200);
+            return response()->json(['data' => 'success'],200);
          }else{
-            return response()->json( ['data' => 'Promocode is not valid'],201);
+            return response()->json( ['error' => 'Promocode is not valid'],201);
          }
     }
 }

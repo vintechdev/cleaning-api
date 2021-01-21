@@ -29,4 +29,5 @@ class BookingStatusChangeTypes
             self::STATUS_CANCEL_AFTER
         ];
     }
+    
 }

@@ -242,7 +242,6 @@ class BookingJobsManager
             $job['address'] = $this->bookingService->getBookingAddress($booking->getId());
             $job['question'] = $this->bookingService->getBookingQuestions($booking->getId());
         }
-
         return $job;
     }
 

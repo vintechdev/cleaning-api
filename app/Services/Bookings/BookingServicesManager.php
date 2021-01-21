@@ -86,6 +86,10 @@ class BookingServicesManager
                 $bookingService
                     ->setFinalServiceCost($service->getFinalServiceCost());
 
+                if (!$bookingService->save()) {
+                    throw new BookingServicesManagerException('Unable to save booking service');
+                }
+
                 unset($newBookingServices[$bookingService->getService()->getId()]);
                 continue;
             }

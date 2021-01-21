@@ -47,7 +47,7 @@ class Bookingservice extends Model
      * @param int $hours
      * @return $this
      */
-    public function setFinalNumberOfHours(int $hours): Bookingservice
+    public function setFinalNumberOfHours(float $hours): Bookingservice
     {
         $this->final_number_of_hours = $hours;
         return $this->updateFinalTotal();
@@ -56,7 +56,7 @@ class Bookingservice extends Model
     /**
      * @return int
      */
-    public function getFinalNumberOfHours(): ?int
+    public function getFinalNumberOfHours(): ?float
     {
         return $this->final_number_of_hours;
     }
@@ -76,7 +76,7 @@ class Bookingservice extends Model
      * @param int $intitialNumberOfHours
      * @return $this
      */
-    public function setInitialNumberOfHours(int $intitialNumberOfHours)
+    public function setInitialNumberOfHours(float $intitialNumberOfHours)
     {
         $this->initial_number_of_hours = $intitialNumberOfHours;
         $this->updateInitialTotal();
@@ -86,7 +86,7 @@ class Bookingservice extends Model
     /**
      * @return int|null
      */
-    public function getInitialNumberOfHours(): ?int
+    public function getInitialNumberOfHours(): ?float
     {
         return $this->initial_number_of_hours;
     }
@@ -106,7 +106,7 @@ class Bookingservice extends Model
      * @param int $intialServiceCost
      * @return $this
      */
-    public function setInitialServiceCost(int $intialServiceCost)
+    public function setInitialServiceCost(float $intialServiceCost)
     {
         $this->initial_service_cost = $intialServiceCost;
         return $this;
@@ -116,7 +116,7 @@ class Bookingservice extends Model
      * @param int $finalServiceCost
      * @return $this
      */
-    public function setFinalServiceCost(int $finalServiceCost)
+    public function setFinalServiceCost(float $finalServiceCost)
     {
         $this->final_service_cost = $finalServiceCost;
         return $this;
@@ -125,12 +125,12 @@ class Bookingservice extends Model
     /**
      * @return int|null
      */
-    public function getInitialServiceCost(): ?int
+    public function getInitialServiceCost(): ?float
     {
         return $this->initial_service_cost;
     }
 
-    public function getFinalServiceCost(): ?int
+    public function getFinalServiceCost(): ?float
     {
         return $this->final_service_cost;
     }

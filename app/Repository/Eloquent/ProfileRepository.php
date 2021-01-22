@@ -43,7 +43,8 @@ class ProfileRepository extends AbstractBaseRepository
     public function getproviderpostcode()
     {
         $user_id = Auth::user()->id;
-        return  Providerpostcodemap::with('postcode')->where('provider_id',$user_id)->get()->toArray();
+        $res =  Providerpostcodemap::with('postcode')->where('provider_id',$user_id)->get()->toArray();
+       return $res;
     }
     public function addproviderpostcode($postcode){
         $user_id = Auth::user()->id;
@@ -69,15 +70,26 @@ class ProfileRepository extends AbstractBaseRepository
     public function createworkinghours($data)
     {
         $user_id = Auth::user()->id;
+        $days = array('monday','tuesday','wednesday','thursday','friday','saturnday','sunday');
         if(count($data)>0){
+           $postday = array_column($data,'working_days') ;
+        //   dd($postday);
             foreach($data as $k=>$v){
-                $Working_hours = Working_hours::firstOrNew(['provider_id' =>$user_id,'working_days'=>$v['working_days']]);
+
+                $Working_hours = Working_hours::updateOrCreate(['provider_id' =>$user_id,'working_days'=>$v['working_days']]);
                 $Working_hours->provider_id = $user_id;
                 $Working_hours->working_days = $v['working_days'];
                 $Working_hours->start_time = $v['start_time'];
                 $Working_hours->end_time =  $v['end_time'];
                 $Working_hours->save();
             }
+            $diff =  array_diff($days, $postday );
+            if(count($diff)>0){
+                foreach($diff as $k=>$v){
+                    $Working_hours = Working_hours::where(['provider_id' =>$user_id,'working_days'=>$v])->forceDelete();
+                }
+            }
+           
         }
         return true;
     }

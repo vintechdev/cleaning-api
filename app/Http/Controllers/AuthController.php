@@ -29,6 +29,7 @@ use App\Loginactivitylogs;
 use Config;
 use Illuminate\Http\Response;
 
+
 class AuthController extends Controller
 {
     use VerifiesEmails;
@@ -202,7 +203,7 @@ public function UpdateToken(Request $request)
 
                     if($r == 'provider'){
                         $User = User::firstOrNew(['id' => $lastinsertid]);
-                        $User->providertype = $request->get('provider_type');
+                        $User->providertype = (($request->has('provider_type'))?$request->get('provider_type'):'freelancer');
                         $User->save();
                     }
                 }
@@ -286,12 +287,12 @@ public function loginlog($data)
             return $this->sendLockoutResponse($request);
         }
 
-        if(!Auth::attempt($credentials)){
+        /* if(!Auth::attempt($credentials)){
             $this->incrementLoginAttempts($request);
             return response()->json([
                 'message' => 'Unauthorized'
             ], 401);
-        }
+        } */
 
         $user = Auth::user();
         // print_r($user);exit;
@@ -306,16 +307,19 @@ public function loginlog($data)
             $user = User::whereEmail($login_email)->first();
             // print_r($user);exit;
             if (! $user) {
+                $this->incrementLoginAttempts($request);
                 // return an error response
                 return response()->json(['message'=>'Email not found'], 401);
             }
 
             if(!$user->hasRole($request->scope)){
+                $this->incrementLoginAttempts($request);
                 return response()->json(['message'=>'You are not authorized!!'], 401);
             }
 
         
             if (!Hash::check($login_password, $user->password)) {
+                $this->incrementLoginAttempts($request);
                 // return an error response
                 return response()->json(['message'=>'Please enter correct password'], 401);
             }

@@ -41,12 +41,8 @@ public function addproviderpostcode(Request $request)
 public function getproviderpostcode(Request $request)
 {
     $res = app(ProfileRepository::class)->getproviderpostcode();
-    
-    if($res){
-        return response()->json(['data' => $res], 200);
-    }else{
-        return response()->json(['error' => true], 201); 
-    }
+    return response()->json(['data' => $res], 200);
+   
 }
 public function deleteproviderpostcode(Request $request)
 {

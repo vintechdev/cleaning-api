@@ -121,4 +121,14 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->id;
     }
+
+    public function getAccessToken()
+    {
+        return $this->accessToken;
+    }
+
+    public function getScopes()
+    {
+        return $this->getAccessToken() ? $this->getAccessToken()->scopes : [];
+    }
 }

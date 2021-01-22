@@ -2,10 +2,8 @@
 
 namespace App\Http\Controllers\Backend\API;
 
-use App\Booking;
 use App\Services\Bookings\BookingJobsManager;
 use App\User;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Validator;
@@ -48,7 +46,7 @@ class BookingJobsController extends Controller
             $jobs = $bookingManager->getBookingJobsByStatus(
                 Bookingstatus::getStatusIdByName($request->get('status')),
                 $user,
-                $user->isProvider(),
+                in_array('provider', $user->getScopes()),
                 $request->get('month'),
                 $request->get('year')
             );

@@ -30,16 +30,16 @@ interface BookingListInterface
     public function setIsProvider(bool $isProvider);
 
     /**
-     * @param int|null $month
-     * @return $this;
-     */
-    public function setMonth(int $month = null);
-
-    /**
-     * @param int|null $year
+     * @param Carbon|null $from
      * @return $this
      */
-    public function setYear(int $year = null);
+    public function setFrom(Carbon $from = null);
+
+    /**
+     * @param Carbon|null $to
+     * @return $this
+     */
+    public function setTo(Carbon $to = null);
 
     /**
      * @return Carbon|null

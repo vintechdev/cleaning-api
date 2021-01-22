@@ -78,16 +78,16 @@ class BookingJobsManager
      * @param int $statusId
      * @param User $user
      * @param bool $isProvider
-     * @param int|null $month
-     * @param int|null $year
+     * @param Carbon|null $from
+     * @param Carbon|null $to
      * @return array
      */
     public function getBookingJobsByStatus(
         int $statusId,
         User $user,
         bool $isProvider = false,
-        int $month = null,
-        int $year = null
+        Carbon $from= null,
+        Carbon $to = null
     ): array
     {
         $bookingList = $this
@@ -96,8 +96,8 @@ class BookingJobsManager
         $bookings = $bookingList
             ->setUser($user)
             ->setIsProvider($isProvider)
-            ->setMonth($month)
-            ->setYear($year)
+            ->setFrom($from)
+            ->setTo($to)
             ->getAllBookings();
 
         if (!$bookings->count()) {

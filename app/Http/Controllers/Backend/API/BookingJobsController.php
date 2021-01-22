@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Backend\API;
 
 use App\Services\Bookings\BookingJobsManager;
 use App\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Validator;
@@ -26,8 +27,8 @@ class BookingJobsController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                'month' => 'date_format:m',
-                'year' => 'date_format:Y',
+                'from' => 'date_format:dmYHis',
+                'to' => 'date_format:dmYHis',
                 'status' => [
                     Rule::in(array_values(Bookingstatus::getAllStatusNames()))
                 ]
@@ -47,8 +48,8 @@ class BookingJobsController extends Controller
                 Bookingstatus::getStatusIdByName($request->get('status')),
                 $user,
                 in_array('provider', $user->getScopes()),
-                $request->get('month'),
-                $request->get('year')
+                $request->get('from') ? Carbon::createFromFormat('dmYHis', $request->get('from')) : null,
+                $request->get('to') ? Carbon::createFromFormat('dmYHis', $request->get('to')) : null
             );
         } catch (\InvalidArgumentException $exception) {
             return response()->json(['message' => $exception->getMessage()], 400);

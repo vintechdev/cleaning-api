@@ -115,7 +115,6 @@ class UseraddressController extends Controller
         $validator = Validator::make($request->all(), [
             'address_label'=>'nullable|string',
             'address_line1' => 'required',
-            'address_line2' => 'required',
             'suburb' => 'required',
             'state' => 'required',
             'postcode' => 'required|numeric'
@@ -152,7 +151,6 @@ class UseraddressController extends Controller
         $validator = Validator::make($request->all(), [
             'address_label'=>'nullable|string',
             'address_line1' => 'required',
-            'address_line2' => 'required',
             'suburb' => 'required',
             'state' => 'required',
             'postcode' => 'required|numeric'

@@ -204,6 +204,7 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
     
      //check profile data
      Route::get('checkprofilecompleted', 'CustomerusersController@CheckProfileCompleted')->name('checkprofilecompleted');
+     Route::get('checkproviderstripeverified', 'CustomerusersController@checkproviderstripeverified')->name('checkproviderstripeverified');
 
     
 

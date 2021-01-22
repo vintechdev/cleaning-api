@@ -14,6 +14,11 @@ use Auth;
 class ProfileRepository extends AbstractBaseRepository
 {
 
+    public function CheckProviderStripeVarified(){
+        $user_id = Auth::user()->id;
+        $payment = StripeUserMetadata::where('user_id',$user_id)->where('stripe_connect_account_verified',1)->get()->count();
+        return $payment;
+    }
 
     public function CheckProfileCompleted()
     {
@@ -29,7 +34,7 @@ class ProfileRepository extends AbstractBaseRepository
         $pc  = Providerpostcodemap::where('provider_id',$user_id)->get()->count();
 
         //stripe payment 
-        $payment = StripeUserMetadata::where('user_id',$user_id)->get()->count();
+        $payment = StripeUserMetadata::where('user_id',$user_id)->where('stripe_connect_account_verified',1)->get()->count();
 
         return ['working_hour'=>$wh,'provider_service'=>$ps,'postcode'=>$pc,'payment'=>$payment];
 

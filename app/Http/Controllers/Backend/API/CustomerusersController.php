@@ -33,22 +33,27 @@ class CustomerusersController extends Controller
             $arr = ['success'=>true];
         }else{
             if($res['working_hour']==0 && $res['provider_service']==0 && $res['postcode']==0 && $res['payment']==0){
-                $arr = ['success'=>false,'message'=>'Please fill details to complete the profile.'];
+                $arr = ['data'=>$res,'success'=>false,'message'=>'Please fill details to complete the profile.'];
             }else if($res['working_hour']==0 && $res['provider_service']>0 && $res['postcode']>0 && $res['payment']>0){
-                $arr = ['success'=>false,'message'=>'Please fill working hours details to complete profile.'];
+                $arr = ['data'=>$res,'success'=>false,'message'=>'Please fill working hours details to complete profile.'];
             }else if($res['working_hour']>0 && $res['provider_service']==0 && $res['postcode']>0 && $res['payment']>0){
-                $arr = ['success'=>false,'message'=>'Please fill service details to complete profile.'];
+                $arr = ['data'=>$res,'success'=>false,'message'=>'Please fill service details to complete profile.'];
             }else if($res['working_hour']>0 && $res['provider_service']>0 && $res['postcode']==0 && $res['payment']>0){
-                $arr = ['success'=>false,'message'=>'Please fill postcode details to complete profile.'];
+                $arr = ['data'=>$res,'success'=>false,'message'=>'Please fill postcode details to complete profile.'];
             }else if($res['working_hour']>0 && $res['provider_service']>0 && $res['postcode']>0 && $res['payment']==0){
-                $arr = ['success'=>false,'message'=>'Please fill payment details to complete profile.'];
+                $arr = ['data'=>$res,'success'=>false,'message'=>'Please fill payment details to complete profile.'];
             }else{
-                $arr = ['success'=>false,'message'=>'Please fill details to complete the profile.'];
+                $arr = ['data'=>$res,'success'=>false,'message'=>'Please fill details to complete the profile.'];
             }
         }
         return response()->json($arr);
     }
 
+    public function checkproviderstripeverified()
+    {
+        $res = $this->profileRepository->CheckProviderStripeVarified();
+        return response()->json(['varified'=>(($res>0)?1:0)],200);
+    }
 
 
     

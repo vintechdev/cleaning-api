@@ -7,6 +7,7 @@ use App\Bookingaddress;
 use App\Bookingquestion;
 use App\Bookingrequestprovider;
 use App\Bookingstatus;
+use App\Servicequestion;
 use App\Events\BookingCreated;
 use App\Exceptions\Booking\BookingCreationException;
 use App\Exceptions\NoSavedCardException;
@@ -197,9 +198,21 @@ class BookingService
                     if (!empty($question)) {
                         foreach ($question as $key => $quest) {
                             if ($quest['answer'] != null) {
+
+                                $questiondata = Servicequestion::where('id',$quest['service_question_id'])->first()->toArray();
+                                
+                                if(count($questiondata)>0){
+                                   
+                                    $title = $questiondata['title'];
+                                    $type = $questiondata['question_type'];
+                                    $service_id = $questiondata['service_id'];
+                                }
+
                                 $bookingquestion = new Bookingquestion();
                                 $bookingquestion->booking_id = $last_insert_id;
-                                $bookingquestion->service_question_id = $quest['service_question_id'];
+                                $bookingquestion->question_type = $type;
+                                $bookingquestion->service_id = $service_id;
+                                $bookingquestion->question_title = $title;
                                 $bookingquestion->answer = $quest['answer'];
                                 if (!$bookingquestion->save()) {
                                     DB::rollBack();
@@ -265,19 +278,27 @@ class BookingService
      */
     public function getBookingQuestions(int $id)
     {
-        $questions = Bookingquestion::with('service_questions','service_questions.service')->where('booking_id',$id)->get()->toArray();
+        $questions = Bookingquestion::with('service')->where('booking_id',$id)->get()->toArray();
         $qst = [];
         if(count($questions)>0){
-          
+        //  dd($questions);
             foreach($questions as $k=>$v){
                 $q =[];
                // $questiondet = 
-                $q['question'] =$v['service_questions']['title'];
-                $q['answer'] =($v['answer']=='Y')?'Yes':$v['answer'];
-                $q['service_id'] = $v['service_questions']['service_id'];
-                $q['service_name'] = $v['service_questions']['service']['name'];
+               if($v['question_type']== 'checkbox'){
+                   $answer = str_replace('|',', ',$v['answer']);
+                   $answer=  substr(trim($answer),0,-1);
+               }else{
+                   $answer = $v['answer'];
+               }
+                $q['question'] =$v['question_title'];
+                $q['question_type'] =$v['question_type'];
+                $q['answer'] =($answer=='Y')?'Yes':$answer;
+                $q['service_id'] = $v['service_id'];
+                $q['service_name'] = $v['service']['name'];
                 $qst[] = $q;
             }
+           
         }
         return $qst;
     }

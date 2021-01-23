@@ -14,9 +14,9 @@ class Bookingquestion extends Model
   protected $fillable = ['id'];
   public $incrementing = false;
 
-  public function service_questions()
+  public function service()
     {
-        return $this->belongsTo(Servicequestion::class,'service_question_id','id');
+        return $this->belongsTo(Service::class,'service_id','id');
     }
 
 }

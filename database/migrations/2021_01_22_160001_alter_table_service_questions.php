@@ -29,8 +29,8 @@ class AlterTableServiceQuestions extends Migration
     {
         //
         DB::statement("ALTER TABLE `service_questions` CHANGE  `question_type` `question_values` ENUM('text','radio','checkbox','textarea') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL;");
-        DB::statement("ALTER TABLE service_questions ADD COLUMN question_type;");
-        DB::statement("ALTER TABLE service_questions ADD COLUMN description;");
+        DB::statement("ALTER TABLE service_questions ADD COLUMN question_type varchar(200);");
+        DB::statement("ALTER TABLE service_questions ADD COLUMN description  text;");
       
     }
 }

@@ -195,7 +195,7 @@ class BookingService
                         throw new BookingCreationException('Booking service could not be saved');
                     }
 
-                    if (empty($question)) {
+                    if (!empty($question)) {
                         foreach ($question as $key => $quest) {
                             if ($quest['answer'] != null) {
 

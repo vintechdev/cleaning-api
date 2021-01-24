@@ -9,12 +9,14 @@ use App\Services\Payments\Exceptions\InvalidUserException;
 use App\Services\Payments\Exceptions\PaymentAccountNotSetUpException;
 use App\Services\Payments\Exceptions\PaymentProcessorException;
 use App\Services\Payments\Interfaces\PaymentProcessorInterface;
+use App\Services\Payments\Interfaces\PaymentUserValidatorInterface;
+use App\User;
 
 /**
  * Class StripePaymentProcessor
  * @package App\Services\Payments
  */
-class StripePaymentProcessor implements PaymentProcessorInterface
+class StripePaymentProcessor implements PaymentProcessorInterface, PaymentUserValidatorInterface
 {
     /**
      * @var PaymentDto
@@ -56,5 +58,18 @@ class StripePaymentProcessor implements PaymentProcessorInterface
     {
         $this->paymentData = $payment;
         return $this;
+    }
+
+    /**
+     * @param User $user
+     * @return bool
+     */
+    public function isUsersCardValid(User $user): bool
+    {
+        try {
+            return $this->stripeService->validatePaymentMethod($user);
+        } catch (\Exception $exception) {
+            return false;
+        }
     }
 }

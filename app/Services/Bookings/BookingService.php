@@ -195,7 +195,7 @@ class BookingService
                         throw new BookingCreationException('Booking service could not be saved');
                     }
 
-                    if (!empty($question)) {
+                    if (empty($question)) {
                         foreach ($question as $key => $quest) {
                             if ($quest['answer'] != null) {
 
@@ -250,8 +250,8 @@ class BookingService
         $bookingDetails = $booking->toArray();
         $services = $booking->getBookingServices();
         $providers = $this->requestProviderRepo->getAllByBookingId($booking->getId())->toArray();
-        $questions = Bookingquestion::where(['booking_id' => $booking->getId()])->get()->toArray();
-    
+        $questions = $this->getBookingQuestions($booking->getId());
+
         return $this->createBooking([
                 'service' => $services,
                 'provider' => $providers,

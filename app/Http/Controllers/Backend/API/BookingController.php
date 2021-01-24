@@ -26,6 +26,7 @@ use App\Services\Bookings\BookingStatusChangeFactory;
 use App\Services\Bookings\BookingStatusChangeTypes;
 use App\Services\Bookings\BookingVerificationService;
 use App\Services\Bookings\Builder\BookingStatusChangeContextBuilder;
+use App\Services\Payments\Exceptions\PaymentFailedException;
 use App\Services\RecurringBookingService;
 use App\User;
 use App\Useraddress;
@@ -395,6 +396,8 @@ class BookingController extends Controller
             return response()->json(['message' => $exception->getMessage()], 403);
         } catch (RecurringBookingCreationException $exception) {
             return response()->json(['message' => $exception->getMessage()], 400);
+        } catch (PaymentFailedException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 402);
         } catch (\Exception $exception) {
             throw $exception;
             return response()->json(['message' => 'Something went wrong. Please contact administrator.'], 500);

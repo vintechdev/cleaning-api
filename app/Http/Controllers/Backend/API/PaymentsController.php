@@ -70,7 +70,7 @@ class PaymentsController extends Controller
 
         try {
             $sessionId = $stripeService
-                ->createSession($request->get('success_url'), $request->get('cancel_url'), auth()->user()->id);
+                ->createSession($request->get('success_url'), $request->get('cancel_url'), auth()->user());
 
             return response()->json([
                 'session_id' => $sessionId, 'publishable_key' => \Config::get('payment.STRIPE_KEY')

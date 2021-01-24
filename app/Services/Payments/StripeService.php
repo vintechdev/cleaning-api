@@ -2,11 +2,18 @@
 
 namespace App\Services\Payments;
 
+use App\PaymentDto;
+use App\Providermetadatum;
 use App\Repository\Eloquent\StripeUserMetadataRepository;
+use App\Services\Payments\Exceptions\CreditCardNotSetUpException;
+use App\Services\Payments\Exceptions\InvalidPaymentDataException;
 use App\Services\Payments\Exceptions\InvalidUserException;
+use App\Services\Payments\Exceptions\PaymentAccountNotSetUpException;
+use App\Services\Payments\Exceptions\PaymentInitialiserException;
 use App\Services\Payments\Exceptions\StripeMetadataUpdateException;
 use App\StripeUserMetadata;
 use App\User;
+use Carbon\Carbon;
 use Stripe\Account;
 use Stripe\AccountLink;
 use Stripe\Balance;
@@ -14,7 +21,6 @@ use Stripe\Checkout\Session;
 use Stripe\Customer;
 use Stripe\PaymentIntent;
 use Stripe\PaymentMethod;
-use Stripe\Payout;
 use Stripe\SetupIntent;
 use Stripe\Stripe;
 
@@ -46,7 +52,7 @@ class StripeService
      */
     public function createPaymentMethodSetupIntent(User $user)
     {
-        $customerId = $this->createCustomerIfNotExists($user->getId());
+        $customerId = $this->createCustomerIfNotExists($user);
         return SetupIntent::create([
             'customer' => $customerId
         ])->client_secret;
@@ -54,33 +60,64 @@ class StripeService
 
     /**
      * @param array $data
-     * @return int
+     * @return bool
      * @throws \Stripe\Exception\ApiErrorException
      */
-    public function createPaymentIntent(array $data): string
+    public function transferAmount(PaymentDto $payment): bool
     {
-        if (!$this->isValidPaymentIntentData($data)) {
-            throw new \InvalidArgumentException('Invalid data received for initialising payment');
+        $this->validatePaymentIntentData($payment);
+        $metadata = $this->metadataRepo->findByUserId($payment->getPayee()->getId());
+        if (!$metadata || !$metadata->stripe_connect_account_verified) {
+            throw new PaymentAccountNotSetUpException('Stripe connect account does not exist or is not verified for the provider');
         }
 
-        $customerId = $this->createCustomerIfNotExists($data['user_id']);
-        unset($data['user_id']);
+        $this->validatePaymentMethod($payment->getPayer());
 
-        $data['customer'] = $customerId;
-        return PaymentIntent::create($data)->client_secret;
+        $stripeAccountId = $metadata->stripe_connect_account_id;
+        if (!$stripeAccountId) {
+            throw new InvalidUserException('Stripe connect account does not exist for this user');
+        }
+
+        $intent['amount'] = (int)floor($payment->getAmount() * 100);
+        $intent['currency'] = $payment->getCurrency() ? : PaymentDto::PAYMENT_CURRENCY_AUD;
+        $intent['payment_method_types'][] = $payment->getPaymentMethodType() ? : PaymentDto::PAYMENT_METHOD_TYPE_CARD;
+        $intent['application_fee_amount'] = (int) floor(($payment->getTransferFeePercentage() * ($payment->getAmount() * 100)) / 100);
+        $intent['transfer_data']['destination'] = $stripeAccountId;
+        $metadata = $this->metadataRepo->findByUserId($payment->getPayer()->getId());
+        $intent['customer'] = $metadata->stripe_customer_id;
+
+        if ($payment->getPaymentDescription()) {
+            $intent['statement_descriptor'] = $payment->getPaymentDescription();
+        }
+
+        if ($payment->getMetadata()) {
+            $intent['metadata'] = $payment->getMetadata();
+        }
+
+        $paymentIntent = PaymentIntent::create($intent)
+            ->confirm(['payment_method' => $metadata->stripe_payment_method_id])
+            ->toArray();
+        if (isset($paymentIntent['error'])) {
+            $error = isset($paymentIntent['error']['message']) ?
+                $paymentIntent['error']['message'] :
+                'An error occured when initiating a transfer with stripe';
+
+            throw new PaymentInitialiserException($error);
+        }
+
+        return true;
     }
 
     /**
      * @param string $successUrl
      * @param string $cancelUrl
-     * @param int $userId
+     * @param User $user
      * @return Session
      * @throws \Stripe\Exception\ApiErrorException
-     * @throws StripeMetadataUpdateException
      */
-    public function createSession(string $successUrl, string $cancelUrl, int $userId): string
+    public function createSession(string $successUrl, string $cancelUrl, User $user): string
     {
-        $customerId = $this->createCustomerIfNotExists($userId);
+        $customerId = $this->createCustomerIfNotExists($user);
         $query = parse_url($successUrl, PHP_URL_QUERY);
 
         if ($query) {
@@ -115,6 +152,42 @@ class StripeService
         return $this
             ->retrieveStoredPaymentMethodByPaymentMethodId($metadata->stripe_payment_method_id, $userId)
             ->toArray();
+    }
+
+    /**
+     * @param User $user
+     * @return bool
+     * @throws CreditCardNotSetUpException
+     * @throws \Stripe\Exception\ApiErrorException
+     */
+    public function validatePaymentMethod(User $user): bool
+    {
+        $paymentMethod = $this->retrieveStoredPaymentMethod($user->getId());
+        if (!$paymentMethod) {
+            throw new CreditCardNotSetUpException('Customer does not have a credit card added');
+        }
+
+        $cvcPass = isset($paymentMethod['card']['checks']['cvc_check']) &&
+            $paymentMethod['card']['checks']['cvc_check'] === 'pass';
+
+        $expMonth = str_pad(
+            $paymentMethod['card']['exp_month'],
+            2,
+            '0',
+            STR_PAD_LEFT
+        );
+
+        if (!$cvcPass ||
+            Carbon::createFromFormat(
+            'mY',
+            $expMonth . $paymentMethod['card']['exp_year']
+        )
+            ->lessThan(Carbon::now())
+        ) {
+            throw new CreditCardNotSetUpException('Customer\'s credit card has expired.');
+        }
+
+        return true;
     }
 
     /**
@@ -284,6 +357,13 @@ class StripeService
                 throw new StripeMetadataUpdateException('Stripe user metadata could not be updated');
             }
 
+            $providerMetadata = Providermetadatum::findByProviderId($user->getId());
+            if ($providerMetadata) {
+                if(!$providerMetadata->setVerified(true)) {
+                    throw new StripeMetadataUpdateException('Provider metadata could not be updated');
+                }
+            }
+
             return true;
         }
 
@@ -327,24 +407,45 @@ class StripeService
     /**
      * @param array $data
      * @return bool
+     * @throws InvalidPaymentDataException
      */
-    private function isValidPaymentIntentData(array $data) : bool
+    private function validatePaymentIntentData(PaymentDto $paymentDto) : bool
     {
-        //TODO: Add validation
+        if (!$paymentDto->getAmount()) {
+            throw new InvalidPaymentDataException('Payment amount is not set');
+        }
+
+        if (!$paymentDto->getTransferFeePercentage()) {
+            throw new InvalidPaymentDataException('Transfer fee percentage is not set');
+        }
+
+        if (!$paymentDto->getPayee()) {
+            throw new InvalidPaymentDataException('Payee is not set');
+        }
+
+        if (!$paymentDto->getPayer()) {
+            throw new InvalidPaymentDataException('Payee is not set');
+        }
+
         return true;
     }
 
     /**
-     * @param string $userId
+     * @param User $user
      * @return string
      * @throws \Stripe\Exception\ApiErrorException
-     * @throws \RuntimeException
      */
-    private function createCustomerIfNotExists(string $userId) : string
+    private function createCustomerIfNotExists(User $user) : string
     {
-        $metadata = $this->findOrCreateMetadata($userId);
+        $metadata = $this->findOrCreateMetadata($user->getId());
         if (!$metadata->stripe_customer_id) {
-            $customerId = Customer::create()->id;
+            $customerId = Customer::create(
+                [
+                    'email' => $user->email,
+                    'name' => $user->first_name . ' ' . $user->last_name,
+                    'metadata' => ['user_id' => $user->getId()]
+                ]
+            )->id;
             if (!$customerId) {
                 throw new \RuntimeException('Unable to create stripe customer');
             }

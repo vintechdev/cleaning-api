@@ -19,6 +19,7 @@ use App\User;
 use App\Useraddress;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * Class BookingService
@@ -79,7 +80,7 @@ class BookingService
         $question = $bookingAttributes['question'];
         $providers = $bookingAttributes['provider'];
 
-        if(count($bookings)>0) {
+        if(count($bookings)>0){
             DB::beginTransaction();
             try {
                 $booking = new Booking();
@@ -195,17 +196,33 @@ class BookingService
                         throw new BookingCreationException('Booking service could not be saved');
                     }
 
+                   
+                    if($parent){
+                        $question = Bookingquestion::where('booking_id',$parent->id)->get()->toarray();
+                    }else{
+                        $question = $question;
+                    }
                     if (!empty($question)) {
-                        foreach ($question as $key => $quest) {
-                            if ($quest['answer'] != null) {
 
-                                $questiondata = Servicequestion::where('id',$quest['service_question_id'])->first()->toArray();
+                        
+
+                      //  dd($question);
+                        foreach ($question as $key => $quest){
+                            if ($quest['answer'] != null){
+
                                 
-                                if(count($questiondata)>0){
-                                   
-                                    $title = $questiondata['title'];
-                                    $type = $questiondata['question_type'];
-                                    $service_id = $questiondata['service_id'];
+                                if($parent){
+                                    $title = $quest['question_title'];
+                                    $type = $quest['question_type'];
+                                    $service_id = $quest['service_id'];
+                                }else{
+                                    $questiondata = Servicequestion::where('id',$quest['service_question_id'])->first()->toArray();
+                                    
+                                    if(count($questiondata)>0){
+                                        $title = $questiondata['title'];
+                                        $type = $questiondata['question_type'];
+                                        $service_id = $questiondata['service_id'];
+                                    }
                                 }
 
                                 $bookingquestion = new Bookingquestion();
@@ -214,7 +231,7 @@ class BookingService
                                 $bookingquestion->service_id = $service_id;
                                 $bookingquestion->question_title = $title;
                                 $bookingquestion->answer = $quest['answer'];
-                                if (!$bookingquestion->save()) {
+                                if (!$bookingquestion->save()){
                                     DB::rollBack();
                                     throw new BookingCreationException('Booking questions could not be saved');
                                 }
@@ -301,5 +318,11 @@ class BookingService
            
         }
         return $qst;
+    }
+    public function getBookingsForChat()
+    {
+        $user_id = Auth::user()->id;
+        $arr = Booking::with('bookingchat')->where('bookings.user_id',$user_id)->where('bookings.booking_status_id','!=',1)->get()->toarray();
+        dd($arr);
     }
 }

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Backend\API;
 
 use App\Chats;
-
+use App\Http\Resources\Bookingservice as ResourcesBookingservice;
 use App\User;
 use Carbon\Carbon;
 use Facade\FlareClient\Http\Response;
@@ -13,6 +13,7 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use App\Repository\Eloquent\ChatsRepository;
+use App\Services\Bookings\BookingService;
 
 /**
  * Class BookingJobsController
@@ -20,6 +21,12 @@ use App\Repository\Eloquent\ChatsRepository;
  */
 class ChatsController extends Controller
 {
+
+public function list(Request $request,BookingService $bookingService)
+{
+   $bookingService->getBookingsForChat();
+}
+
    public function addmessage(Request $request,$bookingid)
    {
       

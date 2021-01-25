@@ -57,6 +57,10 @@ class Booking extends Model
         return $this->hasMany(Bookingquestion::class,'booking_id','id');
     }
 
+    public function bookingchat()
+    {
+        return $this->hasMany(Chats::class,'booking_id','id');
+    }
     /**
      * @return Event|null
      */

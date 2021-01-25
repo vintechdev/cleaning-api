@@ -35,7 +35,7 @@ class BookingJobsController extends Controller
             ]
         );
 
-        if ($validator->fails()) {
+        if ($validator->fails()){
             $message = $validator->messages()->all();
             return response()->json(['message' => $message], 400);
         }

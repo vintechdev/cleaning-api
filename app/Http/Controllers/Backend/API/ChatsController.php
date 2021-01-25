@@ -24,7 +24,9 @@ class ChatsController extends Controller
 
 public function list(Request $request,BookingService $bookingService)
 {
-   $bookingService->getBookingsForChat();
+    $data = $bookingService->getBookingsForChat();
+    return response()->json(['success'=>true,'data'=>$data],200);
+    
 }
 
    public function addmessage(Request $request,$bookingid)

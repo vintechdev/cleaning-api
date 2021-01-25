@@ -322,7 +322,57 @@ class BookingService
     public function getBookingsForChat()
     {
         $user_id = Auth::user()->id;
-        $arr = Booking::with('bookingchat')->where('bookings.user_id',$user_id)->where('bookings.booking_status_id','!=',1)->get()->toarray();
-        dd($arr);
+        $arr = Booking::with(array('bookingrequestprovider' => function($query){
+                                $query->whereIn('status',['accepted','arrived','completed']);
+                            },'bookingchat','bookingrequestprovider.users'))
+                            ->where('bookings.user_id',$user_id)
+                            ->whereIn('bookings.booking_status_id',[2,3,4])->get()
+                            ->map(function($bookings) {
+                            $bookings->setRelation('bookingchat', $bookings->bookingchat->take(1));//->orderBy
+                            $bookings->setRelation('bookingrequestprovider',$bookings->bookingrequestprovider);//
+                            return $bookings;
+                        })->toarray();
+
+                  
+                        $data = [];
+        if(count($arr)){
+            foreach($arr as $k=>$v){
+                //dd($v['bookingrequestprovider']);
+                if(count($v['bookingchat'])>0){
+                $d = [];
+                $d['booking_id'] = $v['id'];
+                $d['user_id']=$v['user_id'];
+                $d['booking_status_id']=$v['booking_status_id'];
+                $d['booking_date']=$v['booking_date'];
+                $d['booking_time']=$v['booking_time'];
+                $d['final_hours']=$v['final_hours'];
+
+                $chat = $v['bookingchat'];
+                    $c = [];
+                    $c['message'] = $chat[0]['message'];
+                    $c['created_at'] = $chat[0]['created_at'];
+                    $c['sender_id'] = $chat[0]['sender_id'];
+                    $c['receiver_id'] = $chat[0]['receiver_id'];
+                    $d['chat'] =$c;
+
+                    if(count($v['bookingrequestprovider'])>0){
+                        $pr = $v['bookingrequestprovider'][0];
+                    // dd($pr);
+                        $p = [];
+                        $p['provider_id'] = $pr['provider_user_id'];
+                        $p['status'] = $pr['status'];
+                        $user = $pr['users'];
+                        $p['provider_name'] = $user['first_name'].' '. $user['last_name'];
+                        $p['profilepic'] =  $user['profilepic'];
+                        $d['provider'] = $p;
+                    }
+                        $data[] = $d;
+                }
+              
+
+            }
+           
+        }
+        return $data;
     }
 }

@@ -23,7 +23,10 @@ class Bookingrequestprovider extends Model
 	protected $table = 'booking_request_providers';
     protected $fillable = ['id'];
     public $incrementing = false;
-
+    public function users()
+    {
+        return $this->belongsTo(Customeruser::class,'provider_user_id','id');
+    }
     /**
      * @return int
      */

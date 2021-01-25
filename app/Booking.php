@@ -57,9 +57,14 @@ class Booking extends Model
         return $this->hasMany(Bookingquestion::class,'booking_id','id');
     }
 
+    public function bookingrequestprovider()
+    {
+        return $this->hasMany(Bookingrequestprovider::class,'booking_id','id');
+    }
+
     public function bookingchat()
     {
-        return $this->hasMany(Chats::class,'booking_id','id');
+        return $this->hasMany(Chats::class,'booking_id','id')->orderBy('created_at','desc');
     }
     /**
      * @return Event|null

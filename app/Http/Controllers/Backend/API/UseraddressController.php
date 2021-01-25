@@ -22,25 +22,25 @@ class UseraddressController extends Controller
         if ($users_uuid) {
             $useraddresses = $useraddresses->where('user_uuid', 'LIKE', '%'.$users_uuid);
         }
-        if ($request->has('type')) {
+        if($request->has('type')) {
             $useraddresses = $useraddresses->where('type', 'LIKE', '%'.$request->get('type').'%');
         }
-        if ($request->has('address_line1')) {
+        if($request->has('address_line1')) {
             $useraddresses = $useraddresses->where('address_line1', 'LIKE', '%'.$request->get('address_line1').'%');
         }
-        if ($request->has('address_line2')) {
+        if($request->has('address_line2')) {
             $useraddresses = $useraddresses->where('address_line2', 'LIKE', '%'.$request->get('address_line2').'%');
         }
-        if ($request->has('subrub')) {
+        if($request->has('subrub')){
             $useraddresses = $useraddresses->where('subrub', 'LIKE', '%'.$request->get('subrub').'%');
         }
-        if ($request->has('state')) {
+        if ($request->has('state')){
             $useraddresses = $useraddresses->where('state', 'LIKE', '%'.$request->get('state').'%');
         }
-        if ($request->has('postcode')) {
+        if ($request->has('postcode')){
             $useraddresses = $useraddresses->where('postcode', 'LIKE', '%'.$request->get('postcode').'%');
         }
-        if ($request->has('country')) {
+        if ($request->has('country')){
             $useraddresses = $useraddresses->where('country', 'LIKE', '%'.$request->get('country').'%');
         }
         $useraddresses = $useraddresses->paginate(20);

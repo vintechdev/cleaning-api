@@ -10,9 +10,15 @@ use App\Exceptions\Booking\BookingStatusChangeException;
 use App\Exceptions\Booking\InvalidBookingStatusActionException;
 use App\Exceptions\Booking\RecurringBookingStatusChangeException;
 use App\Exceptions\Booking\UnauthorizedAccessException;
+use App\PaymentDto;
+use App\Providermetadatum;
 use App\Repository\BookingReqestProviderRepository;
 use App\Services\Bookings\Exceptions\BookingserviceBuilderException;
 use App\Services\Bookings\Exceptions\BookingServicesManagerException;
+use App\Services\Payments\Exceptions\CreditCardNotSetUpException;
+use App\Services\Payments\Exceptions\PaymentAccountNotSetUpException;
+use App\Services\Payments\Exceptions\PaymentFailedException;
+use App\Services\Payments\Interfaces\PaymentProcessorInterface;
 use App\Services\RecurringBookingService;
 use App\User;
 use Carbon\Carbon;
@@ -23,6 +29,9 @@ use Carbon\Carbon;
  */
 class CompleteBookingStrategy extends AbstractBookingStatusChangeStrategy
 {
+    //TODO make this configurable
+    const SERVICE_FEE_PERCENT = '1';
+
     /**
      * @var array
      */
@@ -33,14 +42,21 @@ class CompleteBookingStrategy extends AbstractBookingStatusChangeStrategy
      */
     private $bookingServicesManager;
 
+    /**
+     * @var PaymentProcessorInterface
+     */
+    private $paymentProcessor;
+
     public function __construct(
         BookingReqestProviderRepository $bookingRequestProviderRepository,
         BookingVerificationService $bookingVerificationService,
         RecurringBookingService $recurringBookingService,
-        BookingServicesManager $bookingServicesManager
+        BookingServicesManager $bookingServicesManager,
+        PaymentProcessorInterface $paymentProcessor
     ) {
         parent::__construct($bookingRequestProviderRepository, $bookingVerificationService, $recurringBookingService);
         $this->bookingServicesManager = $bookingServicesManager;
+        $this->paymentProcessor = $paymentProcessor;
     }
 
     /**
@@ -63,13 +79,73 @@ class CompleteBookingStrategy extends AbstractBookingStatusChangeStrategy
             throw new UnauthorizedAccessException('User does not have access to this function');
         }
 
-        $this->updateBookingServices($booking, $user);
+        $bookingRequestProvider = $this
+            ->bookingRequestProviderRepo
+            ->getByBookingAndProviderId($booking->getId(), $user->getId());
+
+        $provider = ($user->getId() === $bookingRequestProvider->provider_user_id) ?
+            $user :
+            User::find($bookingRequestProvider->provider_user_id);
+
+        $this
+            ->updateBookingServices(
+                $booking,
+                $provider
+            );
 
         if (!$booking->setStatus(Bookingstatus::BOOKING_STATUS_COMPLETED)->save()) {
             throw new BookingStatusChangeException('Unable to save booking status');
         }
 
+        try {
+            $paymentSuccess = $this->handlePayment($booking, $provider);
+        } catch (PaymentAccountNotSetUpException $exception) {
+            throw new PaymentFailedException('Payment failed as account details are not set up');
+        } catch (CreditCardNotSetUpException $exception) {
+            throw new PaymentFailedException('Customer\'s credit card is not set up or is expired');
+        }
+
+        if (!$paymentSuccess) {
+            throw new PaymentFailedException('Payment failed for some reason. Please contact administrator.');
+        }
+
         return $booking;
+    }
+
+    /**
+     * @param Booking $booking
+     * @param User $provider
+     * @return bool
+     * @throws CreditCardNotSetUpException
+     * @throws PaymentAccountNotSetUpException
+     * @throws \App\Services\Payments\Exceptions\InvalidPaymentDataException
+     * @throws \App\Services\Payments\Exceptions\InvalidUserException
+     */
+    private function handlePayment(Booking $booking, User $provider): bool
+    {
+        $paymentDto = new PaymentDto();
+        $providerMetadata = Providermetadatum::findByProviderId($provider->getId());
+        if (!$providerMetadata || !$providerMetadata->isVerified()) {
+            throw new PaymentFailedException('User is not verified yet');
+        }
+
+        $serviceFeePercentage = !is_null($providerMetadata->getServiceFeePercentage()) ?
+            $providerMetadata->getServiceFeePercentage() :
+            self::SERVICE_FEE_PERCENT;
+
+        $paymentDto
+            ->setAmount($booking->getFinalCost())
+            ->setMetadata(['booking_id' => $booking->getId()])
+            ->setPayer(User::find($booking->getUserId()))
+            ->setPayee($provider)
+            ->setTransferFeePercentage($serviceFeePercentage)
+            // TODO: Update payment description
+            ->setPaymentDescription('Booking id:' . $booking->getId());
+
+        return $this
+            ->paymentProcessor
+            ->setPaymentData($paymentDto)
+            ->process();
     }
 
     /**

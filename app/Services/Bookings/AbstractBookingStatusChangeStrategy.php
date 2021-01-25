@@ -11,6 +11,7 @@ use App\Exceptions\Booking\RecurringBookingStatusChangeException;
 use App\Exceptions\Booking\UnauthorizedAccessException;
 use App\Repository\BookingReqestProviderRepository;
 use App\Services\Bookings\Interfaces\BookingStatusChangeStrategyInterface;
+use App\Services\Payments\Exceptions\PaymentFailedException;
 use App\Services\RecurringBookingService;
 use App\User;
 use Carbon\Carbon;
@@ -49,6 +50,7 @@ abstract class AbstractBookingStatusChangeStrategy implements BookingStatusChang
      * @throws UnauthorizedAccessException
      * @throws BookingStatusChangeException
      * @throws RecurringBookingStatusChangeException
+     * @throws PaymentFailedException
      */
     abstract protected function handleStatusChange(
         Booking $booking,

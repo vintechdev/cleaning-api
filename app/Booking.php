@@ -153,6 +153,24 @@ class Booking extends Model
     }
 
     /**
+     * @param float $finalCost
+     * @return $this
+     */
+    public function setFinalCost(float $finalCost)
+    {
+        $this->final_cost = $finalCost;
+        return $this;
+    }
+
+    /**
+     * @return float|null
+     */
+    public function getFinalCost(): ?float
+    {
+        return $this->final_cost;
+    }
+
+    /**
      * @param Carbon $dateTime
      * @param float $finalHours
      * @return Carbon

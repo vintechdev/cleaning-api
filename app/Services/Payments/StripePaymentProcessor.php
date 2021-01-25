@@ -2,26 +2,26 @@
 
 namespace App\Services\Payments;
 
-use App\Services\Payments\Exceptions\InvalidPaymentInitialisationDataException;
-use App\Services\Payments\Exceptions\PaymentInitialiserException;
-use App\Services\Payments\Interfaces\PaymentInitialiserInterface;
+use App\PaymentDto;
+use App\Services\Payments\Exceptions\CreditCardNotSetUpException;
+use App\Services\Payments\Exceptions\InvalidPaymentDataException;
+use App\Services\Payments\Exceptions\InvalidUserException;
+use App\Services\Payments\Exceptions\PaymentAccountNotSetUpException;
+use App\Services\Payments\Exceptions\PaymentProcessorException;
 use App\Services\Payments\Interfaces\PaymentProcessorInterface;
+use App\Services\Payments\Interfaces\PaymentUserValidatorInterface;
+use App\User;
 
 /**
  * Class StripePaymentProcessor
  * @package App\Services\Payments
  */
-class StripePaymentProcessor implements PaymentProcessorInterface, PaymentInitialiserInterface
+class StripePaymentProcessor implements PaymentProcessorInterface, PaymentUserValidatorInterface
 {
     /**
-     * @var array
+     * @var PaymentDto
      */
-    private $data = [];
-
-    /**
-     * @var int
-     */
-    private $initialisationId;
+    private $paymentData;
 
     /**
      * @var StripeService
@@ -38,47 +38,38 @@ class StripePaymentProcessor implements PaymentProcessorInterface, PaymentInitia
     }
 
     /**
-     * @return bool
-     * @throws InvalidPaymentInitialisationDataException
-     * @throws PaymentInitialiserException
-     */
-    public function intialisePayment(): bool
-    {
-        try {
-            $id = $this->stripeService->createPaymentIntent($this->data);
-        } catch (\InvalidArgumentException $exception) {
-            throw new InvalidPaymentInitialisationDataException($exception->getMessage());
-        } catch (\RuntimeException $exception) {
-            throw new PaymentInitialiserException($exception->getMessage());
-        }
-
-        $this->initialisationId = $id;
-        return  true;
-    }
-
-    /**
-     * @return int
-     */
-    public function getInitialisationId(): string
-    {
-        return $this->initialisationId;
-    }
-
-    /**
-     * @return bool
+     * @return boolean
+     * @throws PaymentProcessorException
+     * @throws InvalidUserException
+     * @throws InvalidPaymentDataException
+     * @throws PaymentAccountNotSetUpException
+     * @throws CreditCardNotSetUpException
      */
     public function process(): bool
     {
-        // TODO: Implement process() method.
+        return $this->stripeService->transferAmount($this->paymentData);
     }
 
     /**
-     * @param array $data
-     * @return $this
+     * @param PaymentDto $payment
+     * @return $this|StripePaymentProcessor
      */
-    public function setInitialisationData(array $data) : PaymentInitialiserInterface
+    public function setPaymentData(PaymentDto $payment)
     {
-        $this->data = $data;
+        $this->paymentData = $payment;
         return $this;
+    }
+
+    /**
+     * @param User $user
+     * @return bool
+     */
+    public function isUsersCardValid(User $user): bool
+    {
+        try {
+            return $this->stripeService->validatePaymentMethod($user);
+        } catch (\Exception $exception) {
+            return false;
+        }
     }
 }

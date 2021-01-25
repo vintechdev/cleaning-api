@@ -10,6 +10,11 @@ use App\Exceptions\Booking\BookingStatusChangeException;
 use App\Exceptions\Booking\InvalidBookingStatusActionException;
 use App\Exceptions\Booking\RecurringBookingStatusChangeException;
 use App\Exceptions\Booking\UnauthorizedAccessException;
+use App\Repository\BookingReqestProviderRepository;
+use App\Services\Payments\Exceptions\PaymentFailedException;
+use App\Services\Payments\Interfaces\PaymentProcessorInterface;
+use App\Services\Payments\Interfaces\PaymentUserValidatorInterface;
+use App\Services\RecurringBookingService;
 use App\User;
 use Carbon\Carbon;
 
@@ -19,6 +24,28 @@ use Carbon\Carbon;
  */
 class ArriveBookingStrategy extends AbstractBookingStatusChangeStrategy
 {
+    /**
+     * @var PaymentUserValidatorInterface
+     */
+    private $paymentUserValidator;
+
+    /**
+     * ArriveBookingStrategy constructor.
+     * @param BookingReqestProviderRepository $bookingRequestProviderRepository
+     * @param BookingVerificationService $bookingVerificationService
+     * @param RecurringBookingService $recurringBookingService
+     * @param PaymentUserValidatorInterface $paymentUserValidator
+     */
+    public function __construct(
+        BookingReqestProviderRepository $bookingRequestProviderRepository,
+        BookingVerificationService $bookingVerificationService,
+        RecurringBookingService $recurringBookingService,
+        PaymentUserValidatorInterface $paymentUserValidator
+    ) {
+        parent::__construct($bookingRequestProviderRepository, $bookingVerificationService, $recurringBookingService);
+        $this->paymentUserValidator = $paymentUserValidator;
+    }
+
     /**
      * @param Booking $booking
      * @param User $user
@@ -45,6 +72,10 @@ class ArriveBookingStrategy extends AbstractBookingStatusChangeStrategy
 
         if (!$this->canUserArriveForBooking($booking, $user)) {
             throw new UnauthorizedAccessException('User does not have access to this function');
+        }
+
+        if (!$this->paymentUserValidator->isUsersCardValid(User::find($booking->getUserId()))) {
+            throw new PaymentFailedException('Customer does not have a valid credit card set up.');
         }
 
         if (!$booking->setStatus(Bookingstatus::BOOKING_STATUS_ARRIVED)->save()) {

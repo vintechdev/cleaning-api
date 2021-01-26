@@ -343,7 +343,7 @@ class BookingService
                             }
                             $bookings->setRelation('bookingrequestprovider',$bookings->bookingrequestprovider);//
                             return $bookings;
-                        })->take(5)->sortBy('bookingchat.created_at',0)->toarray();
+                        })->sortBy('bookingchat.created_at',0)->toarray();
         }else{
 
        
@@ -356,19 +356,18 @@ class BookingService
                             ->with('bookingServices.service.servicecategory')
                             ->where('bookings.user_id',$user_id)
                             ->whereIn('bookings.booking_status_id',[2,3,4])->get()
-                            ->map(function($bookings)use ($type) {
+                            ->map(function($bookings)use ($type){
                                 if($type=='unread'){
                                     $bookings->setRelation('bookingchat', $bookings->bookingchat->where('isread',0)->take(1));
                                 }else{
                                     $bookings->setRelation('bookingchat', $bookings->bookingchat->take(1));//->orderBy('created_at','desc')
                                 }
-                               
                                 $bookings->setRelation('bookingrequestprovider',$bookings->bookingrequestprovider);//
                                 return $bookings;
                             })->sortBy('bookingchat.created_at',0)->toarray();
         }
                       //  $service = $arr->bookingServices;
-        dd($arr);
+      //  dd($arr);
         $data = [];
         if(count($arr)){
             foreach($arr as $k=>$v){
@@ -382,16 +381,16 @@ class BookingService
                 $d['booking_time']=$v['booking_time'];
                 $d['final_hours']=$v['final_hours'];
 
-                        if(count($v['booking_services'])>0){
-                                $b = [];
-                                $bs = $v['booking_services'][0];
-                                if($bs['service']['is_default_service']==1){
-                                    $b['service_id'] = $bs['service_id'];
-                                    $b['service_name'] = $bs['service']['name'];
-                                    $b['category_name'] = $bs['service']['servicecategory']['name'];
-                                    $d['service'] =$b;
-                                }
+                if(count($v['booking_services'])>0){
+                        $b = [];
+                        $bs = $v['booking_services'][0];
+                        if($bs['service']['is_default_service']==1){
+                            $b['service_id'] = $bs['service_id'];
+                            $b['service_name'] = $bs['service']['name'];
+                            $b['category_name'] = $bs['service']['servicecategory']['name'];
+                            $d['service'] =$b;
                         }
+                }
                // if(in_array('provider', $user->getScopes())){
                     if(array_key_exists('users',$v)){
                         $ur = $v['users'];
@@ -421,10 +420,7 @@ class BookingService
                             }
                         $data[] = $d;
                 }
-              
-
             }
-//            echo "<pre>";print_r($data);exit;
            
         }
         return $data;

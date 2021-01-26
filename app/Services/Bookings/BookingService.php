@@ -328,7 +328,9 @@ class BookingService
         if(in_array('provider', $user->getScopes())){
                     $arr = Booking::with(array('bookingrequestprovider' => function($query) use ($user_id){
                             $query->where('provider_user_id',$user_id)->whereIn('status',['accepted','arrived','completed']);
-                        },'bookingchat','users','bookingrequestprovider.users'))
+                        },'bookingchat'=>function($query){
+                            $query->orderBy('created_at', 'desc');
+                        },'users','bookingrequestprovider.users'))
                         ->with('bookingServices')
                         ->with('bookingServices.service')
                         ->with('bookingServices.service.servicecategory')
@@ -347,7 +349,9 @@ class BookingService
        
                          $arr = Booking::with(array('bookingrequestprovider' => function($query){
                                 $query->whereIn('status',['accepted','arrived','completed']);
-                            },'bookingchat','bookingrequestprovider.users'))
+                            },'bookingchat'=>function($query){
+                                $query->orderBy('created_at', 'desc');
+                            },'bookingrequestprovider.users'))
                             ->with('bookingServices')->with('bookingServices.service')
                             ->with('bookingServices.service.servicecategory')
                             ->where('bookings.user_id',$user_id)
@@ -364,7 +368,7 @@ class BookingService
                             })->toarray();
         }
                       //  $service = $arr->bookingServices;
-       // dd($user);
+        dd($arr);
         $data = [];
         if(count($arr)){
             foreach($arr as $k=>$v){

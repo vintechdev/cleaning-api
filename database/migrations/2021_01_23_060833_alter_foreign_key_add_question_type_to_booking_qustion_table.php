@@ -13,11 +13,11 @@ class AlterForeignKeyAddQuestionTypeToBookingQustionTable extends Migration
      */
     public function up()
     {
-     //   DB::statement("ALTER TABLE booking_questions ADD COLUMN question_type VARCHAR(200);");
-     //   DB::statement("ALTER TABLE booking_questions ADD COLUMN question_title VARCHAR(200);");
+        DB::statement("ALTER TABLE booking_questions ADD COLUMN question_type VARCHAR(200);");
+        DB::statement("ALTER TABLE booking_questions ADD COLUMN question_title VARCHAR(200);");
         
-       // DB::statement("ALTER TABLE `booking_questions` DROP INDEX `services_question`;");
-       // DB::statement("ALTER TABLE booking_questions DROP foreign key services_question;");
+        DB::statement("ALTER TABLE `booking_questions` DROP INDEX `services_question`;");
+        DB::statement("ALTER TABLE booking_questions DROP foreign key services_question;");
         DB::statement("ALTER TABLE booking_questions DROP service_question_id;");
         
     }

@@ -49,7 +49,9 @@ abstract class AbstractBookingNotificationService implements BookingNotification
     {
         if ($this->sendNotification()) {
             // Log the notification using notification log repo.
+            
         }
+        return false;
     }
 
     /**

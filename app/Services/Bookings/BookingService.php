@@ -52,8 +52,7 @@ class BookingService
         StripeUserMetadataRepository $stripeUserMetadataRepository,
         BookingReqestProviderRepository $reqestProviderRepository,
         BookingServicesManager $bookingServicesManager
-    )
-    {
+    ) {
         $this->stripeUserMetadataRepository = $stripeUserMetadataRepository;
         $this->requestProviderRepo = $reqestProviderRepository;
         $this->bookingServicesManager = $bookingServicesManager;
@@ -199,13 +198,9 @@ class BookingService
                    
                     if($parent){
                         $question = Bookingquestion::where('booking_id',$parent->id)->get()->toarray();
-                    }else{
-                        $question = $question;
                     }
+
                     if (!empty($question)) {
-
-                        
-
                       //  dd($question);
                         foreach ($question as $key => $quest){
                             if ($quest['answer'] != null){

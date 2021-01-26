@@ -343,7 +343,7 @@ class BookingService
                             }
                             $bookings->setRelation('bookingrequestprovider',$bookings->bookingrequestprovider);//
                             return $bookings;
-                        })->toarray();
+                        })->take(5)->sortBy('bookingchat.created_at',0)->toarray();
         }else{
 
        
@@ -365,7 +365,7 @@ class BookingService
                                
                                 $bookings->setRelation('bookingrequestprovider',$bookings->bookingrequestprovider);//
                                 return $bookings;
-                            })->toarray();
+                            })->sortBy('bookingchat.created_at',0)->toarray();
         }
                       //  $service = $arr->bookingServices;
         dd($arr);

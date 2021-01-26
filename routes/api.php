@@ -100,7 +100,7 @@ Route::middleware(['auth:api','scope:customer,provider'])->namespace('Backend\AP
     Route::post('addreview/{id}', 'UserreviewController@addreview')->name('addreview');
     Route::post('chats/{bookingid}', 'ChatsController@addmessage')->name('addmessage');
     Route::post('getchat/{bookingid}', 'ChatsController@getchat')->name('getchat');
-    Route::get('chats/list', 'ChatsController@list')->name('chatlist');
+    Route::get('chats/list/{type}', 'ChatsController@list')->name('chatlist');
 
 });
 

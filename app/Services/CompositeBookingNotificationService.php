@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Booking;
+use App\Events\Interfaces\BookingEvent;
 use App\Services\Interfaces\BookingNotificationInterface;
 
 /**
@@ -58,5 +59,12 @@ class CompositeBookingNotificationService implements BookingNotificationInterfac
         }
 
         return $this;
+    }
+    public function getstatus(BookingEvent $event){
+       // $oldStatus = Bookingstatus::getStatusNameById($event->getOldStatus());
+       // $newStatus = Bookingstatus::getStatusNameById($event->getNewStatus());
+
+
+
     }
 }

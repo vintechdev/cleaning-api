@@ -56,9 +56,9 @@
                             <tr>
                                 <td valign="middle">
                                     <div mc:edit="header_logo">
-                                        <a href="#">
+                                       
                                           <span style="font-size:24px;color:white"> {{env('APP_NAME')}}</span>
-                                        </a>
+                                       
                                     </div>
                                 </td>
                             </tr>

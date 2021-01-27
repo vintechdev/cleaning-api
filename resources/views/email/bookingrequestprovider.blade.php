@@ -21,6 +21,10 @@
       <td  class="grey" style="width: 40%;"><span>{{ucwords($data['userdetails']['first_name'].' '.$data['userdetails']['last_name'])}}<br>
       {{$data['userdetails']['email']}}</span></td>
    </tr>
+   <tr>
+      <td class="grey" style="width: 60%;"><span>Date</span></td>
+      <td  class="grey" style="width: 40%;"><span>{{date('d/M/Y',strtotime($data['bookings']['booking_date']))}} {{date('H:i',strtotime($data['bookings']['booking_time']))}}</span></td>
+   </tr>
     <tr>
       <td class="grey" style="width: 60%;"><span>Address</span></td>
       <td  class="grey" style="width: 40%;"><span>{{ucwords($data['address']['address_line1'])}}, {{ucwords($data['address']['address_line2'])}}<br>
@@ -30,8 +34,8 @@
       <td class="grey" style="width: 60%;"><span>Frequency</span></td>
       <td  class="grey" style="width: 40%;"><span>{{$data['bookings']['plan_name']}}</span></td>
    </tr>
-<tr style="background-color: #95e8c6;font-weight:bold">
-<td style="width: 72.7273%;" colspan="2">&nbsp;Service Details</td>
+<tr style="background-color: #3f9672;font-weight:bold">
+<td style="width: 72.7273%;color:white" colspan="2">&nbsp;Service Details</td>
 
 </tr >
       <?php 

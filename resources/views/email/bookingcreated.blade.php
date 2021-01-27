@@ -35,8 +35,12 @@
       <td class="grey" style="width: 72.7273%;"><span>Frequency</span></td>
       <td  class="grey" style="width: 27.135%;"><span>{{ucwords($data['plan'])}}</span></td>
    </tr>
+   <tr>
+      <td class="grey" style="width: 72.7273%;"><span>Date</span></td>
+      <td  class="grey" style="width: 27.135%;"><span>{{date('d/M/Y',strtotime($data['booking']['booking_date']))}} {{date('H:i',strtotime($data['booking']['booking_time']))}}</span></td>
+   </tr>
 <tr style="background-color: #3f9672;font-weight:bold">
-<td style="width: 72.7273%;" colspan="2">&nbsp;Service Details</td>
+<td style="width: 72.7273%;color:white" colspan="2">&nbsp;Service Details</td>
 
 </tr >
       <?php 

@@ -29,6 +29,8 @@ class AlterTableProviderPostcodeMaps extends Migration
             KEY `postcode_id` (`postcode_id`),
             CONSTRAINT `provider_id` FOREIGN KEY (`provider_id`) REFERENCES `users` (`id`)
           ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8");
+
+          
     }
 
     /**
@@ -40,5 +42,6 @@ class AlterTableProviderPostcodeMaps extends Migration
     {
         //
         DB::statement("DROP TABLE `provider_postcode_maps`;");
+      
     }
 }

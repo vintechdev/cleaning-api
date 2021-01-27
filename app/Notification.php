@@ -13,7 +13,7 @@ class Notification extends Model
 {
     use HasApiTokens, Notifiable;
     use Uuids;
-    protected $table = 'notifications';
+    protected $table = 'notification_settings';
     use SoftDeletes;
     protected $fillable = ['id'];
 

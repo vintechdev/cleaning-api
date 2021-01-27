@@ -11,11 +11,17 @@ use App\NotificationLog;
 class BookingStatusChangeEmailNotificationService extends AbstractBookingNotificationService
 {
     protected $booking;
+    public function __construct(){
+        
+    }
+    
+
     protected function sendNotification(): bool
     {
-        
+        echo "in";exit;
+        dd($this->booking);
         // TODO: Implement sendNotification() method.
-        return false;
+       // return false;
     }
 
     /**

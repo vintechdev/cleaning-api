@@ -30,6 +30,7 @@ class BookingEmailNotificationService extends AbstractBookingNotificationService
     }
     protected function sendNotification(): bool
     {
+       // return false;
         $useremail = $this->sendUserEmail();
         $providerEmail = $this->sendProviderEmail();
         if($useremail==true && $providerEmail==true){

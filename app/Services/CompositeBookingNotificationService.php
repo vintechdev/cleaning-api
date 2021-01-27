@@ -41,10 +41,10 @@ class CompositeBookingNotificationService implements BookingNotificationInterfac
      */
     public function send(): bool
     {
+       // dd($this->notificationService);
         foreach ($this->notificationService as $notificationService) {
             $notificationService->send();
         }
-
         return true;
     }
 
@@ -54,17 +54,11 @@ class CompositeBookingNotificationService implements BookingNotificationInterfac
      */
     public function setBooking(Booking $booking)
     {
-        foreach ($this->notificationService as $notificationService) {
+        foreach ($this->notificationService as $notificationService){
             $notificationService->setBooking($booking);
         }
 
         return $this;
     }
-    public function getstatus(BookingEvent $event){
-       // $oldStatus = Bookingstatus::getStatusNameById($event->getOldStatus());
-       // $newStatus = Bookingstatus::getStatusNameById($event->getNewStatus());
-
-
-
-    }
+    
 }

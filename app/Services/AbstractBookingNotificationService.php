@@ -25,8 +25,7 @@ abstract class AbstractBookingNotificationService implements BookingNotification
      */
     protected $booking;
 
-    protected $old_status;
-    protected $new_status;
+    
     /**
      * AbstractBookingNotificationService constructor.
      * @param NotificationLogRepository $notificationLogRepository
@@ -52,11 +51,13 @@ abstract class AbstractBookingNotificationService implements BookingNotification
      */
     public function send(): bool
     {
+        
         if ($this->sendNotification()) {
             // Log the notification using notification log repo.
             
         }
-        return false;
+        return true;
+       // return false;
     }
 
     /**

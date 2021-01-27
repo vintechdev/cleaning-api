@@ -74,9 +74,11 @@ class BookingSubscriber
     {
         /** @var CompositeBookingNotificationService $notificationService */
         $notificationService = app(CompositeBookingNotificationService::class);
+    
         $notificationService
             ->add(app(BookingStatusChangeEmailNotificationService::class))
             ->setBooking($event->getBooking());
+           
     }
 
     /**

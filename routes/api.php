@@ -155,7 +155,7 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
 
     Route::get('getnotifications', 'NotificationController@getnotifications')->name('api.Notification.getnotifications')->middleware(['scope:customer']);
 
-    Route::patch('editnotifications/{uuid}', 'NotificationController@editnotifications')->name('api.Notification.editnotifications')->middleware(['scope:customer']);
+    Route::post('editnotifications', 'NotificationController@editnotifications')->name('api.Notification.editnotifications')->middleware(['scope:customer']);
     Route::get('getallbookingdetails', 'BookingController@getallbookingdetails')->name('api.Booking.getallbookingdetails')->middleware(['scope:customer']);
 
     Route::get('getpendingbookingdetails', 'BookingController@getpendingbookingdetails')->name('api.Booking.getpendingbookingdetails')->middleware(['scope:customer']);

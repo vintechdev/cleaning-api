@@ -7,20 +7,16 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Emadadly\LaravelUuid\Uuids;
 use Laravel\Passport\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
-use App\UserNotification;
+// for cashier payment
+use Laravel\Cashier\Billable;
 
-class Notification extends Model
+class UserNotification extends Model
 {
+    use uuids;
     use HasApiTokens, Notifiable;
-    use Uuids;
-    protected $table = 'notifications';
+    use Billable;
+    protected $table = 'user_notifications';
     use SoftDeletes;
     protected $fillable = ['id'];
-
-
-
-    public function usernotification()
-    {
-        return $this->hasMany(UserNotification::class,'notification_id','id');
-    }
+    public $incrementing = false;
 }

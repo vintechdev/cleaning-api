@@ -56,6 +56,7 @@ class ProfileRepository extends AbstractBaseRepository
         $Providerpostcodemap = Providerpostcodemap::firstOrNew(['provider_id' =>$user_id,'postcode_id'=>$postcode]);
         $Providerpostcodemap->provider_id = $user_id;
         $Providerpostcodemap->postcode_id = $postcode;
+     
         if($Providerpostcodemap->save()){
             return Providerpostcodemap::with('postcode')->where('id',$Providerpostcodemap->id)->get()->toArray();
         }else{

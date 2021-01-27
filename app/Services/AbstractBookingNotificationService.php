@@ -3,8 +3,11 @@
 namespace App\Services;
 
 use App\Booking;
+use App\Events\Interfaces\BookingEvent;
 use App\Repository\Eloquent\NotificationLogRepository;
 use App\Services\Interfaces\BookingNotificationInterface;
+use App\Bookingstatus;
+use App\Events\BookingStatusChanged;
 
 /**
  * Class AbstractBookingNotificationService
@@ -22,6 +25,8 @@ abstract class AbstractBookingNotificationService implements BookingNotification
      */
     protected $booking;
 
+    protected $old_status;
+    protected $new_status;
     /**
      * AbstractBookingNotificationService constructor.
      * @param NotificationLogRepository $notificationLogRepository
@@ -62,5 +67,12 @@ abstract class AbstractBookingNotificationService implements BookingNotification
     {
         $this->booking = $booking;
         return $this;
+    }
+    public function getStatus(BookingEvent $event){
+
+       // $this->old_status = Bookingstatus::getStatusNameById($event->getOldStatus());
+       // $this->new_status = Bookingstatus::getStatusNameById($event->getNewStatus());
+        return $this;
+
     }
 }

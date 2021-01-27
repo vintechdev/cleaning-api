@@ -430,8 +430,6 @@ class BookingService
         }, $data), SORT_DESC, $data);
         return $data;
     }
-    public function BookingDetails()
-    {
-        
-    }
+   
+    
 }

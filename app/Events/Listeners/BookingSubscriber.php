@@ -84,12 +84,12 @@ class BookingSubscriber
      */
     public function addToBookingActivityLogs(BookingEvent $event)
     {
-        if ($event instanceof BookingStatusChanged) {
+        if($event instanceof BookingStatusChanged) {
             $action = Bookingactivitylog::ACTION_STATUS_CHANGED;
             $oldStatus = Bookingstatus::getStatusNameById($event->getOldStatus());
             $newStatus = Bookingstatus::getStatusNameById($event->getNewStatus());
             $detail = 'Status changed from ' . $oldStatus . ' to ' . $newStatus;
-        }  else {
+        }else{
             $action = Bookingactivitylog::ACTION_BOOKING_CREATED;
             $detail = 'New booking created';
         }

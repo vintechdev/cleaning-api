@@ -9,6 +9,7 @@ use App\User;
 use App\Customeruser;
 use App\Working_hours;
 use App\Providerpostcodemap;
+use App\UserNotification;
 
 class UserRepository{
 
@@ -51,11 +52,12 @@ class UserRepository{
           return $users;
         }
 
-        public function CheckProfileCompleted()
-        {
-          
-          
+        public function getUserNotification($user_id,$nid){
+        
+            $notification = UserNotification::where('user_id',Auth::user()->id)->where('notification_id',$nid)->first()->toarray();
+            return $notification;
         }
+        
 }
 
 

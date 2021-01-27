@@ -11,6 +11,7 @@ use App\Services\Interfaces\BookingNotificationInterface;
  */
 class CompositeBookingNotificationService implements BookingNotificationInterface
 {
+    protected $booking;
     /**
      * @var BookingNotificationInterface[]
      */

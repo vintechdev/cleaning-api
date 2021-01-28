@@ -197,8 +197,6 @@ public function UpdateToken(Request $request)
                             "email" => $User->email
                         ];
                         $user_id = $User->id;
-                        //$stripeCustomer = $User->createAsStripeCustomer();
-                        $Customermetadata = new Customermetadata();
                     }
 
                     if($r == 'provider'){

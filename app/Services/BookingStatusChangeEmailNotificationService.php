@@ -72,28 +72,34 @@ class BookingStatusChangeEmailNotificationService extends AbstractBookingNotific
         $bookingproviders = $this->bookingrequestprovider->getBookingAccptedProvidersDetails($this->booking->id);
         if(count($bookingproviders)>0){
             $providername =  $bookingproviders[0]['provider_first_name'].' '.$bookingproviders[0]['provider_last_name'];
-            if($this->booking->booking_status_id ==2){
-                 $text =  $providername .' has accepted your Booking. Have fun working together!!';
-                 $subject =  $text;
-            }else if($this->booking->booking_status_id ==3){
-                $text =  $providername .' has arrived at your place. Have fun working together!!';
-                $subject =  $text;
-            }else if($this->booking->booking_status_id ==4){
-                $text =  $providername .' has completed your services. Hope you enjoy his service!! Please share your review.';
-                $subject =  $providername .' has completed your services. Hope you enjoy his service!!';
-            }
-            $subject =  $text;
-            $bookingdata['text'] = $text;
-            $bookingdata['provider_name'] = $providername ;
-            $bookingdata['badge'] =  $this->userbadge->getBadgeDetails($bookingproviders[0]['provider_user_id']);
-            $bookingdata['avgrate'] =  $this->userbadge->getAvgRating($bookingproviders[0]['provider_user_id']);
+            
+                    if(in_array($this->booking->booking_status_id,[2,3,4])){   
 
-            $res = $this->mailService->send('email.statusaccepted_arrived_completed_emailtouser', $bookingdata, $bookingdata['userEmail'], $bookingdata['userName'], $subject);
-            if($res){
-                return true;
-            }else{
-                return false;
-            }
+                        if($this->booking->booking_status_id ==2){
+                            $text =  $providername .' has accepted your Booking. Have fun working together!!';
+                            $subject =  $text;
+                        }else if($this->booking->booking_status_id ==3){
+                            $text =  $providername .' has arrived at your place. Have fun working together!!';
+                            $subject =  $text;
+                        }else if($this->booking->booking_status_id ==4){
+                            $text =  $providername .' has completed your services. Hope you enjoy his service!! Please share your review.';
+                            $subject =  $providername .' has completed your services. Hope you enjoy his service!!';
+                        }
+                        $subject =  $text;
+                        $bookingdata['text'] = $text;
+                        $bookingdata['provider_name'] = $providername ;
+                        $bookingdata['badge'] =  $this->userbadge->getBadgeDetails($bookingproviders[0]['provider_user_id']);
+                        $bookingdata['avgrate'] =  $this->userbadge->getAvgRating($bookingproviders[0]['provider_user_id']);
+
+                        $res = $this->mailService->send('email.statusaccepted_arrived_completed_emailtouser', $bookingdata, $bookingdata['userEmail'], $bookingdata['userName'], $subject);
+                        if($res){
+                            return true;
+                        }else{
+                            return false;
+                        }
+                    }else{
+                        return false;
+                    }
         }else{
             return false;
         }
@@ -103,6 +109,7 @@ class BookingStatusChangeEmailNotificationService extends AbstractBookingNotific
         $bookingproviders = $this->bookingrequestprovider->getBookingProvidersData($this->booking->id);
         $data = $this->bookingservicerepo->BookingDetailsforProviderEmail($this->booking->id,$this->booking->user_id);
         if(count($bookingproviders)>0){
+            if(in_array($this->booking->booking_status_id,[2,3,4])){  
             
                 $providername =  $bookingproviders[0]['provider_first_name'].' '.$bookingproviders[0]['provider_last_name'];
                 if($this->booking->booking_status_id ==2){
@@ -121,7 +128,9 @@ class BookingStatusChangeEmailNotificationService extends AbstractBookingNotific
                 $data['providers_name'] = $providername ;
                 $res = $this->mailService->send('email.status_accepted_arrived_completed_email_to_provider', $data, $userEmail, $userName, $subject);
                 return true;
-           
+            }else{
+                return false;
+            }
         }else{
             return false;
         }

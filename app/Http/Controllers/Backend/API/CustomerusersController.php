@@ -30,7 +30,7 @@ class CustomerusersController extends Controller
         $res = $this->profileRepository->CheckProfileCompleted();
 
         if($res['working_hour']>0 && $res['provider_service']>0 && $res['postcode']>0 && $res['payment']>0){
-            $arr = ['success'=>true];
+            $arr = ['success'=>true,'data'=>$res];
         }else{
             if($res['working_hour']==0 && $res['provider_service']==0 && $res['postcode']==0 && $res['payment']==0){
                 $arr = ['data'=>$res,'success'=>false,'message'=>'Please fill details to complete the profile.'];

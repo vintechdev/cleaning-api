@@ -9,6 +9,7 @@ use App\StripeUserMetadata;
 use App\Http\Resources\Chat;
 use Illuminate\Http\Request;
 use Auth;
+use Illuminate\Support\Facades\DB;
 
 
 class ProfileRepository extends AbstractBaseRepository
@@ -82,12 +83,10 @@ class ProfileRepository extends AbstractBaseRepository
         //   dd($postday);
             foreach($data as $k=>$v){
 
-                $Working_hours = Working_hours::updateOrCreate(['provider_id' =>$user_id,'working_days'=>$v['working_days']]);
-                $Working_hours->provider_id = $user_id;
-                $Working_hours->working_days = $v['working_days'];
-                $Working_hours->start_time = $v['start_time'];
-                $Working_hours->end_time =  $v['end_time'];
-                $Working_hours->save();
+                $Working_hours = Working_hours::updateOrCreate(
+                    ['provider_id' =>$user_id, 'working_days'=>$v['working_days']],
+                    ['start_time' => $v['start_time'], 'end_time' => $v['end_time']]
+                );
             }
             $diff =  array_diff($days, $postday );
             if(count($diff)>0){

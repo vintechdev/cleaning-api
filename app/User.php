@@ -87,7 +87,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function sendApiEmailVerificationNotification()
     {
-       // $this->notify(new VerifyApiEmail); // my notification
+        $this->notify(new VerifyApiEmail); // my notification
     }
 
     /**

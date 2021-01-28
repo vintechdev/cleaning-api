@@ -148,6 +148,7 @@ class BookingEventService
         if (!$booking->isRecurring()) {
             return false;
         }
+
         return $this->recurringPatternService->isValidRecurringDate($booking->getEvent(), $recurringDate);
     }
 

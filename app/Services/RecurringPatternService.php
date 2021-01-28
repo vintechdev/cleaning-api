@@ -127,12 +127,30 @@ class RecurringPatternService
      */
     public function isValidRecurringDate(Event $event, Carbon $date): bool
     {
+        if ($event->getEndDateTime() && $date->greaterThanOrEqualTo($event->getEndDateTime())) {
+            return false;
+        }
+
         $recurringPatternable = $this->getRecurringPatternFromEvent($event);
         if (!$recurringPatternable) {
             return false;
         }
 
         return $recurringPatternable->isValidRecurringDate($date);
+    }
+
+    /**
+     * @param Event $event
+     * @param Carbon $date
+     * @return bool
+     */
+    public function cancelEventAfter(Event $event, Carbon $date): bool
+    {
+        if ($event->getStartDateTime()->greaterThan($date)) {
+            throw new \InvalidArgumentException('Date passed is lesser than start date of the booking');
+        }
+
+        return $event->setEndDateTime($date)->save();
     }
 
     /**

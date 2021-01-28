@@ -20,16 +20,22 @@ class BookingStatusChangeEmailNotificationService extends AbstractBookingNotific
     protected $bookingservicerepo;
     protected $mailService;
     protected $userRepo;
+    protected $userbadge;
     protected $bookingrequestprovider;
     
 
-    public function __construct(){
-        $this->bookingservicerepo = app(BookingServiceRepository::class);
-        $this->mailService = app(MailService::class);
-        $this->userRepo = app(UserRepository::class);
-        $this->bookingrequestprovider = app(BookingReqestProviderRepository::class);
-        $this->userbadge = app(UserBadgeReviewRepository::class);
-      
+    public function __construct(
+        BookingServiceRepository $bookingservicerepo,
+        MailService $mailService,
+        UserRepository $userRepo,
+        BookingReqestProviderRepository $bookingrequestprovider,
+        UserBadgeReviewRepository $userbadge
+    ) {
+        $this->bookingservicerepo = $bookingservicerepo;
+        $this->mailService = $mailService;
+        $this->userRepo = $userRepo;
+        $this->bookingrequestprovider = $bookingrequestprovider;
+        $this->userbadge = $userbadge;
     }
     
 

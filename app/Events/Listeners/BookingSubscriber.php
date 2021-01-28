@@ -52,10 +52,10 @@ class BookingSubscriber
             [BookingSubscriber::class, 'addToBookingActivityLogs']
         );
 
-        $events->listen(
+         $events->listen(
             BookingCreated::class,
             [BookingSubscriber::class, 'sendBookingCreatedNotifications']
-        );
+        ); 
     }
 
     public function sendBookingCreatedNotifications(BookingEvent $event)
@@ -72,12 +72,17 @@ class BookingSubscriber
 
     public function sendBookingStatusChangeNotifications(BookingEvent $event)
     {
+
+
         /** @var CompositeBookingNotificationService $notificationService */
         $notificationService = app(CompositeBookingNotificationService::class);
     
         $notificationService
             ->add(app(BookingStatusChangeEmailNotificationService::class))
             ->setBooking($event->getBooking());
+
+            //set another class
+        $notificationService->send();
            
     }
 

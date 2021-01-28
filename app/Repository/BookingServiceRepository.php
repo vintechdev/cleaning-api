@@ -29,7 +29,7 @@ class BookingServiceRepository{
       $data =[];
       $data['plan']=$bdata[0]['plan_name'];
       $data['name']=$bdata[0]['first_name'];
-      $services = app(BookingServiceRepository::class)->getServiceDetails($bookingid);
+      $services = $this->getServiceDetails($bookingid);
     
      // $companyName = isset($default['company']) && !empty($default['company']) ? $default['company'] : __('Trade By Trade');
       $subject = 'Service Booked : '.$bookingid;
@@ -47,7 +47,7 @@ class BookingServiceRepository{
     {
       $bookingaddress = app(BookingAddressRepository::class)->Bookingaddress($bookingid);
       $userdetails = app(UserRepository::class)->getUserDetails($user_id);
-      $services = app(BookingServiceRepository::class)->getServiceDetails($bookingid);
+      $services = $this->getServiceDetails($bookingid);
       $bookings = Booking::leftJoin('plans','plans.id','=','bookings.plan_type')->where('bookings.id',$bookingid)->get(['bookings.*','plans.plan_name'])->toArray();
       $data['bookings']=$bookings[0];
       

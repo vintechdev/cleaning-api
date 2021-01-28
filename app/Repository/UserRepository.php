@@ -54,7 +54,7 @@ class UserRepository{
 
         public function getUserNotification($user_id,$nid){
         
-            $notification = UserNotification::where('user_id',Auth::user()->id)->where('notification_id',$nid)->first()->toarray();
+            $notification = UserNotification::where('user_id',$user_id)->where('notification_id',$nid)->first()->toarray();
             return $notification;
         }
         

@@ -66,8 +66,8 @@ class BookingEmailNotificationService extends AbstractBookingNotificationService
     {
        //user email
        $bookingid = $this->booking->id;
-       $notificationsetting = $this->userRepo->getUserNotification(Auth::user()->id,self::TRANSACTION_SETTING_ID);
-       if($notificationsetting['email']==1){
+       //$notificationsetting = $this->userRepo->getUserNotification(Auth::user()->id,self::TRANSACTION_SETTING_ID);
+       //if($notificationsetting['email']==1){
            $bookingdata = $this->bookingservicerepo->BookingDetailsforMail( $this->booking->id);
            //TODO: Check if the user have opted to send email. If not return false. If yes, add logic to send email here and return true.
            $res = $this->mailService->send('email.bookingcreated', $bookingdata, $bookingdata['userEmail'], $bookingdata['userName'], $bookingdata['subject']);
@@ -76,8 +76,8 @@ class BookingEmailNotificationService extends AbstractBookingNotificationService
            }else{
                return false;
            }
-       }else{
+       /* }else{
            return false;
-       }
+       } */
     }
 }

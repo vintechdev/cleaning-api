@@ -240,7 +240,9 @@ class BookingService
                     }
 
                     DB::commit();
-                    event(new BookingCreated($booking, $user));
+                    if (!$parent) {
+                        event(new BookingCreated($booking, $user));
+                    }
 
                     return $booking;
                 }

@@ -178,7 +178,7 @@ public function UpdateToken(Request $request)
                 $lastinsertid = $User->id;
 
                 // for email verify
-                $url = '';//google.com';
+                $url = $request->url;
                 $User->sendApiEmailVerificationNotification( $url);
                 $success['message'] = 'Please confirm yourself by clicking on verify user button sent to you on your email';
                 

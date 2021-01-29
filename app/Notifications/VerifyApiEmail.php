@@ -11,9 +11,9 @@ class VerifyApiEmail extends VerifyEmailBase
     * @param mixed $notifiable
     * @return string
     */
-    public function __construct($test)
+    public function __construct($url)
     {
-        $this->test = $test;
+        $this->url = $url;
     }
     protected function verificationUrl($notifiable)
     {

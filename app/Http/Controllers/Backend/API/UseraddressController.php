@@ -133,7 +133,9 @@ class UseraddressController extends Controller
         $Useraddress->user_id = $user_id;
         $Useraddress->type = 'home';//$request->get('type');
         $Useraddress->address_line1 = $request->get('address_line1');
-        $Useraddress->address_line2 = $request->get('address_line2');
+        if($request->has('address_line2') && $request->get('address_line2')!=''){
+            $Useraddress->address_line2 = $request->get('address_line2');
+        }
         $Useraddress->suburb = $request->get('suburb');
         $Useraddress->state = $request->get('state');
         $Useraddress->postcode = $request->get('postcode');
@@ -161,34 +163,18 @@ class UseraddressController extends Controller
             return response()->json(['message' => $message], 401);
         }
 
-        // $type = $request->get('type');
-        // print_r($type);exit;
+        
 
         $user = Auth::user();
         $user_id = $user->id;
-        // dd($user_id);
-
-        // $types = DB::table('user_addresses')->where('user_id', $user_id)->pluck('type')->toArray();
-        // $types = json_decode(json_encode($types), true);
-        // print_r($types);
-        
-        // if (($key = array_search($type, $types)) !== false) {
-        //     unset($types[$key]);
-        // }
-        // print_r($types);exit;
-
-        // if (in_array($type, $types))
-        // {
-        //     return response()->json(['message' => 'Type '.$type.' already exist with this user! Please use other type.']);
-            
-        // }
-        // else
-        // {
+       
             $Useraddress = Useraddress::firstOrNew(['uuid' => $uuid]);
             // $Useraddress->type = $request->get('type');
             $Useraddress->address_label = $request->get('address_label');
             $Useraddress->address_line1 = $request->get('address_line1');
-            $Useraddress->address_line2 = $request->get('address_line2');
+            if($request->has('address_line2') && $request->get('address_line2')!=''){
+                $Useraddress->address_line2 = $request->get('address_line2');
+            }
             $Useraddress->suburb = $request->get('suburb');
             $Useraddress->state = $request->get('state');
             $Useraddress->postcode = $request->get('postcode');

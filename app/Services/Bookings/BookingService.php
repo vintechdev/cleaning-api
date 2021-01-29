@@ -136,7 +136,9 @@ class BookingService
                         $bookingaddress = new Bookingaddress();
                         $bookingaddress->booking_id = $last_insert_id;
                         $bookingaddress->address_line1 = $address['address_line1'];
-                        $bookingaddress->address_line2 = $address['address_line2'];
+                        if($address['address_line2']!='' && $address['address_line2']!=NULL){
+                            $bookingaddress->address_line2 = $address['address_line2'];
+                        }
                         $bookingaddress->suburb = $address['suburb'];
                         $bookingaddress->state = $address['state'];
                         $bookingaddress->postcode = $address['postcode'];

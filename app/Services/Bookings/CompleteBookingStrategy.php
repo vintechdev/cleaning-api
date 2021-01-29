@@ -133,7 +133,7 @@ class CompleteBookingStrategy extends AbstractBookingStatusChangeStrategy
     {
         $paymentDto = new PaymentDto();
         $providerMetadata = Providermetadatum::findByProviderId($provider->getId());
-        $serviceFeePercentage = !is_null($providerMetadata->getServiceFeePercentage()) ?
+        $serviceFeePercentage = !is_null($providerMetadata) ?
             $providerMetadata->getServiceFeePercentage() :
             self::SERVICE_FEE_PERCENT;
 

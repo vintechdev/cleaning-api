@@ -202,7 +202,7 @@ public function UpdateToken(Request $request)
 
                     if($r == 'provider'){
                         $User = User::firstOrNew(['id' => $lastinsertid]);
-                        $User->providertype = (($request->has('provider_type'))?$request->get('provider_type'):'freelancer');
+                        $User->providertype = 'freelancer';
                         $User->save();
                     }
                 }

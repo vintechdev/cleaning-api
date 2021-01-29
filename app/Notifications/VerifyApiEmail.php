@@ -18,8 +18,11 @@ class VerifyApiEmail extends VerifyEmailBase
     protected function verificationUrl($notifiable)
     {
        
-        return URL::temporarySignedRoute(
-            'verificationapi.verify', Carbon::now()->addMinutes(60), ['id' => $notifiable->getKey()]
+        $verifyurl =  URL::temporarySignedRoute(
+            'verificationapi.verify', Carbon::now()->addMinutes(60), ['id' => $notifiable->getKey()],false
         ); // this will basically mimic the email endpoint with get request
+        $verifyurl = str_replace('/api','',$verifyurl);
+        $returnurl = $this->url.$verifyurl;
+        return $returnurl;
     }
 }

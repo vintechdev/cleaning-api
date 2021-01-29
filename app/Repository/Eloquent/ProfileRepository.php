@@ -29,7 +29,7 @@ class ProfileRepository extends AbstractBaseRepository
         $wh  = Working_hours::where('provider_id',$user_id)->get()->count();
         
         //service mapping
-        $ps  = Providerservicemaps::where('provider_id',$user_id)->get()->count();
+        $ps  = 1;//Providerservicemaps::where('provider_id',$user_id)->get()->count();
 
         //post code mapping
         $pc  = Providerpostcodemap::where('provider_id',$user_id)->get()->count();

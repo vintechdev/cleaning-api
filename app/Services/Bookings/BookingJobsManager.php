@@ -169,7 +169,7 @@ class BookingJobsManager
             $this->getProviderDetails($booking),
             [
                 'from' => $recurringDate,
-                'to' => Booking::calculateFinalBookingDateTime($recurringDate, $booking->getFinalHours())
+                'to' => Booking::calculateFinalBookingDateTime($recurringDate, $booking->getTotalHours())
             ],
             $this->buildBookingServices($booking)
         );

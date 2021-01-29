@@ -212,7 +212,7 @@ class BookingEventService
         /** @var Carbon $date */
         foreach ($dates as $date) {
             $from = clone $date;
-            $to = Booking::calculateFinalBookingDateTime($date, $booking->getFinalHours());
+            $to = Booking::calculateFinalBookingDateTime($date, $booking->getTotalHours());
             $returnDates[] = ['from' => $from, 'to' => $to];
         }
 

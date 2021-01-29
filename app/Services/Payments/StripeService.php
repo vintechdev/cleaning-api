@@ -253,6 +253,15 @@ class StripeService
      */
     public function createAccountLink(User $user, string $returnUrl, string $refreshUrl): array
     {
+        $metadata = $this->metadataRepo->findByUserId($user->getId());
+
+        if ($metadata && $metadata->stripe_connect_account_verified) {
+            $loginLink = $this->createAccountLoginLink($user, $refreshUrl);
+            if ($loginLink) {
+                return ['url' => $loginLink . '#/account'];
+            }
+        }
+
         $accountId = $this->findOrCreateStripeConnectAccount($user);
         return AccountLink::create([
             'account' => $accountId,

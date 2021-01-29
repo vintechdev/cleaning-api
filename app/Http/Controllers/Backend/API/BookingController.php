@@ -384,6 +384,7 @@ class BookingController extends Controller
      */
     private function changeBookingStatus(string $status, BookingStatusChangeEngine $statusChangeEngine)
     {
+        //return response()->json(['message' => 'payment error'], 402);
         try {
             $booking = $statusChangeEngine->changeStatus($status);
         } catch (InvalidBookingStatusException $exception) {

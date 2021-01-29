@@ -42,6 +42,7 @@ class UserBadgeReviewRepository{
         if($request->has('comments')){
             $r->comments = $request->comments;
         }
+        $r->review_type = $request->type;
         $r->published =1;
         $r->save();
         return true;
@@ -50,7 +51,13 @@ class UserBadgeReviewRepository{
     {
         # code...
         $rev = [];
-       $arr = Userreview::with('reviewby','reviewfor')->where('booking_id',$id)->where('published',1)->get()->toArray();
+        $user = Auth::user();
+        if(in_array('provider', $user->getScopes())){
+            $type='provider';
+        }else{
+            $type = 'user';
+        }
+        $arr = Userreview::with('reviewby','reviewfor')->where('booking_id',$id)->where('published',1)->get()->toArray();
        if(count($arr)>0){
         
           $review =[];
@@ -60,6 +67,7 @@ class UserBadgeReviewRepository{
                 $review['user_review_by'] = $v['user_review_by'];
                 $review['review_for_name'] = $v['reviewfor']['first_name'].' '.$v['reviewfor']['last_name'];
                 $review['review_by_name'] = $v['reviewby']['first_name'].' '.$v['reviewby']['last_name'];
+                $review['review_type'] = $v['review_type'];
                 $review['comments'] = $v['comments'];
                 $review['rating'] = $v['rating'];
                 $review['created_at'] = $v['created_at'];

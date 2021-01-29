@@ -11,8 +11,13 @@ class VerifyApiEmail extends VerifyEmailBase
     * @param mixed $notifiable
     * @return string
     */
+    public function __construct($test)
+    {
+        $this->test = $test;
+    }
     protected function verificationUrl($notifiable)
     {
+       
         return URL::temporarySignedRoute(
             'verificationapi.verify', Carbon::now()->addMinutes(60), ['id' => $notifiable->getKey()]
         ); // this will basically mimic the email endpoint with get request

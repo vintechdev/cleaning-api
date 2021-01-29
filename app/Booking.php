@@ -154,7 +154,21 @@ class Booking extends Model
             return null;
         }
 
-        return self::calculateFinalBookingDateTime($this->getStartDate(), $this->getFinalHours());
+        return self::calculateFinalBookingDateTime($this->getStartDate(), $this->getTotalHours());
+    }
+
+    /**
+     * @return float
+     */
+    public function getTotalHours(): float
+    {
+        $totalHours = 0;
+        /** @var Bookingservice $bookingService */
+        foreach ($this->bookingServices() as $bookingService) {
+            $totalHours += $bookingService->getInitialNumberOfHours() ? : 0;
+        }
+
+        return $totalHours;
     }
 
     /**

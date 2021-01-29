@@ -47,6 +47,14 @@ class CompleteBookingStrategy extends AbstractBookingStatusChangeStrategy
      */
     private $paymentProcessor;
 
+    /**
+     * CompleteBookingStrategy constructor.
+     * @param BookingReqestProviderRepository $bookingRequestProviderRepository
+     * @param BookingVerificationService $bookingVerificationService
+     * @param RecurringBookingService $recurringBookingService
+     * @param BookingServicesManager $bookingServicesManager
+     * @param PaymentProcessorInterface $paymentProcessor
+     */
     public function __construct(
         BookingReqestProviderRepository $bookingRequestProviderRepository,
         BookingVerificationService $bookingVerificationService,
@@ -125,11 +133,7 @@ class CompleteBookingStrategy extends AbstractBookingStatusChangeStrategy
     {
         $paymentDto = new PaymentDto();
         $providerMetadata = Providermetadatum::findByProviderId($provider->getId());
-        if (!$providerMetadata || !$providerMetadata->isVerified()) {
-            throw new PaymentFailedException('User is not verified yet');
-        }
-
-        $serviceFeePercentage = !is_null($providerMetadata->getServiceFeePercentage()) ?
+        $serviceFeePercentage = !is_null($providerMetadata) ?
             $providerMetadata->getServiceFeePercentage() :
             self::SERVICE_FEE_PERCENT;
 

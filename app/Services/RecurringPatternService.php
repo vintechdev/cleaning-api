@@ -127,8 +127,15 @@ class RecurringPatternService
      */
     public function isValidRecurringDate(Event $event, Carbon $date): bool
     {
-        if ($event->getEndDateTime() && $date->greaterThanOrEqualTo($event->getEndDateTime())) {
-            return false;
+        if ($event->getEndDateTime()) {
+            if ($date->equalTo($event->getEndDateTime())) {
+                // Recurring time would have ended at that datetime.
+                return true;
+            }
+
+            if ($date->greaterThan($event->getEndDateTime())) {
+                return false;
+            }
         }
 
         $recurringPatternable = $this->getRecurringPatternFromEvent($event);

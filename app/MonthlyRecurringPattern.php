@@ -76,17 +76,6 @@ class MonthlyRecurringPattern extends Model implements RecurringDateInterface
     }
 
     /**
-     * @param Carbon $date
-     * @return bool
-     */
-    public function isValidRecurringDate(Carbon $date): bool
-    {
-        /** @var Carbon $nextValidDate */
-        $nextValidDate = $this->getNextValidDateRelativeTo($date);
-        return $nextValidDate->floatDiffInMonths($date) == $this->getRecurringPattern()->getSeparationCount();
-    }
-
-    /**
      * @return string
      */
     protected function getDateModifier(): string

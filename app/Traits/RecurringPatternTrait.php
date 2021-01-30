@@ -51,4 +51,20 @@ trait RecurringPatternTrait
 
         return  $startDate->modify('+' . $separation . ' ' . $this->getDateModifier());
     }
+
+    /**
+     * @param Carbon $date
+     * @return bool
+     */
+    public function isValidRecurringDate(Carbon $date): bool
+    {
+        $newDate = clone $date;
+        /** @var Carbon $nextValidDate */
+        $nextValidDate = $this->getNextValidDateRelativeTo($newDate->subSecond());
+        if (!$nextValidDate) {
+            return false;
+        }
+
+        return $nextValidDate->equalTo($date);
+    }
 }

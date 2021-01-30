@@ -78,20 +78,6 @@ class WeeklyRecurringPattern extends Model implements RecurringDateInterface
     }
 
     /**
-     * @param Carbon $date
-     * @return bool
-     */
-    public function isValidRecurringDate(Carbon $date): bool
-    {
-        /** @var Carbon $nextValidDate */
-        $nextValidDate = $this->getNextValidDateRelativeTo($date);
-        if (!$nextValidDate) {
-            return false;
-        }
-        return ($nextValidDate->floatDiffInDays($date) / 7) == $this->getRecurringPattern()->getSeparationCount();
-    }
-
-    /**
      * @return string
      */
     protected function getDateModifier(): string

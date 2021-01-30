@@ -47,7 +47,7 @@ class WeeklyRecurringPattern extends Model implements RecurringDateInterface
     public function getNextValidDateRelativeTo(Carbon $date): ?Carbon
     {
         $endDateTime = $this->getRecurringPattern()->getEvent()->getEndDateTime();
-        if ($endDateTime && $date->greaterThan($endDateTime)) {
+        if ($endDateTime && $date->greaterThanOrEqualTo($endDateTime)) {
             return null;
         }
 
@@ -61,7 +61,7 @@ class WeeklyRecurringPattern extends Model implements RecurringDateInterface
         $separationCount = $this->getRecurringPattern()->getSeparationCount();
         if ($weeks < $separationCount) {
             $nextDate = $this->getNextRecurringDate($startDateTime);
-            if ($endDateTime && $nextDate->greaterThan($endDateTime)) {
+            if ($endDateTime && $nextDate->greaterThanOrEqualTo($endDateTime)) {
                 return null;
             }
             return $nextDate;
@@ -71,7 +71,7 @@ class WeeklyRecurringPattern extends Model implements RecurringDateInterface
         $startDateTime->modify('+' . $weeksToAdd . ' weeks');
 
         $nextDate = $this->getNextRecurringDate($startDateTime);
-        if ($endDateTime && $nextDate->greaterThan($endDateTime)) {
+        if ($endDateTime && $nextDate->greaterThanOrEqualTo($endDateTime)) {
             return null;
         }
         return $nextDate;

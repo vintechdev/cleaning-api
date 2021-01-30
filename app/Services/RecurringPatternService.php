@@ -113,8 +113,7 @@ class RecurringPatternService
             $date = $recurringPatternable->getNextValidDateRelativeTo($date);
             if (
                 !$date ||
-                !$toDate->greaterThan($date) ||
-                ($event->getEndDateTime() && $date->greaterThanOrEqualTo($event->getEndDateTime()))
+                !$toDate->greaterThan($date)
             ) {
                 break;
             }

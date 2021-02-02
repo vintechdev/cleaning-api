@@ -118,7 +118,7 @@ class PaymentDto
      * @param float $transferFeePercentage
      * @return $this
      */
-    public function setTransferFeePercentage(float $transferFeePercentage)
+    public function setTransferFeePercentage(float $transferFeePercentage = null)
     {
         $this->transferFeePercentage = $transferFeePercentage;
         return $this;

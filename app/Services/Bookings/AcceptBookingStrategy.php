@@ -52,7 +52,7 @@ class AcceptBookingStrategy extends AbstractBookingStatusChangeStrategy
             !$booking->setStatus(Bookingstatus::BOOKING_STATUS_ACCEPTED)->save() ||
             !$request->setStatus(Bookingrequestprovider::STATUS_ACCEPTED)->save()
         ) {
-            throw new BookingStatusChangeException('Acceppt booking failed while saving Booking request');
+            throw new BookingStatusChangeException('Accept booking failed while saving Booking request');
         }
         return $booking;
     }

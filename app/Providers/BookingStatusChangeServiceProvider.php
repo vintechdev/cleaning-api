@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Repository\BookingReqestProviderRepository;
+use App\Services\Bookings\ApproveBookingStrategy;
 use App\Services\Bookings\ArriveBookingStrategy;
 use App\Services\Bookings\BookingServicesManager;
 use App\Services\Bookings\BookingVerificationService;
@@ -36,6 +37,15 @@ class BookingStatusChangeServiceProvider extends ServiceProvider implements Defe
         });
 
         $this->app->singleton(ArriveBookingStrategy::class, function ($app) {
+            return new ArriveBookingStrategy(
+                $app->get(BookingReqestProviderRepository::class),
+                $app->get(BookingVerificationService::class),
+                $app->get(RecurringBookingService::class),
+                $app->get(StripePaymentProcessor::class)
+            );
+        });
+
+        $this->app->singleton(ApproveBookingStrategy::class, function ($app) {
             return new ArriveBookingStrategy(
                 $app->get(BookingReqestProviderRepository::class),
                 $app->get(BookingVerificationService::class),

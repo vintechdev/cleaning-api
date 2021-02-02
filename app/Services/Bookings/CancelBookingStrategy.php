@@ -63,16 +63,14 @@ class CancelBookingStrategy extends AbstractBookingStatusChangeStrategy
             throw new BookingStatusChangeException('Booking cancellation failed while saving');
         }
 
-        $providers = $this
+        $provider = $this
             ->bookingRequestProviderRepo
-            ->getAllWithStatuses([Bookingrequestprovider::STATUS_ACCEPTED], $booking->getId());
+            ->getAcceptedBookingRequestProvider($booking);
 
-        /** @var Bookingrequestprovider $provider */
-        foreach ($providers as $provider) {
-            if (!$provider->setStatus(Bookingrequestprovider::STATUS_CANCELLED)->save()) {
-                throw new BookingStatusChangeException('Booking cancellation failed while saving Booking requests');
-            }
+        if (!$provider->setStatus(Bookingrequestprovider::STATUS_CANCELLED)->save()) {
+            throw new BookingStatusChangeException('Booking cancellation failed while saving Booking requests');
         }
+
         return $booking;
     }
 

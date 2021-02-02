@@ -62,6 +62,7 @@ Route::group([
     Route::post('userexist', 'AuthController@UserExist')->name('userexist');
     Route::post('updatetoken', 'AuthController@UpdateToken')->name('updatetoken');
     Route::get('logout', 'AuthController@logout')->middleware(['auth:api']);
+    Route::get('email/verify/{id}', 'VerificationApiController@verify')->name('verificationapi.verify');
 });
 
 

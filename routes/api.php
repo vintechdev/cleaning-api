@@ -102,6 +102,8 @@ Route::middleware(['auth:api','scope:customer,provider'])->namespace('Backend\AP
     Route::post('chats/{bookingid}', 'ChatsController@addmessage')->name('addmessage');
     Route::post('getchat/{bookingid}', 'ChatsController@getchat')->name('getchat');
     Route::get('chats/list/{type}', 'ChatsController@list')->name('chatlist');
+    Route::post('profilepicture', 'CustomerusersController@profilepicture')->name('profilepicture');
+    
 
 });
 

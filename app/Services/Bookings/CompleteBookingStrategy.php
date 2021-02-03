@@ -4,6 +4,7 @@ namespace App\Services\Bookings;
 
 use App\Booking;
 use App\Bookingrequestprovider;
+use App\Bookingservice;
 use App\Bookingstatus;
 use App\Exceptions\Booking\BookingStatusChangeException;
 use App\Exceptions\Booking\InvalidBookingStatusActionException;
@@ -149,13 +150,39 @@ class CompleteBookingStrategy extends AbstractBookingStatusChangeStrategy
         return $this;
     }
 
+    /**
+     * @param Booking $booking
+     * @return bool
+     */
     private function hasBookingDetailsChanged(Booking $booking): bool
     {
         if (!$this->services) {
             throw new InvalidBookingStatusActionException('Can not change status for booking without providing any services details');
         }
 
-        return true;
+        if (count($this->services) !== $booking->getBookingServices()->count()) {
+            return true;
+        }
+
+        $actualServices = [];
+
+        /** @var Bookingservice $bookingService */
+        foreach ($booking->getBookingServices() as $bookingService) {
+            $actualServices[$bookingService->getService()->getId()] = $bookingService;
+        }
+
+        foreach ($this->services as $bookingService) {
+            if (!in_array($bookingService['service_id'], array_keys($actualServices))) {
+                return true;
+            }
+
+            $actualService = $actualServices[$bookingService['service_id']];
+            if ($actualService->getInitialNumberOfHours() !== $actualService['final_number_of_hours']) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

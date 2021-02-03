@@ -46,7 +46,7 @@ class BookingStatusChangeServiceProvider extends ServiceProvider implements Defe
         });
 
         $this->app->singleton(ApproveBookingStrategy::class, function ($app) {
-            return new ArriveBookingStrategy(
+            return new ApproveBookingStrategy(
                 $app->get(BookingReqestProviderRepository::class),
                 $app->get(BookingVerificationService::class),
                 $app->get(RecurringBookingService::class),
@@ -62,7 +62,8 @@ class BookingStatusChangeServiceProvider extends ServiceProvider implements Defe
     {
         return [
             CompleteBookingStrategy::class,
-            ArriveBookingStrategy::class
+            ArriveBookingStrategy::class,
+            ApproveBookingStrategy::class
         ];
     }
 }

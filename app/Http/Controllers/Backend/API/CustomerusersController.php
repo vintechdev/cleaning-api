@@ -10,13 +10,14 @@ use App\Http\Resources\Customeruser as CustomeruserResource;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
 // for change password
-use Auth;
+
 use Hash;
 use DB;
 use App\Userreview;
 use Session;
 use File;
 use Config;
+use Illuminate\Support\Facades\Auth;
 use App\Repository\Eloquent\ProfileRepository;
 class CustomerusersController extends Controller
 {
@@ -24,6 +25,47 @@ class CustomerusersController extends Controller
     public function __construct(ProfileRepository $profileRepository){
         $this->profileRepository = new ProfileRepository();
     }
+
+    public function profilepicture(Request $request){
+         $rules = array(
+           'file_content'=>'required|string'
+        ); 
+
+     
+        $params = $request->all();
+        $validator = Validator::make($params, $rules);
+        if ($validator->fails()){
+            $message = $validator->messages()->all();
+            return response()->json(['message' => $message], 401);
+        }else{
+
+            $image = $request->input('file_content'); 
+             $user_id = Auth::user()->id;
+            
+
+            $Customeruser = Customeruser::firstOrNew(['id' => $user_id]);
+            if($image!=''){
+                $type = $request->file_type;
+               
+                $image = str_replace('data:'.$type.';base64,', '', $image);
+              
+                $ext = str_replace('image/','',$type);
+                $image = str_replace(' ', '+', $image);
+                
+                $imageName = time().'.'. $ext ;
+                $destinationPath = \Config::get('const.PROFILE_PATH'); //public_path().'/images/upload/profile/';
+          //    echo $imageName;exit;
+                \File::put( $destinationPath . $imageName, base64_decode($image));
+                $Customeruser->profilepic = $imageName;
+                $Customeruser->save();
+                return response()->json(['message' => 'Profile Image has been updated successfully!!'], 200);
+            }else{
+                return response()->json(['message' => 'Profile picture is not found. Try again!!'], 401);
+            }
+            
+        }
+    }
+
 
     public function CheckProfileCompleted(Request $request)
     {
@@ -367,7 +409,7 @@ class CustomerusersController extends Controller
             $Customeruser->email = $request->get('email');
            // $request->get('profilepic');
 
-            if($image!=''){
+           /*  if($image!=''){
                 $type = $request->file_type;
                
                 $image = str_replace('data:'.$type.';base64,', '', $image);
@@ -380,7 +422,7 @@ class CustomerusersController extends Controller
               
                 \File::put( $destinationPath . $imageName, base64_decode($image));
                 $Customeruser->profilepic =$imageName;
-            }
+            } */
             
 
            

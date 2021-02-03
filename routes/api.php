@@ -62,6 +62,7 @@ Route::group([
     Route::post('userexist', 'AuthController@UserExist')->name('userexist');
     Route::post('updatetoken', 'AuthController@UpdateToken')->name('updatetoken');
     Route::get('logout', 'AuthController@logout')->middleware(['auth:api']);
+    Route::get('email/verify/{id}', 'VerificationApiController@verify')->name('verificationapi.verify');
 });
 
 
@@ -101,6 +102,8 @@ Route::middleware(['auth:api','scope:customer,provider'])->namespace('Backend\AP
     Route::post('chats/{bookingid}', 'ChatsController@addmessage')->name('addmessage');
     Route::post('getchat/{bookingid}', 'ChatsController@getchat')->name('getchat');
     Route::get('chats/list/{type}', 'ChatsController@list')->name('chatlist');
+    Route::post('profilepicture', 'CustomerusersController@profilepicture')->name('profilepicture');
+    
 
 });
 

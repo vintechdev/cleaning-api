@@ -274,31 +274,20 @@ public function loginlog($data)
 }
     public function login(Request $request)
     {
-        
-        
         $credentials = request(['email', 'password']);
-
-      //  dd($credentials);
-        //lockout event
+         //lockout event
          if($this->hasTooManyLoginAttempts($request)){
            
             $this->fireLockoutEvent($request);
             return $this->sendLockoutResponse($request);
         }
 
-        /* if(!Auth::attempt($credentials)){
-            $this->incrementLoginAttempts($request);
-            return response()->json([
-                'message' => 'Unauthorized'
-            ], 401);
-        } */
-
         $user = Auth::user();
         // print_r($user);exit;
 
         if(!$request->email || !$request->password){
             // return an error response
-            return response()->json(['message'=>'Username or Password field empty'], 401);
+            return response()->json(['message'=>'Username or Password field empty.'], 401);
         } else{
             $login_email = $request->email;
             $login_password = $request->password;
@@ -308,7 +297,7 @@ public function loginlog($data)
             if (! $user) {
                 $this->incrementLoginAttempts($request);
                 // return an error response
-                return response()->json(['message'=>'Email not found'], 401);
+                return response()->json(['message'=>'Email not found.'], 401);
             }
 
             if(!$user->hasRole($request->scope)){
@@ -358,8 +347,6 @@ public function loginlog($data)
                 $this->loginlog($log);
                 $this->clearLoginAttempts($request);
 
-                // dd($Customermetadata);
-
                 $json['userdata'] =
                     [
                         'id' => $user->id,
@@ -383,54 +370,6 @@ public function loginlog($data)
             }
         }
 
-        
-
-        // $request->validate([
-        //     'email' => 'required|string|email|exists:users,email',
-        //     'password' => 'required|string',
-        //     'remember_me' => 'boolean'
-        // ]);
-        // $credentials = request(['email', 'password']);
-
-        // if(!Auth::attempt($credentials))
-        //     return response()->json([
-        //         'message' => 'Unauthorized'
-        //     ], 401);
-
-        //     $user = Auth::user();
-            
-        //     // Add role as scope
-        //     $userRole = $user->role()->first();
-        //     // print_r($userRole);exit;
-        // // $userRole = $user->roles ? $user->roles->first()->name : 'admin';
-
-        // // if ($userRole) {
-        // //     $this->scope = $userRole->role;
-        // // }
-
-        // $userdata = $request->user();
-        // unset($userdata["id"]);
-
-        // // Token based on user role (scope)
-        // $tokenResult = $user->createToken('Personal Access Token', [
-        //     $userRole->role
-        // ]);
-        // // $tokenResult = $user->createToken('Personal Access Token');
-        // $token = $tokenResult->token;
-
-        // if ($request->remember_me)
-        //     $token->expires_at = Carbon::now()->addWeeks(1);
-
-        // $token->save();
-        
-        // return response()->json([
-        //     'access_token' => $tokenResult,
-        //     'token_type' => 'Bearer',
-        //     'expires_at' => Carbon::parse(
-        //         $tokenResult->token->expires_at
-        //     )->toDateTimeString(),
-        //     'user_data' => $userdata
-        // ]);
     }
   
     /**

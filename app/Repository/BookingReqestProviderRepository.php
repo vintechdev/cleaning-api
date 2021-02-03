@@ -1,6 +1,7 @@
 <?php 
 namespace App\Repository;
 
+use App\Booking;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -86,5 +87,21 @@ class BookingReqestProviderRepository{
     public function getCountWithStatuses(array $statuses, int $bookingId): int
     {
         return $this->getAllWithStatuses($statuses, $bookingId)->count();
+    }
+
+    /**
+     * @param Booking $booking
+     * @return Bookingrequestprovider|null
+     */
+    public function getAcceptedBookingRequestProvider(Booking $booking): ?Bookingrequestprovider
+    {
+        $requestProviders = $this
+            ->getAllWithStatuses([Bookingrequestprovider::STATUS_ACCEPTED], $booking->getId());
+
+        if (!$requestProviders->count()) {
+            return null;
+        }
+
+        return $requestProviders->first();
     }
 }

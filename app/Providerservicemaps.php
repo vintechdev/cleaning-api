@@ -38,10 +38,7 @@ class Providerservicemaps extends Model
     {
         return $this
             ->getService()
-            ->getTotalCost(
-                $hours, $this->amount,
-                $this->type === 'billingrateonetime' ? Service::SERVICE_TYPE_ONCE_OFF : Service::SERVICE_TYPE_HOURLY
-            );
+            ->getTotalCost($hours, $this->amount);
     }
 
     public function GetTotal(){

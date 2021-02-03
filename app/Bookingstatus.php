@@ -8,6 +8,10 @@ use Laravel\Passport\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * Class Bookingstatus
+ * @package App
+ */
 class Bookingstatus extends Model
 {
     use HasApiTokens, Notifiable;
@@ -21,6 +25,8 @@ class Bookingstatus extends Model
     const BOOKING_STATUS_COMPLETED = 4;
     const BOOKING_STATUS_CANCELLED = 5;
     const BOOKING_STATUS_REJECTED = 6;
+    const BOOKING_STATUS_PENDING_APPROVAL = 7;
+    const BOOKING_STATUS_APPROVED = 8;
 
     protected $fillable = ['id'];
 
@@ -39,6 +45,8 @@ class Bookingstatus extends Model
             self::BOOKING_STATUS_COMPLETED,
             self::BOOKING_STATUS_CANCELLED,
             self::BOOKING_STATUS_REJECTED,
+            self::BOOKING_STATUS_PENDING_APPROVAL,
+            self::BOOKING_STATUS_APPROVED,
         ]);
     }
 

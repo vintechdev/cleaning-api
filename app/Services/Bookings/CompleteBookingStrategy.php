@@ -10,14 +10,10 @@ use App\Exceptions\Booking\BookingStatusChangeException;
 use App\Exceptions\Booking\InvalidBookingStatusActionException;
 use App\Exceptions\Booking\RecurringBookingStatusChangeException;
 use App\Exceptions\Booking\UnauthorizedAccessException;
-use App\PaymentDto;
-use App\Providermetadatum;
 use App\Repository\BookingReqestProviderRepository;
 use App\Services\Bookings\Exceptions\BookingserviceBuilderException;
 use App\Services\Bookings\Exceptions\BookingServicesManagerException;
-use App\Services\Payments\Exceptions\CreditCardNotSetUpException;
-use App\Services\Payments\Exceptions\PaymentAccountNotSetUpException;
-use App\Services\Payments\Exceptions\PaymentFailedException;
+use App\Services\Bookings\Traits\BookingPaymentHandlerTrait;
 use App\Services\Payments\Interfaces\PaymentProcessorInterface;
 use App\Services\RecurringBookingService;
 use App\User;
@@ -29,8 +25,7 @@ use Carbon\Carbon;
  */
 class CompleteBookingStrategy extends AbstractBookingStatusChangeStrategy
 {
-    //TODO make this configurable
-    const SERVICE_FEE_PERCENT = '1';
+    use BookingPaymentHandlerTrait;
 
     /**
      * @var array
@@ -101,55 +96,20 @@ class CompleteBookingStrategy extends AbstractBookingStatusChangeStrategy
                 $provider
             );
 
+        if ($this->hasBookingDetailsChanged($booking)) {
+            if (!$booking->setStatus(Bookingstatus::BOOKING_STATUS_PENDING_APPROVAL)->save()) {
+                throw new BookingStatusChangeException('Unable to save booking status');
+            }
+
+            return $booking;
+        }
+
         if (!$booking->setStatus(Bookingstatus::BOOKING_STATUS_COMPLETED)->save()) {
             throw new BookingStatusChangeException('Unable to save booking status');
         }
 
-        try {
-            $paymentSuccess = $this->handlePayment($booking, $provider);
-        } catch (PaymentAccountNotSetUpException $exception) {
-            throw new PaymentFailedException('Payment failed as account details are not set up');
-        } catch (CreditCardNotSetUpException $exception) {
-            throw new PaymentFailedException('Customer\'s credit card is not set up or is expired');
-        }
-
-        if (!$paymentSuccess) {
-            throw new PaymentFailedException('Payment failed for some reason. Please contact administrator.');
-        }
-
+        $this->handlePayment($booking, $provider);
         return $booking;
-    }
-
-    /**
-     * @param Booking $booking
-     * @param User $provider
-     * @return bool
-     * @throws CreditCardNotSetUpException
-     * @throws PaymentAccountNotSetUpException
-     * @throws \App\Services\Payments\Exceptions\InvalidPaymentDataException
-     * @throws \App\Services\Payments\Exceptions\InvalidUserException
-     */
-    private function handlePayment(Booking $booking, User $provider): bool
-    {
-        $paymentDto = new PaymentDto();
-        $providerMetadata = Providermetadatum::findByProviderId($provider->getId());
-        $serviceFeePercentage = !is_null($providerMetadata) ?
-            $providerMetadata->getServiceFeePercentage() :
-            self::SERVICE_FEE_PERCENT;
-
-        $paymentDto
-            ->setAmount($booking->getFinalCost())
-            ->setMetadata(['booking_id' => $booking->getId()])
-            ->setPayer(User::find($booking->getUserId()))
-            ->setPayee($provider)
-            ->setTransferFeePercentage($serviceFeePercentage)
-            // TODO: Update payment description
-            ->setPaymentDescription('Booking id:' . $booking->getId());
-
-        return $this
-            ->paymentProcessor
-            ->setPaymentData($paymentDto)
-            ->process();
     }
 
     /**
@@ -194,6 +154,41 @@ class CompleteBookingStrategy extends AbstractBookingStatusChangeStrategy
      * @param Booking $booking
      * @return bool
      */
+    private function hasBookingDetailsChanged(Booking $booking): bool
+    {
+        if (!$this->services) {
+            throw new InvalidBookingStatusActionException('Can not change status for booking without providing any services details');
+        }
+
+        if (count($this->services) !== $booking->getBookingServices()->count()) {
+            return true;
+        }
+
+        $actualServices = [];
+
+        /** @var Bookingservice $bookingService */
+        foreach ($booking->getBookingServices() as $bookingService) {
+            $actualServices[$bookingService->getService()->getId()] = $bookingService;
+        }
+
+        foreach ($this->services as $bookingService) {
+            if (!in_array($bookingService['service_id'], array_keys($actualServices))) {
+                return true;
+            }
+
+            $actualService = $actualServices[$bookingService['service_id']];
+            if ($actualService->getInitialNumberOfHours() !== $actualService['final_number_of_hours']) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param Booking $booking
+     * @return bool
+     */
     private function updateBookingServices(Booking $booking, User $user): bool
     {
         if (!$this->services) {
@@ -213,5 +208,13 @@ class CompleteBookingStrategy extends AbstractBookingStatusChangeStrategy
         }
 
         return true;
+    }
+
+    /**
+     * @return PaymentProcessorInterface
+     */
+    protected function getPaymentProcessor(): PaymentProcessorInterface
+    {
+        return $this->paymentProcessor;
     }
 }

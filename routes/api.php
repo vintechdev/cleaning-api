@@ -31,13 +31,14 @@ Route::namespace('Backend\API')->prefix('v1/public')->group(function () {
     Route::get('plans', 'PlansController@get_all_plan')->name('api.plan.get_all_plan');
     Route::post('providerdetails', 'BookingController@providerdetails')->name('providerdetails');
     Route::get('search_postcode', 'PostcodesController@search_postcode')->name('search_postcode');
+    Route::get('getallcategorieswithservice', 'ServicecategoryController@getCategorywithservices')->name('getallcategorieswithservice');
 });
 
 Route::namespace('Backend\API')->prefix('v1/customer')->group(function(){
     Route::get('getallprovider', 'CustomerusersController@getallprovider')->name('api.Customeruser.getallprovider');//->middleware(['scope:customer']);
-	  Route::get('getallservices', 'ServiceController@index')->name('api.Service.index');//->middleware(['scope:customer']);
+	Route::get('getallservices', 'ServiceController@index')->name('api.Service.index');//->middleware(['scope:customer']);
     Route::get('getaddress', 'UseraddressController@getaddress')->name('api.Useraddress.getaddress')->middleware('auth:api');
-	  Route::get('getservicequestions/{uuid}', 'ServicequestionController@getservicequestions')->name('api.Servicequestion.getservicequestions');
+	Route::get('getservicequestions/{uuid}', 'ServicequestionController@getservicequestions')->name('api.Servicequestion.getservicequestions');
     Route::any('geserviceprice', 'ServiceController@geserviceprice')->name('geserviceprice');
 });
 
@@ -263,22 +264,18 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
 
      Route::patch('editskills/{uuid}', 'SkillsController@editskills')->name('api.Skills.editskills')->middleware(['scope:provider']);
 
-      Route::delete('deleteskills/{uuid}', 'SkillsController@deleteskills')->name('api.skills.deleteskills')->middleware(['scope:provider']);
+     Route::delete('deleteskills/{uuid}', 'SkillsController@deleteskills')->name('api.skills.deleteskills')->middleware(['scope:provider']);
 
-      Route::post('addportfolios', 'ProviderportfoliosController@addportfolios')->name('api.Providerportfolios.addportfolios')->middleware(['scope:provider']);
+     Route::post('addportfolios', 'ProviderportfoliosController@addportfolios')->name('api.Providerportfolios.addportfolios')->middleware(['scope:provider']);
 
      Route::get('getportfolios', 'ProviderportfoliosController@getportfolios')->name('api.Providerportfolios.getportfolios')->middleware(['scope:provider']);
 
+     Route::delete('deleteportfolios/{uuid}', 'ProviderportfoliosController@deleteportfolios')->name('api.Providerportfolios.deleteportfolios')->middleware(['scope:provider']);
 
+     Route::post('addservices', 'ServiceController@addservices')->name('api.Service.addservices')->middleware(['scope:provider']);
+     Route::post('saveservices', 'ServiceController@saveservices')->name('api.Service.saveservices')->middleware(['scope:provider']);
 
-      Route::delete('deleteportfolios/{uuid}', 'ProviderportfoliosController@deleteportfolios')->name('api.Providerportfolios.deleteportfolios')->middleware(['scope:provider']);
-
-
-      Route::post('addservices', 'ServiceController@addservices')->name('api.Service.addservices')->middleware(['scope:provider']);
-      Route::post('saveservices', 'ServiceController@saveservices')->name('api.Service.saveservices')->middleware(['scope:provider']);
-
-      Route::get('getallservices', 'ServiceController@index')->name('api.Service.index')->middleware(['scope:provider']);
-
+     Route::get('getallservices', 'ServiceController@index')->name('api.Service.index')->middleware(['scope:provider']);
 
      Route::post('addservicesarea', 'ServiceareaController@addservicesarea')->name('api.Servicearea.addservicesarea')->middleware(['scope:provider']);
 
@@ -559,11 +556,12 @@ Route::middleware(['auth:api','scope:admin'])->namespace('Backend\API')->prefix(
 
 });
 
+
 //provider api
-Route::namespace('Backend\API')->prefix('v1/provider')->middleware(['scope:provider'])->group(function () {
-
+Route::namespace('Backend\API')->prefix('v1/provider')->middleware(['auth:api,scope:provider'])->group(function () {
    
-
+    Route::post('saveproviderservicemap', 'ServiceController@save_provider_servicemap')->name('saveproviderservicemap');
+    
      // Providermetadata Route
 
     Route::get('providermetadata', 'ProvidermetadataController@get_all_providermetadata')->name('api.providermetadatum.get_all_providermetadata');

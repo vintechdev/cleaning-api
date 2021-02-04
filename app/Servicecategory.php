@@ -19,6 +19,10 @@ class Servicecategory extends Model
     public function __construct(){
         parent::__construct();
     }
+    public function services()
+    {
+        return $this->hasMany(Service::class, 'category_id', 'id');
+    }
     
   /*   public function getAllCategory(){
         return  $result = Servicecategory::where('active',1)->get()->toArray();

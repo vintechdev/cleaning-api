@@ -11,6 +11,7 @@ use App\Http\Requests\Backend\ServicecategoryRequest;
 use App\Http\Resources\ServicecategoryCollection;
 use App\Http\Resources\Servicecategory as ServicecategoryResource;
 use App\Http\Controllers\Controller;
+use App\Repository\ProviderServiceMapRespository;
 
 class ServicecategoryController extends Controller
 {
@@ -19,13 +20,20 @@ class ServicecategoryController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-
-     public function __construct(){
+    public $providerSeviceMap ;
+     public function __construct(ProviderServiceMapRespository $providerSeviceMap){
         $this->ServiceCategory = new \App\Servicecategory();
+        $this->providerSeviceMap = $providerSeviceMap;
      }
 
     public function GetAllCategories(Request $request){
+    
        return $this->get_all_servicecategory($request);
+    }
+
+    public function getCategorywithservices(Request $request){
+      $arr =  $this->providerSeviceMap->getServiceCategory($request);
+      return $arr;
     }
 
     public function provider_sort(Request $request){      
@@ -197,163 +205,6 @@ class ServicecategoryController extends Controller
         return response()->json(['data' => $users,'paging' => $paging], 200);       
     }
 
-//     public function provider_search(Request $request)
-//     {
-//         $paging['perpage'] = 0;
-//         $paging['callpage'] = 0;
-//         $paging['next'] = 0;
-//         $paging['previous'] = 0;
-//         $paging['pages'] = 0;
-//         $paging['result'] = 0;
-
-//         $catagories_id=$request->get('catagories_id');
-//         $postcode=$request->get('postcode');
-//         $working_day=$request->working_day;
-//         $booking_date=$request->booking_date;
-//         $start_time=$request->start_time;
-//         $work_hours=$request->work_hours;
-//         //time conversion
-//         $plus_minute='00:00:01';//for time between condition true 
-//         //start time plus
-//         $start_time_result=date("H:i:s", strtotime($start_time));
-//         $secs = strtotime($plus_minute)-strtotime("00:00:00");
-//         $start_time_result_plus = date("H:i:s",strtotime($start_time_result)+$secs);
-//         $work_hours_result=floor($work_hours) . ' hours ' . (($work_hours * 60) % 60).' minutes';
-//         $end_time_result = date("H:i:s",strtotime($start_time_result.$work_hours_result));
-//         //end_time_minus
-//         $secs = strtotime($plus_minute)-strtotime("00:01:01");
-//         $end_time_result_minus = date("H:i:s",strtotime($end_time_result)+$secs);
-//         $validator = Validator::make($request->all(),[ 
-//             'catagories_id' => 'required',
-//             'postcode' => 'required|numeric',
-
-//         ]);
-        
-//         if($validator->fails()){
-//             $respond = 0;
-//             $message = implode(",", $validator->messages()->all());
-//             return response()->json(['respond' => $respond, 'paging' => $paging, 'message' => $message, 'result' => ''], 401);
-//         }
-
-
-//             //pagination
-//               if (empty($request->page)) {
-//                    $request->page=1;
-//                 }
-//                 else{
-//                     $request->page;
-//                 }
-//                 $result_perpage            = 10;
-//                 $current_page              = $request->page;
-//                 $current_page_first_result = ($current_page - 1) * $result_perpage;
-
-
-
-// // $users = DB::select("SELECT provider_id FROM bookings WHERE booking_time NOT BETWEEN '16:00:01' AND '17:00:00'
-// // AND booking_end_time NOT BETWEEN '16:00:01' AND '17:00:00' 
-// // AND booking_date='2020-05-26'
-// // AND booking_status_id!=4");
-
-// // $test=array();
-// // foreach($users as $row)
-// // {
-// //     $sql=DB::select("SELECT provider_id FROM bookings WHERE
-// //                         booking_end_time>'17:00:00'
-// //                         AND booking_date='2020-05-26'
-// //                         AND provider_id=$row->provider_id");
-                        
-
-// //                         if(!empty($sql))
-// //                         {
-                          
-// //                           foreach ($sql as $row1){
-
-// //                               $sql = DB::select("SELECT * FROM users WHERE id!=$row1->provider_id");
-// //                                 $test[]=$sql;    
-// //                             }
-// //                             // $provider_id=$sql[0]->provider_id;
-// //                         }                       
-
-// // }
-// // print_r($test);
-// // exit;
-
-
-//                         $users = DB::select("SELECT
-//                               users.first_name,
-//                               users.last_name,
-//                               provider_service_maps.amount,
-//                               TRUNCATE(SUM(user_reviews.rating)*5/(COUNT(user_reviews.user_review_by)*5), 1) AS rating,
-//                               comp.comp_total AS cleanings,
-//                               users.profilepic,
-//                               postcodes.postcode,
-//                               postcodes.suburb,
-//                               service_categories.name,
-//                               provider_working_hours.start_time,
-//                               provider_working_hours.end_time
-//                             FROM users 
-//                               INNER JOIN role_user
-//                                 ON role_user.user_id = users.id
-//                               INNER JOIN roles
-//                                 ON role_user.role_id = roles.id 
-//                               INNER JOIN provider_working_hours
-//                                 ON provider_working_hours.provider_id = users.id
-//                               INNER JOIN provider_postcode_maps
-//                                 ON provider_postcode_maps.provider_id = users.id
-//                               INNER JOIN postcodes
-//                                 ON postcodes.id = provider_postcode_maps.postcode_id
-//                               INNER JOIN provider_service_maps
-//                                 ON provider_service_maps.provider_id = users.id
-//                               INNER JOIN user_reviews
-//                                 ON user_reviews.user_review_for = users.id  
-//                               INNER JOIN services
-//                                 ON provider_service_maps.service_id = services.id
-//                               INNER JOIN service_categories
-//                                 ON services.category_id = service_categories.id
-//                               INNER JOIN bookings
-//                                 ON bookings.user_id = users.id
-//                               INNER JOIN booking_services
-//                                 ON booking_services.booking_id = bookings.id  
-//                               INNER JOIN booking_status
-//                                 ON bookings.booking_status_id = booking_status.id
-//                               INNER JOIN completed_bookings as comp
-//                                 ON comp.provider_id = users.id    
-//                               INNER JOIN provider_metadata
-//                                 ON provider_metadata.provider_id = users.id    
-//                                 WHERE  roles.id=2
-//                                   AND provider_metadata.verify=1  
-//                                   AND postcodes.postcode LIKE '$postcode'
-//                             AND service_categories.id = '$catagories_id'
-//                             AND FIND_IN_SET('$working_day',provider_working_hours.working_days)
-//                             AND provider_working_hours.start_time<='$start_time_result' AND provider_working_hours.end_time>='$end_time_result'
-//                             AND bookings.booking_time NOT BETWEEN '$start_time_result_plus' AND '$end_time_result'
-//                             AND bookings.booking_end_time NOT BETWEEN '$start_time_result_plus' AND '$end_time_result' 
-//                             AND bookings.booking_date='$booking_date' 
-//                             AND booking_status_id!=4
-//                             GROUP BY users.first_name,
-//                                   users.last_name,
-//                                   provider_service_maps.amount,
-//                                   user_reviews.user_review_for,
-//                                   users.profilepic,
-//                                   postcodes.postcode,
-//                                   postcodes.suburb,
-//                                   service_categories.name,
-//                                   provider_working_hours.start_time,
-//                                   provider_working_hours.end_time,
-//                                   comp.comp_total  
-//                             LIMIT $current_page_first_result, $result_perpage
-//                             ");
-//         //Paginastion
-//               $total_result = count($users);
-//               $number_of_pages = ceil($total_result / $result_perpage);
-//               $paging['perpage']  = $result_perpage;
-//               $paging['callpage'] = $current_page;
-//               $paging['result']   = $total_result;
-//               $paging['next']     = $current_page < $number_of_pages ? $current_page + 1 : null;
-//               $paging['previous'] = $current_page == 1 ? null : $current_page - 1;
-//               $paging['pages']    = $number_of_pages;
-//         return response()->json(['data' => $users,'paging' => $paging], 200);
-//     }
 
     public function provider_search(Request $request)
     {
@@ -414,35 +265,6 @@ class ServicecategoryController extends Controller
                 $current_page_first_result = ($current_page - 1) * $result_perpage;
 
 
-
-// $users = DB::select("SELECT provider_id FROM bookings WHERE booking_time NOT BETWEEN '16:00:01' AND '17:00:00'
-// AND booking_end_time NOT BETWEEN '16:00:01' AND '17:00:00' 
-// AND booking_date='2020-05-26'
-// AND booking_status_id!=4");
-
-// $test=array();
-// foreach($users as $row)
-// {
-//     $sql=DB::select("SELECT provider_id FROM bookings WHERE
-//                         booking_end_time>'17:00:00'
-//                         AND booking_date='2020-05-26'
-//                         AND provider_id=$row->provider_id");
-                        
-
-//                         if(!empty($sql))
-//                         {
-                          
-//                           foreach ($sql as $row1){
-
-//                               $sql = DB::select("SELECT * FROM users WHERE id!=$row1->provider_id");
-//                                 $test[]=$sql;    
-//                             }
-//                             // $provider_id=$sql[0]->provider_id;
-//                         }                       
-
-// }
-// print_r($test);
-// exit;
 
 
                         $users = DB::select("SELECT

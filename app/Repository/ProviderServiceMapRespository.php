@@ -5,8 +5,20 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Service;
 use App\Promocodes;
+use Illuminate\Http\Request;
+use App\Servicecategory;
 class ProviderServiceMapRespository{
 
+   public function getServiceCategory(Request $request)
+   {
+      # code...
+      $user = auth()->user();
+      
+      $servicecategories = Servicecategory::with(['services'=>function($q){
+         $q->where('active',1);
+      }])->where('active','1');
+      return $servicecategories->get()->toArray();
+   }
         public function GetServicePriceofProvider($serviceid,$providerid, $returnArray = true){
            
            
@@ -30,6 +42,8 @@ class ProviderServiceMapRespository{
         {
          return Providerservicemaps::with('service')->where('provider_service_maps.provider_id',$pid)->where('provider_service_maps.status',1)->get()->toarray();
         }
+
+       
        
 }
 

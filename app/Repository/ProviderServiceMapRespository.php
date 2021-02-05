@@ -9,6 +9,30 @@ use Illuminate\Http\Request;
 use App\Servicecategory;
 class ProviderServiceMapRespository{
 
+   public function save_provider_servicemap(Request $request)
+   {
+      # code...
+      
+      if($request->has('data')){
+         $data = $request->data;
+         $pid = Auth::user()->id;
+         $service_ids = array_column($data,'service_id');
+        
+         // $service_ids = array_values($service_ids);
+         //  dd($service_ids);
+         foreach($data as $k=>$v){
+            $Providerservicemaps = Providerservicemaps::updateOrInsert(
+               ['provider_id' =>$pid, 'service_id'=>$v['service_id']],
+               ['amount' => $v['amount'],'status'=>1]
+            );
+         }
+         Providerservicemaps::whereNotIn('service_id',  $service_ids)->where('provider_id',$pid)->forceDelete();
+         return true;
+      }
+      return false;
+
+
+   }
    public function getServiceCategory(Request $request)
    {
       # code...

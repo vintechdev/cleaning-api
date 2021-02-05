@@ -8,6 +8,7 @@ use App\Http\Requests\Backend\CustomeruserRequest;
 use App\Http\Resources\CustomeruserCollection;
 use App\Http\Resources\Customeruser as CustomeruserResource;
 use App\Http\Controllers\Controller;
+use App\Repository\UserBadgeReviewRepository;
 use Illuminate\Support\Facades\Validator;
 // for change password
 
@@ -19,13 +20,23 @@ use File;
 use Config;
 use Illuminate\Support\Facades\Auth;
 use App\Repository\Eloquent\ProfileRepository;
+
 class CustomerusersController extends Controller
 {
     protected $profileRepository;
-    public function __construct(ProfileRepository $profileRepository){
+    protected $userbage;
+
+    public function __construct(ProfileRepository $profileRepository,UserBadgeReviewRepository $userbage){
         $this->profileRepository = new ProfileRepository();
+        $this->userbage = $userbage;
     }
 
+    public function getBadges()
+    {
+        # code...
+        $arr = $this->userbage->getBadgeDetails(Auth::user()->id);
+        return response()->json(['data'=>$arr],200);
+    }
     public function profilepicture(Request $request){
          $rules = array(
            'file_content'=>'required|string'

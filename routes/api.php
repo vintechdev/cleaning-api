@@ -104,6 +104,7 @@ Route::middleware(['auth:api','scope:customer,provider'])->namespace('Backend\AP
     Route::post('getchat/{bookingid}', 'ChatsController@getchat')->name('getchat');
     Route::get('chats/list/{type}', 'ChatsController@list')->name('chatlist');
     Route::post('profilepicture', 'CustomerusersController@profilepicture')->name('profilepicture');
+    Route::get('profile_view', 'CustomerusersController@profile_view')->name('api.Customeruser.profile_view');
     
 
 });
@@ -128,9 +129,9 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
     Route::post('add_multipal_service', 'BookingserviceController@add_multipal_service')->name('add_multipal_service')->middleware(['scope:customer']);
     Route::get('getcleanardata/{uuid}', 'UserreviewController@getcleanardata')->name('api.Userreview.getcleanardata')->middleware(['scope:customer']);
 
-
-    Route::get('getallusers', 'CustomerusersController@index')->name('api.Customeruser.index')->middleware(['scope:customer']);
     Route::get('profile_view', 'CustomerusersController@profile_view')->name('api.Customeruser.profile_view')->middleware(['scope:customer']);
+    Route::get('getallusers', 'CustomerusersController@index')->name('api.Customeruser.index')->middleware(['scope:customer']);
+   
     Route::patch('change_password', 'CustomerusersController@change_password')->name('api.Customeruser.change_password')->middleware(['scope:customer']);
     Route::patch('profile_update', 'CustomerusersController@profile_update')->name('api.Customeruser.profile_update')->middleware(['scope:customer']);
 
@@ -199,7 +200,7 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
     Route::patch('change_booking_status/{uuid}', 'BookingController@change_booking_status')->name('api.Booking.change_booking_status')->middleware(['scope:customer']);
   });
 
- Route::middleware(['auth:api', 'role:provider'])->namespace('Backend\API')->prefix('v1/provider')->group(function () {
+ Route::middleware(['auth:api', 'role:provider'])->namespace('Backend\API')->prefix('v1/provider')->group(function(){
     // provider Route
     Route::post('addworking_hours', 'Working_hoursController@addworking_hours')->name('api.Working_hours.addworking_hours')->middleware(['scope:provider']);
     Route::get('getworking_hours', 'Working_hoursController@getworking_hours')->name('api.Working_hours.getworking_hours')->middleware(['scope:provider']);
@@ -211,7 +212,7 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
      Route::get('checkprofilecompleted', 'CustomerusersController@CheckProfileCompleted')->name('checkprofilecompleted');
      Route::get('checkproviderstripeverified', 'CustomerusersController@checkproviderstripeverified')->name('checkproviderstripeverified');
 
-    
+     Route::get('getbadges', 'CustomerusersController@getBadges')->name('getbadges')->middleware(['scope:provider']);
 
     
     Route::get('getservicebyprovider/{pid}', 'BookingController@GetServiceByProvider')->middleware(['scope:provider']);

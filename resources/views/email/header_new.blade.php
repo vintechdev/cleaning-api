@@ -49,16 +49,16 @@
         <td align="center" valign="top" id="emailContainerCell">
 
             <!-- Start Email Header Area -->
-            <table border="0" cellpadding="0" cellspacing="0" id="emailHeader" style="table-layout: fixed;max-width:100% !important;width: 100% !important;min-width: 100% !important;background: #fff;padding: 15px; background-color:#edf2f7;">
+            <table border="0" cellpadding="0" cellspacing="0" id="emailHeader" style="table-layout: fixed;max-width:100% !important;width: 100% !important;min-width: 100% !important;background: #fff;padding: 15px; background-color:#3f9672;">
                 <tr>
                     <td align="center" valign="middle">
                         <table border="0" cellpadding="0" cellspacing="0" mc:repeatable="header_logo" mc:variant="header_logo">
                             <tr>
                                 <td valign="middle">
                                     <div mc:edit="header_logo">
-                                        <a href="#">
-                                          <span style="font-size:18px;color:black"> {{env('APP_NAME')}}</span>
-                                        </a>
+                                       
+                                          <span style="font-size:24px;color:white"> {{env('APP_NAME')}}</span>
+                                       
                                     </div>
                                 </td>
                             </tr>
@@ -68,17 +68,4 @@
                 </tr>
             </table>
 
-            <!-- Start Email Header Area -->
-            <table border="0" cellpadding="0" cellspacing="0" id="emailHeader" style="table-layout: fixed;max-width:100% !important;width: 100% !important;min-width: 100% !important;background-color: #95e8c6;padding: 15px;">
-                <tr>
-                    <td align="center" valign="top">
-                        <table border="0" cellpadding="0" cellspacing="0" mc:repeatable="banner" mc:variant="banner" style="text-align: center;">
-                            <tr>
-                                <td valign="top">
-                                    <p style="margin-top: 5px;color: #fff;font-size: 20px;">{{__('Service is Booked!!')}}</p>
-                                </td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
-            </table>
+            

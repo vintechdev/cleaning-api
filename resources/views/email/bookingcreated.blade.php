@@ -5,12 +5,25 @@
   .grey{background-color:#00000008;}
 </style>
   
-
+<!-- Start Email Header Area
+<table border="0" cellpadding="0" cellspacing="0" id="emailHeader" style="table-layout: fixed;max-width:100% !important;width: 100% !important;min-width: 100% !important;background-color: #3f9672;padding: 15px;">
+                <tr>
+                    <td align="center" valign="top">
+                        <table border="0" cellpadding="0" cellspacing="0" mc:repeatable="banner" mc:variant="banner" style="text-align: center;">
+                            <tr>
+                                <td valign="top">
+                                    <p style="margin-top: 5px;color: #fff;font-size: 20px;">{{__('Service is Booked!!')}}</p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table> -->
 <h3 style="text-align: left;">{{__('Hello')}}, {{ ucwords($data['name']) }}</h3>
 <p style="font-size: 15px;text-align: left;">
-  {{__('Your Service has been booked successfully. 
+  Your Service has been booked successfully. 
     @if($data['booking']['booking_provider_type']=='freelancer')
-    You will be notified once provider will accept your service request.')}}
+    You will be notified once provider will accept your service request.
     @else
     Agency will contact you soon!!
     @endif
@@ -20,10 +33,14 @@
 <tbody>
     <tr>
       <td class="grey" style="width: 72.7273%;"><span>Frequency</span></td>
-      <td  class="grey" style="width: 27.135%;"><span>{{$data['plan']}}</span></td>
+      <td  class="grey" style="width: 27.135%;"><span>{{ucwords($data['plan'])}}</span></td>
    </tr>
-<tr style="background-color: #95e8c6;font-weight:bold">
-<td style="width: 72.7273%;" colspan="2">&nbsp;Service Details</td>
+   <tr>
+      <td class="grey" style="width: 72.7273%;"><span>Date</span></td>
+      <td  class="grey" style="width: 27.135%;"><span>{{date('d/M/Y',strtotime($data['booking']['booking_date']))}} {{date('H:i',strtotime($data['booking']['booking_time']))}}</span></td>
+   </tr>
+<tr style="background-color: #3f9672;font-weight:bold">
+<td style="width: 72.7273%;color:white" colspan="2">&nbsp;Service Details</td>
 
 </tr >
       <?php 
@@ -31,7 +48,7 @@
       if(count($data['services'])>0){
           foreach($data['services'] as $key=>$val){ ?>
      
-        <tr><td style="width: 72.7273%;" ><span>{{$val['service_name']}}</span></td>
+        <tr><td style="width: 72.7273%;" ><span>{{ucwords($val['service_name'])}}</span></td>
         
         <td  style="width: 27.135%;"><span>{{Config::get('const.currency').$val['initial_service_cost']}}</span></td>
         </tr>

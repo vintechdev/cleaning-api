@@ -19,9 +19,42 @@ use Input;
 use Response;
 use App\Services\TotalCostCalculation;
 use App\Repository\UserRepository;
+use App\Repository\ProviderServiceMapRespository;
 
 class ServiceController extends Controller
 {
+    public $providerservicemap;
+
+    public function __construct(ProviderServiceMapRespository $providerservicemap)
+    {
+        $this->providerservicemap = $providerservicemap;
+    }
+
+
+
+    public function save_provider_servicemap(Request $request)
+    {
+        # code...
+        $validator = Validator::make($request->all(), [
+            'data' => 'nullable|array'
+        ]);
+
+        if($validator->fails()) {
+            $message = $validator->messages()->all();
+            return response()->json(['message' => $message], 401);
+        }
+
+        $arr =  $this->providerservicemap->save_provider_servicemap($request);
+
+        if($arr){
+            return response()->json(['success' => true,'message'=>'Services have been added sucessfully.'], 200);
+        }else{
+            return response()->json(['error' => true,'message'=>'Services have not been added sucessfully.'], 401);
+        }
+
+       
+
+    }
     /**
      * Display a listing of the resource.
      *

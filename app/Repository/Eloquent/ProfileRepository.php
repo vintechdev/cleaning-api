@@ -9,6 +9,7 @@ use App\StripeUserMetadata;
 use App\Http\Resources\Chat;
 use Illuminate\Http\Request;
 use Auth;
+use Illuminate\Support\Facades\DB;
 
 
 class ProfileRepository extends AbstractBaseRepository
@@ -28,7 +29,7 @@ class ProfileRepository extends AbstractBaseRepository
         $wh  = Working_hours::where('provider_id',$user_id)->get()->count();
         
         //service mapping
-        $ps  = Providerservicemaps::where('provider_id',$user_id)->get()->count();
+        $ps  = 1;//Providerservicemaps::where('provider_id',$user_id)->get()->count();
 
         //post code mapping
         $pc  = Providerpostcodemap::where('provider_id',$user_id)->get()->count();
@@ -56,6 +57,7 @@ class ProfileRepository extends AbstractBaseRepository
         $Providerpostcodemap = Providerpostcodemap::firstOrNew(['provider_id' =>$user_id,'postcode_id'=>$postcode]);
         $Providerpostcodemap->provider_id = $user_id;
         $Providerpostcodemap->postcode_id = $postcode;
+     
         if($Providerpostcodemap->save()){
             return Providerpostcodemap::with('postcode')->where('id',$Providerpostcodemap->id)->get()->toArray();
         }else{
@@ -81,12 +83,10 @@ class ProfileRepository extends AbstractBaseRepository
         //   dd($postday);
             foreach($data as $k=>$v){
 
-                $Working_hours = Working_hours::updateOrCreate(['provider_id' =>$user_id,'working_days'=>$v['working_days']]);
-                $Working_hours->provider_id = $user_id;
-                $Working_hours->working_days = $v['working_days'];
-                $Working_hours->start_time = $v['start_time'];
-                $Working_hours->end_time =  $v['end_time'];
-                $Working_hours->save();
+                $Working_hours = Working_hours::updateOrCreate(
+                    ['provider_id' =>$user_id, 'working_days'=>$v['working_days']],
+                    ['start_time' => $v['start_time'], 'end_time' => $v['end_time']]
+                );
             }
             $diff =  array_diff($days, $postday );
             if(count($diff)>0){

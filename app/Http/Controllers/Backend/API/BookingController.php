@@ -399,12 +399,13 @@ class BookingController extends Controller
         } catch (PaymentFailedException $exception) {
             return response()->json(['message' => $exception->getMessage()], 402);
         } catch (\Exception $exception) {
-            throw $exception;
-            return response()->json(['message' => 'Something went wrong. Please contact administrator.'], 500);
+            return response()->json(['message' => $exception->getMessage()], 500);
         }
 
         if ($booking) {
-            return response()->json(['booking' => new BookingResource($booking)], 201);
+            $bookingResource = new BookingResource($booking);
+            $bookingResource['is_recurring'] = $booking->isRecurring();
+            return response()->json(['booking' => $bookingResource], 201);
         }
         return response()->json(['message' => 'Something went wrong. Please contact administrator.'], 500);
     }

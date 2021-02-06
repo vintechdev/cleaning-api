@@ -45,6 +45,7 @@ class BookingStatusChangeContext
         $oldStatus = $booking->getStatus();
         $booking = $this->bookingStatusChangeStrategy->changeStatus($booking, $user, $recurredDate);
         if ($booking) {
+          
             event(new BookingStatusChanged($booking, $user, $oldStatus, $booking->getStatus()));
         }
 

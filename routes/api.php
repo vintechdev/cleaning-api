@@ -31,13 +31,14 @@ Route::namespace('Backend\API')->prefix('v1/public')->group(function () {
     Route::get('plans', 'PlansController@get_all_plan')->name('api.plan.get_all_plan');
     Route::post('providerdetails', 'BookingController@providerdetails')->name('providerdetails');
     Route::get('search_postcode', 'PostcodesController@search_postcode')->name('search_postcode');
+    Route::get('getallcategorieswithservice', 'ServicecategoryController@getCategorywithservices')->name('getallcategorieswithservice');
 });
 
 Route::namespace('Backend\API')->prefix('v1/customer')->group(function(){
     Route::get('getallprovider', 'CustomerusersController@getallprovider')->name('api.Customeruser.getallprovider');//->middleware(['scope:customer']);
-	  Route::get('getallservices', 'ServiceController@index')->name('api.Service.index');//->middleware(['scope:customer']);
+	Route::get('getallservices', 'ServiceController@index')->name('api.Service.index');//->middleware(['scope:customer']);
     Route::get('getaddress', 'UseraddressController@getaddress')->name('api.Useraddress.getaddress')->middleware('auth:api');
-	  Route::get('getservicequestions/{uuid}', 'ServicequestionController@getservicequestions')->name('api.Servicequestion.getservicequestions');
+	Route::get('getservicequestions/{uuid}', 'ServicequestionController@getservicequestions')->name('api.Servicequestion.getservicequestions');
     Route::any('geserviceprice', 'ServiceController@geserviceprice')->name('geserviceprice');
 });
 
@@ -62,6 +63,7 @@ Route::group([
     Route::post('userexist', 'AuthController@UserExist')->name('userexist');
     Route::post('updatetoken', 'AuthController@UpdateToken')->name('updatetoken');
     Route::get('logout', 'AuthController@logout')->middleware(['auth:api']);
+    Route::get('email/verify/{id}', 'VerificationApiController@verify')->name('verificationapi.verify');
 });
 
 
@@ -100,7 +102,10 @@ Route::middleware(['auth:api','scope:customer,provider'])->namespace('Backend\AP
     Route::post('addreview/{id}', 'UserreviewController@addreview')->name('addreview');
     Route::post('chats/{bookingid}', 'ChatsController@addmessage')->name('addmessage');
     Route::post('getchat/{bookingid}', 'ChatsController@getchat')->name('getchat');
-    Route::get('chats/list', 'ChatsController@list')->name('chatlist');
+    Route::get('chats/list/{type}', 'ChatsController@list')->name('chatlist');
+    Route::post('profilepicture', 'CustomerusersController@profilepicture')->name('profilepicture');
+    Route::get('profile_view', 'CustomerusersController@profile_view')->name('api.Customeruser.profile_view');
+    
 
 });
 
@@ -124,9 +129,9 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
     Route::post('add_multipal_service', 'BookingserviceController@add_multipal_service')->name('add_multipal_service')->middleware(['scope:customer']);
     Route::get('getcleanardata/{uuid}', 'UserreviewController@getcleanardata')->name('api.Userreview.getcleanardata')->middleware(['scope:customer']);
 
-
-    Route::get('getallusers', 'CustomerusersController@index')->name('api.Customeruser.index')->middleware(['scope:customer']);
     Route::get('profile_view', 'CustomerusersController@profile_view')->name('api.Customeruser.profile_view')->middleware(['scope:customer']);
+    Route::get('getallusers', 'CustomerusersController@index')->name('api.Customeruser.index')->middleware(['scope:customer']);
+   
     Route::patch('change_password', 'CustomerusersController@change_password')->name('api.Customeruser.change_password')->middleware(['scope:customer']);
     Route::patch('profile_update', 'CustomerusersController@profile_update')->name('api.Customeruser.profile_update')->middleware(['scope:customer']);
 
@@ -155,7 +160,7 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
 
     Route::get('getnotifications', 'NotificationController@getnotifications')->name('api.Notification.getnotifications')->middleware(['scope:customer']);
 
-    Route::patch('editnotifications/{uuid}', 'NotificationController@editnotifications')->name('api.Notification.editnotifications')->middleware(['scope:customer']);
+    Route::post('editnotifications', 'NotificationController@editnotifications')->name('api.Notification.editnotifications')->middleware(['scope:customer']);
     Route::get('getallbookingdetails', 'BookingController@getallbookingdetails')->name('api.Booking.getallbookingdetails')->middleware(['scope:customer']);
 
     Route::get('getpendingbookingdetails', 'BookingController@getpendingbookingdetails')->name('api.Booking.getpendingbookingdetails')->middleware(['scope:customer']);
@@ -195,7 +200,7 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
     Route::patch('change_booking_status/{uuid}', 'BookingController@change_booking_status')->name('api.Booking.change_booking_status')->middleware(['scope:customer']);
   });
 
- Route::middleware(['auth:api', 'role:provider'])->namespace('Backend\API')->prefix('v1/provider')->group(function () {
+ Route::middleware(['auth:api', 'role:provider'])->namespace('Backend\API')->prefix('v1/provider')->group(function(){
     // provider Route
     Route::post('addworking_hours', 'Working_hoursController@addworking_hours')->name('api.Working_hours.addworking_hours')->middleware(['scope:provider']);
     Route::get('getworking_hours', 'Working_hoursController@getworking_hours')->name('api.Working_hours.getworking_hours')->middleware(['scope:provider']);
@@ -207,7 +212,7 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
      Route::get('checkprofilecompleted', 'CustomerusersController@CheckProfileCompleted')->name('checkprofilecompleted');
      Route::get('checkproviderstripeverified', 'CustomerusersController@checkproviderstripeverified')->name('checkproviderstripeverified');
 
-    
+     Route::get('getbadges', 'CustomerusersController@getBadges')->name('getbadges')->middleware(['scope:provider']);
 
     
     Route::get('getservicebyprovider/{pid}', 'BookingController@GetServiceByProvider')->middleware(['scope:provider']);
@@ -260,22 +265,18 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
 
      Route::patch('editskills/{uuid}', 'SkillsController@editskills')->name('api.Skills.editskills')->middleware(['scope:provider']);
 
-      Route::delete('deleteskills/{uuid}', 'SkillsController@deleteskills')->name('api.skills.deleteskills')->middleware(['scope:provider']);
+     Route::delete('deleteskills/{uuid}', 'SkillsController@deleteskills')->name('api.skills.deleteskills')->middleware(['scope:provider']);
 
-      Route::post('addportfolios', 'ProviderportfoliosController@addportfolios')->name('api.Providerportfolios.addportfolios')->middleware(['scope:provider']);
+     Route::post('addportfolios', 'ProviderportfoliosController@addportfolios')->name('api.Providerportfolios.addportfolios')->middleware(['scope:provider']);
 
      Route::get('getportfolios', 'ProviderportfoliosController@getportfolios')->name('api.Providerportfolios.getportfolios')->middleware(['scope:provider']);
 
+     Route::delete('deleteportfolios/{uuid}', 'ProviderportfoliosController@deleteportfolios')->name('api.Providerportfolios.deleteportfolios')->middleware(['scope:provider']);
 
+     Route::post('addservices', 'ServiceController@addservices')->name('api.Service.addservices')->middleware(['scope:provider']);
+     Route::post('saveservices', 'ServiceController@saveservices')->name('api.Service.saveservices')->middleware(['scope:provider']);
 
-      Route::delete('deleteportfolios/{uuid}', 'ProviderportfoliosController@deleteportfolios')->name('api.Providerportfolios.deleteportfolios')->middleware(['scope:provider']);
-
-
-      Route::post('addservices', 'ServiceController@addservices')->name('api.Service.addservices')->middleware(['scope:provider']);
-      Route::post('saveservices', 'ServiceController@saveservices')->name('api.Service.saveservices')->middleware(['scope:provider']);
-
-      Route::get('getallservices', 'ServiceController@index')->name('api.Service.index')->middleware(['scope:provider']);
-
+     Route::get('getallservices', 'ServiceController@index')->name('api.Service.index')->middleware(['scope:provider']);
 
      Route::post('addservicesarea', 'ServiceareaController@addservicesarea')->name('api.Servicearea.addservicesarea')->middleware(['scope:provider']);
 
@@ -556,11 +557,12 @@ Route::middleware(['auth:api','scope:admin'])->namespace('Backend\API')->prefix(
 
 });
 
+
 //provider api
-Route::namespace('Backend\API')->prefix('v1/provider')->middleware(['scope:provider'])->group(function () {
-
+Route::namespace('Backend\API')->prefix('v1/provider')->middleware(['auth:api,scope:provider'])->group(function () {
    
-
+    Route::post('saveproviderservicemap', 'ServiceController@save_provider_servicemap')->name('saveproviderservicemap');
+    
      // Providermetadata Route
 
     Route::get('providermetadata', 'ProvidermetadataController@get_all_providermetadata')->name('api.providermetadatum.get_all_providermetadata');

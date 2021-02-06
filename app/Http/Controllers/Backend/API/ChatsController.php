@@ -22,15 +22,15 @@ use App\Services\Bookings\BookingService;
 class ChatsController extends Controller
 {
 
-public function list(Request $request,BookingService $bookingService)
+public function list(Request $request,BookingService $bookingService,User $user,$type)
 {
-    $data = $bookingService->getBookingsForChat();
+    $data = $bookingService->getBookingsForChat($type);
     return response()->json(['success'=>true,'data'=>$data],200);
     
 }
 
    public function addmessage(Request $request,$bookingid)
-   {
+{
       
     $validator = Validator::make($request->all(), [
         'receiver_id' => 'required|numeric',

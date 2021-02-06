@@ -5,8 +5,44 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Service;
 use App\Promocodes;
+use Illuminate\Http\Request;
+use App\Servicecategory;
 class ProviderServiceMapRespository{
 
+   public function save_provider_servicemap(Request $request)
+   {
+      # code...
+      
+      if($request->has('data')){
+         $data = $request->data;
+         $pid = Auth::user()->id;
+         $service_ids = array_column($data,'service_id');
+        
+         // $service_ids = array_values($service_ids);
+         //  dd($service_ids);
+         foreach($data as $k=>$v){
+            $Providerservicemaps = Providerservicemaps::updateOrInsert(
+               ['provider_id' =>$pid, 'service_id'=>$v['service_id']],
+               ['amount' => $v['amount'],'status'=>1]
+            );
+         }
+         Providerservicemaps::whereNotIn('service_id',  $service_ids)->where('provider_id',$pid)->forceDelete();
+         return true;
+      }
+      return false;
+
+
+   }
+   public function getServiceCategory(Request $request)
+   {
+      # code...
+      $user = auth()->user();
+      
+      $servicecategories = Servicecategory::with(['services'=>function($q){
+         $q->where('active',1);
+      }])->where('active','1');
+      return $servicecategories->get()->toArray();
+   }
         public function GetServicePriceofProvider($serviceid,$providerid, $returnArray = true){
            
            
@@ -30,6 +66,8 @@ class ProviderServiceMapRespository{
         {
          return Providerservicemaps::with('service')->where('provider_service_maps.provider_id',$pid)->where('provider_service_maps.status',1)->get()->toarray();
         }
+
+       
        
 }
 

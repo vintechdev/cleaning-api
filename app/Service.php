@@ -44,11 +44,10 @@ class Service extends Model
      * @param int|null $cost
      * @return int
      */
-    public function getTotalCost(float $hours = null, float $cost = null, string $type = null): float
+    public function getTotalCost(float $hours = null, float $cost = null): float
     {
         $cost = $cost ?: $this->getServiceCost();
-        $serviceType = $type ? : $this->service_type;
-        if ($serviceType === self::SERVICE_TYPE_ONCE_OFF) {
+        if ($this->service_type === self::SERVICE_TYPE_ONCE_OFF) {
             return $cost;
         }
 

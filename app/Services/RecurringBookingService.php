@@ -77,9 +77,9 @@ class RecurringBookingService
             return $recurringBooking;
         }
 
-        if ($date->lessThan(Carbon::now()->floorDay())) {
-            throw new RecurringBookingCreationException('Recurring booking can not be created for past date');
-        }
+//        if ($date->lessThan(Carbon::now()->floorDay())) {
+//            throw new RecurringBookingCreationException('Recurring booking can not be created for past date');
+//        }
 
         $childBooking = $this->bookingService->createChildBooking($booking);
 
@@ -105,11 +105,7 @@ class RecurringBookingService
             throw new \InvalidArgumentException('Cancelling recurring bookings require the parent booking id to carry out the operation.');
         }
 
-        if ($booking->getEvent()->getStartDateTime()->greaterThan($date)) {
-            throw new \InvalidArgumentException('Date passed is greater than start date of the booking');
-        }
-
-        return $booking->getEvent()->setEndDateTime($date)->save();
+        return $this->recurringPatternService->cancelEventAfter($booking->getEvent(), $date);
     }
 
     /**

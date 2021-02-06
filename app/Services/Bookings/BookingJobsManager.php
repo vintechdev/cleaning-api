@@ -169,7 +169,7 @@ class BookingJobsManager
             $this->getProviderDetails($booking),
             [
                 'from' => $recurringDate,
-                'to' => Booking::calculateFinalBookingDateTime($recurringDate, $booking->getFinalHours())
+                'to' => Booking::calculateFinalBookingDateTime($recurringDate, $booking->getTotalHours())
             ],
             $this->buildBookingServices($booking)
         );
@@ -235,7 +235,7 @@ class BookingJobsManager
         $job['booking_status'] = $booking->getStatus();
         $job['providers'] = $providerDetails;
         $job['booking_service'] = $services;
-        $job['booking_review'] = app(UserBadgeReviewRepository::class)->getreviewbybooking($booking->getId());
+        $job['booking_review'] = $this->badgeReviewRepo->getreviewbybooking($booking->getId());
         $job['booking_status_name'] = Bookingstatus::getStatusNameById($booking->booking_status_id);
         $job['user'] = $booking->getUserDetails();
         if (!$isList) {

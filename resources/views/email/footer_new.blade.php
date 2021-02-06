@@ -1,5 +1,5 @@
 <!-- Start email footer area -->
-<table border="0" cellpadding="0" cellspacing="0" style="width:100%;padding:35px 35px; background-color:#edf2f7;">
+<table border="0" cellpadding="0" cellspacing="0" style="width:100%;padding:35px 35px; background-color:#3f9672;">
     <tr>
         <td align="center" valign="top">
             <table>

@@ -22,7 +22,7 @@ class CompletedBookingList extends AbstractBookingList
         $bookingQuery = $this->getBookingQuery();
 
         $bookingQuery
-            ->where('booking_status_id', Bookingstatus::BOOKING_STATUS_COMPLETED)
+            ->whereIn('booking_status_id', [Bookingstatus::BOOKING_STATUS_COMPLETED, Bookingstatus::BOOKING_STATUS_PENDING_APPROVAL])
             ->where('plan_type', Plan::ONCEOFF);
 
         $from = $this->getFrom();

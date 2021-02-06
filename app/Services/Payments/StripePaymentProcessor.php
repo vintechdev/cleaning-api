@@ -10,6 +10,7 @@ use App\Services\Payments\Exceptions\PaymentAccountNotSetUpException;
 use App\Services\Payments\Exceptions\PaymentProcessorException;
 use App\Services\Payments\Interfaces\PaymentProcessorInterface;
 use App\Services\Payments\Interfaces\PaymentUserValidatorInterface;
+use App\Setting;
 use App\User;
 
 /**
@@ -47,6 +48,11 @@ class StripePaymentProcessor implements PaymentProcessorInterface, PaymentUserVa
      */
     public function process(): bool
     {
+        $transferFeePercent = $this
+            ->paymentData
+            ->getTransferFeePercentage() ? : Setting::getStripeServiceFeePercentage();
+
+        $this->paymentData->setTransferFeePercentage($transferFeePercent);
         return $this->stripeService->transferAmount($this->paymentData);
     }
 

@@ -135,7 +135,9 @@ class BookingService
                         $bookingaddress = new Bookingaddress();
                         $bookingaddress->booking_id = $last_insert_id;
                         $bookingaddress->address_line1 = $address['address_line1'];
-                        $bookingaddress->address_line2 = $address['address_line2'];
+                        if($address['address_line2']!='' && $address['address_line2']!=NULL){
+                            $bookingaddress->address_line2 = $address['address_line2'];
+                        }
                         $bookingaddress->suburb = $address['suburb'];
                         $bookingaddress->state = $address['state'];
                         $bookingaddress->postcode = $address['postcode'];
@@ -235,7 +237,9 @@ class BookingService
                     }
 
                     DB::commit();
-                    event(new BookingCreated($booking, $user));
+                    if (!$parent) {
+                        event(new BookingCreated($booking, $user));
+                    }
 
                     return $booking;
                 }
@@ -314,22 +318,57 @@ class BookingService
         }
         return $qst;
     }
-    public function getBookingsForChat()
+    public function getBookingsForChat($type)
     {
-        $user_id = Auth::user()->id;
-        $arr = Booking::with(array('bookingrequestprovider' => function($query){
-                                $query->whereIn('status',['accepted','arrived','completed']);
-                            },'bookingchat','bookingrequestprovider.users'))
-                            ->where('bookings.user_id',$user_id)
-                            ->whereIn('bookings.booking_status_id',[2,3,4])->get()
-                            ->map(function($bookings) {
-                            $bookings->setRelation('bookingchat', $bookings->bookingchat->take(1));//->orderBy
+       // dd($user);
+        $user = Auth::user();
+        $user_id = $user->id;
+       
+        if(in_array('provider', $user->getScopes())){
+                    $arr = Booking::has('bookingchat', '>' , 0)->with(array('bookingrequestprovider' => function($query) use ($user_id){
+                            $query->where('provider_user_id',$user_id)->whereIn('status',['accepted','arrived','completed']);
+                        },'bookingchat'=>function($query){
+                            $query->orderBy('created_at', 'desc');
+                        },'users','bookingrequestprovider.users'))
+                        ->with('bookingServices')
+                        ->with('bookingServices.service')
+                        ->with('bookingServices.service.servicecategory')
+                        ->whereIn('bookings.booking_status_id',[2,3,4])->get()
+                        ->map(function($bookings) use ($type){
+                            if($type=='unread'){
+                                $bookings->setRelation('bookingchat', $bookings->bookingchat->where('isread',0)->take(1));
+                            }else{
+                                $bookings->setRelation('bookingchat', $bookings->bookingchat->take(1));//->orderBy('created_at','desc')
+                            }
                             $bookings->setRelation('bookingrequestprovider',$bookings->bookingrequestprovider);//
                             return $bookings;
                         })->toarray();
+        }else{
 
-                  
-                        $data = [];
+       
+                         $arr = Booking::has('bookingchat', '>' , 0)->with(array('bookingrequestprovider' => function($query){
+                                $query->whereIn('status',['accepted','arrived','completed']);
+                            },'bookingchat'=>function($query){
+                                $query->orderBy('created_at', 'desc');//->first();
+                            },'bookingrequestprovider.users'))
+                            ->with('bookingServices')->with('bookingServices.service')
+                            ->with('bookingServices.service.servicecategory')
+                            ->where('bookings.user_id',$user_id)
+                           // ->where('bookingchat_count','>',0)
+                            ->whereIn('bookings.booking_status_id',[2,3,4])->get()//->sortByDesc('bookingchat.created_at')
+                            ->map(function($bookings)use ($type){
+                                if($type=='unread'){
+                                    $bookings->setRelation('bookingchat', $bookings->bookingchat->where('isread',0)->take(1));
+                                }else{
+                                    $bookings->setRelation('bookingchat', $bookings->bookingchat->take(1));//->orderBy('created_at','desc')
+                                }
+                                $bookings->setRelation('bookingrequestprovider',$bookings->bookingrequestprovider);//
+                                return $bookings;
+                            })->toarray();
+        }
+                      //  $service = $arr->bookingServices;
+      
+        $data = [];
         if(count($arr)){
             foreach($arr as $k=>$v){
                 //dd($v['bookingrequestprovider']);
@@ -342,32 +381,54 @@ class BookingService
                 $d['booking_time']=$v['booking_time'];
                 $d['final_hours']=$v['final_hours'];
 
-                $chat = $v['bookingchat'];
-                    $c = [];
-                    $c['message'] = $chat[0]['message'];
-                    $c['created_at'] = $chat[0]['created_at'];
-                    $c['sender_id'] = $chat[0]['sender_id'];
-                    $c['receiver_id'] = $chat[0]['receiver_id'];
-                    $d['chat'] =$c;
-
-                    if(count($v['bookingrequestprovider'])>0){
-                        $pr = $v['bookingrequestprovider'][0];
-                    // dd($pr);
-                        $p = [];
-                        $p['provider_id'] = $pr['provider_user_id'];
-                        $p['status'] = $pr['status'];
-                        $user = $pr['users'];
-                        $p['provider_name'] = $user['first_name'].' '. $user['last_name'];
-                        $p['profilepic'] =  $user['profilepic'];
-                        $d['provider'] = $p;
+                if(count($v['booking_services'])>0){
+                        $b = [];
+                        $bs = $v['booking_services'][0];
+                        if($bs['service']['is_default_service']==1){
+                            $b['service_id'] = $bs['service_id'];
+                            $b['service_name'] = $bs['service']['name'];
+                            $b['category_name'] = $bs['service']['servicecategory']['name'];
+                            $d['service'] =$b;
+                        }
+                }
+               // if(in_array('provider', $user->getScopes())){
+                    if(array_key_exists('users',$v)){
+                        $ur = $v['users'];
+                        $u['user_name'] = $ur['first_name'].' '. $ur['last_name'];
+                        $u['profilepic']= $ur['profilepic'];
+                        $d['users'] = $u;
                     }
+               // }
+                        $chat = $v['bookingchat'];
+                            $c = [];
+                            $c['message'] = $chat[0]['message'];
+                            $c['created_at'] = $chat[0]['created_at'];
+                            $c['sender_id'] = $chat[0]['sender_id'];
+                            $c['receiver_id'] = $chat[0]['receiver_id'];
+                            $d['chat'] =$c;
+                            $d['last_chat_date']= $chat[0]['created_at'];
+
+                            if(count($v['bookingrequestprovider'])>0){
+                                $pr = $v['bookingrequestprovider'][0];
+                            // dd($pr);
+                                $p = [];
+                                $p['provider_id'] = $pr['provider_user_id'];
+                                $p['status'] = $pr['status'];
+                                $user = $pr['users'];
+                                $p['provider_name'] = $user['first_name'].' '. $user['last_name'];
+                                $p['profilepic'] =  $user['profilepic'];
+                                $d['provider'] = $p;
+                            }
                         $data[] = $d;
                 }
-              
-
             }
            
         }
+        array_multisort(array_map(function($element) {
+            return $element['last_chat_date'];
+        }, $data), SORT_DESC, $data);
         return $data;
     }
+   
+    
 }

@@ -47,7 +47,7 @@ class MonthlyRecurringPattern extends Model implements RecurringDateInterface
     public function getNextValidDateRelativeTo(Carbon $date): ?Carbon
     {
         $endDateTime = $this->getRecurringPattern()->getEvent()->getEndDateTime();
-        if ($endDateTime && $date->greaterThan($endDateTime)) {
+        if ($endDateTime && $date->greaterThanOrEqualTo($endDateTime)) {
             return null;
         }
         $startDateTime = $this->getRecurringPattern()->getEvent()->getStartDateTime();
@@ -59,7 +59,7 @@ class MonthlyRecurringPattern extends Model implements RecurringDateInterface
         $separationCount = $this->getRecurringPattern()->getSeparationCount();
         if ($months < $separationCount) {
             $nextDate = $this->getNextRecurringDate($startDateTime);
-            if ($endDateTime && $nextDate->greaterThan($endDateTime)) {
+            if ($endDateTime && $nextDate->greaterThanOrEqualTo($endDateTime)) {
                 return null;
             }
             return $nextDate;
@@ -69,21 +69,10 @@ class MonthlyRecurringPattern extends Model implements RecurringDateInterface
         $startDateTime->modify('+' . $monthsToAdd . ' months');
 
         $nextDate = $this->getNextRecurringDate($startDateTime);
-        if ($endDateTime && $nextDate->greaterThan($endDateTime)) {
+        if ($endDateTime && $nextDate->greaterThanOrEqualTo($endDateTime)) {
             return null;
         }
         return $nextDate;
-    }
-
-    /**
-     * @param Carbon $date
-     * @return bool
-     */
-    public function isValidRecurringDate(Carbon $date): bool
-    {
-        /** @var Carbon $nextValidDate */
-        $nextValidDate = $this->getNextValidDateRelativeTo($date);
-        return $nextValidDate->floatDiffInMonths($date) == $this->getRecurringPattern()->getSeparationCount();
     }
 
     /**

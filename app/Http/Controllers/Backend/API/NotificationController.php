@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Validator;
 use Auth;
 use Hash;
 use DB;
+use App\UserNotification;
 
 
 class NotificationController extends Controller
@@ -76,20 +77,24 @@ class NotificationController extends Controller
     //for get notifications
     public function getnotifications(Request $request)
     {
-        $Notification = Notification::query();
+        $user_id = Auth::user()->id;
+        $Notification = Notification::with(array('usernotification'=>function($query) use ($user_id){
+            $query->where('user_id',$user_id);
+        }))->get();
 		
-        $Notification = $Notification->paginate(20);
-        return (new NotificationCollection($Notification));
+        return response()->json( $Notification, 200);
+       // return (new NotificationCollection($Notification));
     }
 
     //for update notifications by uuid
-    public function editnotifications(Request $request, $uuid)
+    public function editnotifications(Request $request)
     {
  
         $validator = Validator::make($request->all(), [
-            'allow_sms' => 'required',
-            'allow_email' => 'required',
-            'allow_push' => 'required'
+            'id'=>'required|array',
+            'allow_sms' => 'nullable|array',
+            'allow_email' => 'nullable|array',
+            'allow_push' => 'nullable|array',
         ]);
         
         if($validator->fails()){
@@ -97,13 +102,23 @@ class NotificationController extends Controller
             return response()->json(['message' => $message], 401);
         }
        
+        $id = $request->id;
+        $allow_sms = $request->allow_sms;
+        $allow_email = $request->allow_email;
+        $allow_push = $request->allow_push;
+        if(count($id)>0){
+           
+            foreach($id as $k=>$v){
+                $Notification = UserNotification::firstOrNew(['notification_id' => $v,'user_id'=>Auth::user()->id]);
+                $Notification->notification_id = $v;
+                $Notification->user_id =Auth::user()->id;
+                $Notification->sms = ($allow_sms!= null && array_key_exists($v,$allow_sms )?$allow_sms[$v]:0);
+                $Notification->email = ($allow_email!= null && array_key_exists($v,$allow_email )?$allow_email[$v]:0);
+                $Notification->push = ($allow_push!= null && array_key_exists($v,$allow_push )?$allow_push[$v]:0);
+                $Notification->save();
+            }
 
-        $Notification = Notification::firstOrNew(['uuid' => $uuid]);
-        $Notification->allow_sms = $request->get('allow_sms');
-        $Notification->allow_email = $request->get('allow_email');
-        $Notification->allow_push = $request->get('allow_push');
-        $Notification->save();
-        
+        }
         $responseCode = $request->get('id') ? 200 : 201;
         return response()->json(['saved' => $Notification], $responseCode);
     }

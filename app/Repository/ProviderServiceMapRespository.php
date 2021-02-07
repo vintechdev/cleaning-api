@@ -55,12 +55,6 @@ class ProviderServiceMapRespository{
            }
            return $pdr;
         }
-        public function GetServicePrice($serviceid){
-          if($serviceid){
-             $services = Service::where('id',$serviceid)->where('active',1)->get()->toArray();
-             return $services;
-          }
-        }
 
         public function GetServicesByProvider($pid)
         {

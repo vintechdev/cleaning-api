@@ -187,4 +187,18 @@ class Bookingservice extends Model
     {
         return $this->booking_id;
     }
+
+    /**
+     * @return float|null
+     */
+    public function getBaseInitialServiceCost(): ?float
+    {
+        if (!$this->getInitialServiceCost()) {
+            return null;
+        }
+
+        return $this
+            ->getService()
+            ->getBaseCost($this->getInitialServiceCost(), $this->getInitialNumberOfHours());
+    }
 }

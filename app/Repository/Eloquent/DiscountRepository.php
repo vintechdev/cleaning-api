@@ -15,14 +15,14 @@ class DiscountRepository extends AbstractBaseRepository
     {
         return Discounts::class;
     }
-    public function getPlanDiscount($id): array
+    public function getPlanDiscount($id): Collection
     {
-        return $this->getModelClass()::where(['plan_id' =>$id])->limit(1)->get()->toArray();
+        return $this->getModelClass()::where(['plan_id' =>$id])->limit(1)->get();
        
     }
-    public function CheckPromocode($promocode,$categoryid){
+    public function CheckPromocode($promocode,$categoryid): Collection {
 
-        $res = $this->getModelClass()::where('promocode',$promocode)->where('category_id',$categoryid)->limit(1)->get()->toArray();
+        $res = $this->getModelClass()::where('promocode',$promocode)->where('category_id',$categoryid)->limit(1)->get();
         return $res;
     }
 }

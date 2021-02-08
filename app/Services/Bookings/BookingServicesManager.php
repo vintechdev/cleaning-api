@@ -161,8 +161,7 @@ class BookingServicesManager
     private function add(Booking $booking, array $bookingServices, bool $isInitiallyAdded = true)
     {
         foreach ($bookingServices as $bookingService) {
-            if ($isInitiallyAdded && is_null($bookingService->getInitialServiceCost())
-            ) {
+            if ($isInitiallyAdded && is_null($bookingService->getInitialServiceCost())) {
                 $bookingService->updateInitialTotal();
             }
 

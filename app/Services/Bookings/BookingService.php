@@ -7,6 +7,7 @@ use App\Bookingaddress;
 use App\Bookingquestion;
 use App\Bookingrequestprovider;
 use App\Bookingstatus;
+use App\Service;
 use App\Servicequestion;
 use App\Events\BookingCreated;
 use App\Exceptions\Booking\BookingCreationException;
@@ -15,6 +16,7 @@ use App\Plan;
 use App\Repository\BookingReqestProviderRepository;
 use App\Repository\Eloquent\StripeUserMetadataRepository;
 use App\Services\Bookings\Exceptions\BookingserviceBuilderException;
+use App\Services\TotalCostCalculation;
 use App\User;
 use App\Useraddress;
 use Illuminate\Database\Eloquent\Collection;
@@ -43,20 +45,27 @@ class BookingService
     private $bookingServicesManager;
 
     /**
+     * @var TotalCostCalculation
+     */
+    private $totalCostCalculator;
+
+    /**
      * BookingService constructor.
      * @param StripeUserMetadataRepository $stripeUserMetadataRepository
      * @param BookingReqestProviderRepository $reqestProviderRepository
      * @param BookingServicesManager $bookingServicesManager
+     * @param TotalCostCalculation $totalCostCalculator
      */
     public function __construct(
         StripeUserMetadataRepository $stripeUserMetadataRepository,
         BookingReqestProviderRepository $reqestProviderRepository,
-        BookingServicesManager $bookingServicesManager
-    )
-    {
+        BookingServicesManager $bookingServicesManager,
+        TotalCostCalculation $totalCostCalculator
+    ) {
         $this->stripeUserMetadataRepository = $stripeUserMetadataRepository;
         $this->requestProviderRepo = $reqestProviderRepository;
         $this->bookingServicesManager = $bookingServicesManager;
+        $this->totalCostCalculator = $totalCostCalculator;
     }
 
     /**
@@ -81,6 +90,42 @@ class BookingService
         $providers = $bookingAttributes['provider'];
 
         if(count($bookings)>0){
+            if (!$parent) {
+                $serviceIds = [];
+                $serviceTimes = [];
+                $providerIds = [];
+                foreach ($service as $item) {
+                    $serviceIds[] = $item['service_id'];
+                    $serviceTimes[$item['service_id']] = $item['initial_number_of_hours'];
+                    if (!isset($category)) {
+                        /** @var Service $service */
+                        $service = Service::find($item['service_id']);
+                        if (!$service) {
+                            throw new \InvalidArgumentException('Invalid service id received');
+                        }
+                        $category = $service->getCategoryId();
+                    }
+                }
+
+                foreach ($providers as $provider) {
+                    $providerIds[] = $provider['provider_user_id'];
+                }
+
+                $highestTotalPriceDetails = $this
+                    ->totalCostCalculator
+                    ->GetHighestTotalPrice(
+                        $serviceIds,
+                        implode(',', $providerIds),
+                        $serviceTimes,
+                        $bookings['plan_type'],
+                        $bookings['promocode'],
+                        $category,
+                        true
+                    );
+
+                $bookingServices = $highestTotalPriceDetails['booking_services'];
+            }
+
             DB::beginTransaction();
             try {
                 $booking = new Booking();
@@ -93,6 +138,7 @@ class BookingService
                     DB::rollBack();
                     throw new \InvalidArgumentException('Invalid booking status');
                 }
+
                 $booking->is_recurring = (isset($bookings['is_recurring'])) ? $bookings['is_recurring'] : 0;
                 $booking->booking_date = $bookings['booking_date'];
                 $booking->booking_time = $bookings['booking_time'];
@@ -101,12 +147,12 @@ class BookingService
                 $booking->booking_provider_type = $bookings['booking_provider_type'];
                 $booking->plan_type = $bookings['plan_type'];
                 $booking->promocode = $bookings['promocode'];
-                $booking->total_cost = $bookings['total_cost'];
-                $booking->discount = $bookings['discount'];
-                $booking->plan_discount = $bookings['plan_discount'];
+                $booking->total_cost = $parent ? $bookings['total_cost'] : $highestTotalPriceDetails['total_cost'];
+                $booking->discount = $parent ? $bookings['discount'] : $highestTotalPriceDetails['discount'];
+                $booking->plan_discount = $parent ? $bookings['plan_discount'] : $highestTotalPriceDetails['plan_discount'];
               
-                $booking->final_cost = $bookings['final_cost'];
-                $booking->final_hours = $bookings['final_hours'];
+                $booking->final_cost = $parent ? $bookings['final_cost'] : $highestTotalPriceDetails['final_cost'];
+                $booking->final_hours = $parent ? $bookings['final_hours'] : $highestTotalPriceDetails['total_time'];
                 $booking->is_flexible = $bookings['is_flexible'];
 
                 if ($parent) {
@@ -177,19 +223,18 @@ class BookingService
                                 // TODO: log error saying that invalid services type received.
                                 throw new BookingCreationException('Booking could not be saved without services');
                             }
-                            $this->bookingServicesManager->addBookingServicesFromArray($booking, $service);
                         } else {
                             if (!($service instanceof Collection) || !$service->count()) {
                                 // TODO: log error saying that invalid services type received.
                                 throw new BookingCreationException('Booking service could not be saved');
                             }
-                            $services = [];
+                            $bookingServices = [];
 
                             foreach ($service as $serv) {
-                                $services[] = $serv->replicate();
+                                $bookingServices[] = $serv->replicate();
                             }
-                            $this->bookingServicesManager->addBookingServices($booking, $services);
                         }
+                        $this->bookingServicesManager->addBookingServices($booking, $bookingServices);
                     } catch (BookingserviceBuilderException $exception) {
                         DB::rollBack();
                         throw new BookingCreationException($exception->getMessage());
@@ -201,13 +246,9 @@ class BookingService
                    
                     if($parent){
                         $question = Bookingquestion::where('booking_id',$parent->id)->get()->toarray();
-                    }else{
-                        $question = $question;
                     }
+
                     if (!empty($question)) {
-
-                        
-
                       //  dd($question);
                         foreach ($question as $key => $quest){
                             if ($quest['answer'] != null){

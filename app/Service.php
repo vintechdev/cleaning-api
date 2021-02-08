@@ -47,11 +47,37 @@ class Service extends Model
     public function getTotalCost(float $hours = null, float $cost = null): float
     {
         $cost = $cost ?: $this->getServiceCost();
-        if ($this->service_type === self::SERVICE_TYPE_ONCE_OFF) {
+        if ($this->getServiceType() === self::SERVICE_TYPE_ONCE_OFF) {
             return $cost;
         }
 
         return $cost * ($hours ?: 0);
+    }
+
+    /**
+     * @param float $totalServiceCost
+     * @param float $numberOfHours
+     * @return float|null
+     */
+    public function getBaseCost(float $totalServiceCost, float $numberOfHours): ?float
+    {
+        if ($this->getServiceType() === self::SERVICE_TYPE_HOURLY) {
+            if (!$numberOfHours) {
+                return null;
+            }
+
+            return $totalServiceCost/$numberOfHours;
+        }
+
+        return  $totalServiceCost;
+    }
+
+    /**
+     * @return string
+     */
+    public function getServiceType(): string
+    {
+        return $this->service_type;
     }
 
     /**
@@ -76,5 +102,13 @@ class Service extends Model
     public function getServicecategory(): ?Servicecategory
     {
         return $this->servicecategory;
+    }
+
+    /**
+     * @return int
+     */
+    public function getCategoryId(): int
+    {
+        return $this->category_id;
     }
 }

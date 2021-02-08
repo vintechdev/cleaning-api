@@ -202,6 +202,10 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
 
  Route::middleware(['auth:api', 'role:provider'])->namespace('Backend\API')->prefix('v1/provider')->group(function(){
     // provider Route
+    
+    Route::get('getdashboardstatistics', 'BookingController@getdashboardstatistics')->middleware(['scope:provider']);
+
+
     Route::post('addworking_hours', 'Working_hoursController@addworking_hours')->name('api.Working_hours.addworking_hours')->middleware(['scope:provider']);
     Route::get('getworking_hours', 'Working_hoursController@getworking_hours')->name('api.Working_hours.getworking_hours')->middleware(['scope:provider']);
     Route::post('addproviderpostcode', 'PostcodesController@addproviderpostcode')->name('addproviderpostcode')->middleware(['scope:provider']);

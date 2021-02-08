@@ -7,13 +7,15 @@ use App\Userreview;
 use App\UserBadge;
 use App\Badges;
 use Illuminate\Http\Request;
+use config;
 class UserBadgeReviewRepository{
 
     public function getBadgeDetails($providerid){
         $badges = UserBadge::leftJoin('badges', function($join){
                     $join->on('user_badges.badge_id', '=', 'badges.id');
-                })->where('user_badges.user_id',$providerid)->get()->toArray();
-                    return $badges;
+                })->where('user_badges.user_id',$providerid)
+                ->get()->toArray();
+                return $badges;
     }
 
     public function getReviewDetails($providerid){

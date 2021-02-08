@@ -5,6 +5,7 @@ namespace App;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Emadadly\LaravelUuid\Uuids;
+use App\Booking;
 
 /**
  * Class Bookingrequestprovider
@@ -26,6 +27,11 @@ class Bookingrequestprovider extends Model
     public function users()
     {
         return $this->belongsTo(Customeruser::class,'provider_user_id','id');
+    }
+
+    public function bookings()
+    {
+        return $this->belongsTo(Booking::class,'booking_id','id');
     }
     /**
      * @return int

@@ -59,6 +59,17 @@ use App\Bookingactivitylogs;
 use App\Repository\ProviderServiceMapRespository;
 class BookingController extends Controller
 {
+    private $userrepo;
+    
+    public  function __construct(UserRepository $userrepo)
+    {
+        $this->userrepo = $userrepo;
+    }
+    public function getdashboardstatistics()
+    {
+       $data =  $this->userrepo->getdashboardstatistics();
+       return response()->json($data);
+    }
 
     public function listAllStatus()
     {

@@ -10,6 +10,8 @@ use App\Customeruser;
 use App\Working_hours;
 use App\Providerpostcodemap;
 use App\UserNotification;
+use App\Booking;
+use App\Bookingrequestprovider;
 
 class UserRepository{
 
@@ -56,6 +58,20 @@ class UserRepository{
         
             $notification = UserNotification::where('user_id',$user_id)->where('notification_id',$nid)->first()->toarray();
             return $notification;
+        }
+
+        //get completed booking statitics
+        public function getdashboardstatistics()
+        {
+         $query = Bookingrequestprovider::join('bookings','booking_id', '=', 'bookings.id')->where('bookings.booking_status_id',4);
+        
+         $query1 =clone $query;
+
+         $cost = $query->sum('bookings.final_cost');
+
+         $totalcompletedbooking =  $query1->count();
+
+         return ['total_amount'=>$cost,'completedbooking'=>$totalcompletedbooking];
         }
         
 }

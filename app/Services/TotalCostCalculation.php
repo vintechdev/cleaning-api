@@ -22,7 +22,7 @@ class TotalCostCalculation{
         $this->discountManager = $discountManager;
     }
 
-    public function GetHighestTotalPrice($serviceid,$provider_id='',$servicetime,$plan_id='',$promocode='',$categoryid='', $returnBookingServices = false)
+    public function GetHighestTotalPrice($serviceid,$provider_id='',$servicetime,$plan_id='',$promocode='',$categoryid='', $returnBookingServices = false, $returnDiscounts = false)
     {
         if(!is_array($provider_id)) {
             $provider_id = explode(',',$provider_id);
@@ -39,11 +39,6 @@ class TotalCostCalculation{
 
         $highestPricedProvider = $this->bookingInitialCostCalculator->getHighestPricedProviderIdFromCostDetails($costDetails);
         $totalCost = $costDetails[$highestPricedProvider]['total_cost'];
-
-        $planDiscountDetails = [];
-        if ($plan_id) {
-            $planDiscountDetails = $this->discountManager->getPlanDiscountDetails($plan_id);
-        }
 
         $result = [];
 
@@ -62,32 +57,54 @@ class TotalCostCalculation{
             $result['booking_services'] = $costDetails[$highestPricedProvider]['booking_services'];
         }
 
-        if ($planDiscountDetails) {
-            $result['plan_discount_price'] = $this->discountManager->getDiscountAmount($planDiscountDetails, $totalCost);
-            $result['plan_discount_type'] = $planDiscountDetails[DiscountManager::DISCOUNT_TYPE];
-            $result['plan_discount'] = $planDiscountDetails[DiscountManager::DISCOUNT_VALUE];
-            $result['final_cost'] = $this->discountManager->getDiscountedPrice($planDiscountDetails, $totalCost);
+        $discounts = [];
+        $planDiscount = null;
+        if ($plan_id) {
+            $planDiscount = $this->discountManager->getPlanDiscount($plan_id);
+        }
+
+        $result['final_cost'] = $totalCost;
+        if ($planDiscount) {
+            $discounts[] = $planDiscount;
+            $result['plan_discount_price'] = $this->discountManager->getDiscountAmount($planDiscount, $totalCost);
+            $result['plan_discount_type'] = $planDiscount->getDiscountType();
+            $result['plan_discount'] = $planDiscount->getDiscount();
         } else {
             $result['plan_discount_price'] = '';
             $result['plan_discount_type'] = '';
             $result['plan_discount'] = '';
-            $result['final_cost'] = $totalCost;
         }
 
-        $promoDiscountDetails = [];
+        $promoDiscount = null;
         if ($promocode) {
-            $promoDiscountDetails = $this->discountManager->getPromoCodeDetails($promocode, $categoryid);
+            $promoDiscount = $this->discountManager->getPromoCodeDiscount($promocode, $categoryid);
         }
 
-        if ($promoDiscountDetails) {
-            $result['discount'] = $this->discountManager->getDiscountAmount($promoDiscountDetails, $result['final_cost']);
-            $result['final_cost'] = $this->discountManager->getDiscountedPrice($promoDiscountDetails, $result['final_cost']);
+        if ($promoDiscount) {
+            $result['discount'] = $this->discountManager->getDiscountAmount($promoDiscount, $result['final_cost']);
+            $discounts[] = $promoDiscount;
         } else {
             $result['discount'] = '';
         }
 
+        if ($discounts) {
+            $result['final_cost'] = $this->discountManager->getDiscountedPrice($discounts, $result['final_cost']);
+        }
+
         $result['total_cost'] = $totalCost;
         $result['total_time'] = $costDetails[$highestPricedProvider]['total_hours'];
+
+        if ($returnDiscounts) {
+            $result['all_discounts'] = [];
+            if ($planDiscount) {
+                $result['all_discounts'][] = $planDiscount;
+            }
+
+            if ($promoDiscount) {
+                $result['all_discounts'][] = $promoDiscount;
+            }
+        }
+
         return $result;
     }
 
@@ -123,8 +140,8 @@ class TotalCostCalculation{
        
         $result=array();
        
-        $arr = $this->discountManager->getPromoCodeDetails($promocode,$categoryid);
-        if(!empty($arr)){
+        $discount = $this->discountManager->getPromoCodeDiscount($promocode,$categoryid);
+        if($discount){
             return response()->json(['data' => 'success'],200);
          }else{
             return response()->json( ['error' => 'Promocode is not valid'],201);

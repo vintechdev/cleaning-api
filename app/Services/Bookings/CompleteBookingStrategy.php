@@ -11,6 +11,7 @@ use App\Exceptions\Booking\InvalidBookingStatusActionException;
 use App\Exceptions\Booking\RecurringBookingStatusChangeException;
 use App\Exceptions\Booking\UnauthorizedAccessException;
 use App\Repository\BookingReqestProviderRepository;
+use App\Services\BookingFinalCostCalculator;
 use App\Services\Bookings\Exceptions\BookingserviceBuilderException;
 use App\Services\Bookings\Exceptions\BookingServicesManagerException;
 use App\Services\Bookings\Traits\BookingPaymentHandlerTrait;
@@ -43,23 +44,31 @@ class CompleteBookingStrategy extends AbstractBookingStatusChangeStrategy
     private $paymentProcessor;
 
     /**
+     * @var BookingFinalCostCalculator
+     */
+    private $finalCostCalculator;
+
+    /**
      * CompleteBookingStrategy constructor.
      * @param BookingReqestProviderRepository $bookingRequestProviderRepository
      * @param BookingVerificationService $bookingVerificationService
      * @param RecurringBookingService $recurringBookingService
      * @param BookingServicesManager $bookingServicesManager
      * @param PaymentProcessorInterface $paymentProcessor
+     * @param BookingFinalCostCalculator $finalCostCalculator
      */
     public function __construct(
         BookingReqestProviderRepository $bookingRequestProviderRepository,
         BookingVerificationService $bookingVerificationService,
         RecurringBookingService $recurringBookingService,
         BookingServicesManager $bookingServicesManager,
-        PaymentProcessorInterface $paymentProcessor
+        PaymentProcessorInterface $paymentProcessor,
+        BookingFinalCostCalculator $finalCostCalculator
     ) {
         parent::__construct($bookingRequestProviderRepository, $bookingVerificationService, $recurringBookingService);
         $this->bookingServicesManager = $bookingServicesManager;
         $this->paymentProcessor = $paymentProcessor;
+        $this->finalCostCalculator = $finalCostCalculator;
     }
 
     /**
@@ -95,6 +104,10 @@ class CompleteBookingStrategy extends AbstractBookingStatusChangeStrategy
                 $booking,
                 $provider
             );
+
+        if (!$this->finalCostCalculator->updateBookingGrandTotal($booking)) {
+            throw new BookingStatusChangeException('Unable to update final total for booking');
+        }
 
         if ($this->hasBookingDetailsChanged($booking)) {
             if (!$booking->setStatus(Bookingstatus::BOOKING_STATUS_PENDING_APPROVAL)->save()) {

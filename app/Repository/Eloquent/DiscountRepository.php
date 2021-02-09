@@ -17,12 +17,12 @@ class DiscountRepository extends AbstractBaseRepository
     }
     public function getPlanDiscount($id): Collection
     {
-        return $this->getModelClass()::where(['plan_id' =>$id])->limit(1)->get();
+        return $this->getModelClass()::where(['plan_id' =>$id])->where('deleted_at', null)->limit(1)->get();
        
     }
     public function CheckPromocode($promocode,$categoryid): Collection {
 
-        $res = $this->getModelClass()::where('promocode',$promocode)->where('category_id',$categoryid)->limit(1)->get();
+        $res = $this->getModelClass()::where('promocode',$promocode)->where('category_id',$categoryid)->where('deleted_at', null)->limit(1)->get();
         return $res;
     }
 }

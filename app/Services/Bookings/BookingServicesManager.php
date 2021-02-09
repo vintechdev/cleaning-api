@@ -178,6 +178,8 @@ class BookingServicesManager
             }
         }
 
+        $booking->refresh();
+
         return true;
     }
 }

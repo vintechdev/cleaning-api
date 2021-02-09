@@ -140,7 +140,7 @@ class Bookingservice extends Model
      */
     public function isRemoved(): bool
     {
-        return $this->is_removed;
+        return $this->is_removed != 0;
     }
 
     /**
@@ -157,7 +157,7 @@ class Bookingservice extends Model
      * @return bool
      */
     public function isInitiallyAdded(): bool {
-        return $this->is_initially_added;
+        return $this->is_initially_added != 0;
     }
 
     /**

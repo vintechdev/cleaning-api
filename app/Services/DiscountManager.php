@@ -29,67 +29,68 @@ class DiscountManager
     }
 
     /**
-     * @param int $planId
-     * @return array
+     * @param int $id
+     * @return Discounts
      */
-    public function getPlanDiscountDetails(int $planId): array
+    public function getDiscountDetailsById(int $id): ?Discounts
+    {
+        return $this->discountRepo->find($id);
+    }
+
+    /**
+     * @param int $planId
+     * @return Discounts
+     */
+    public function getPlanDiscount(int $planId): ?Discounts
     {
         $discount = $this->discountRepo->getPlanDiscount($planId);
         if (!$discount->count()) {
-            return [];
+            return null;
         }
 
-        return $this->buildDiscountDetails($discount->first());
+        return $discount->first();
     }
 
     /**
      * @param string $promocode
      * @param int $categoryid
-     * @return array
+     * @return Discounts
      */
-    public function getPromoCodeDetails(string $promocode, int $categoryid): array
+    public function getPromoCodeDiscount(string $promocode, int $categoryid): ?Discounts
     {
         $discount = $this->discountRepo->CheckPromocode($promocode,$categoryid);
         if (!$discount->count()) {
-            return [];
+            return null;
         }
 
-        return $this->buildDiscountDetails($discount->first());
+        return $discount->first();
     }
 
     /**
-     * @param array $discountDetails
+     * @param Discounts $discount
      * @param float $price
      * @return float
      */
-    public function getDiscountAmount(array $discountDetails, float $price): float
+    public function getDiscountAmount(Discounts $discount, float $price): float
     {
-        if (!$discountDetails) {
-            return 0;
-        }
-
-        return ($discountDetails[self::DISCOUNT_TYPE] === Discounts::DISCOUNT_TYPE_PERCENTAGE) ?
-            (($price * $discountDetails[self::DISCOUNT_VALUE]) / 100) :
-            $discountDetails[self::DISCOUNT_VALUE];
+        return ($discount->getDiscountType() === Discounts::DISCOUNT_TYPE_PERCENTAGE) ?
+            (($price * $discount->getDiscount()) / 100) :
+            $discount->getDiscount();
     }
 
     /**
-     * @param array $discountDetails
+     * @param Discounts[] $discounts
      * @param float $price
      * @return float
      */
-    public function getDiscountedPrice(array $discountDetails, float $price): float
+    public function getDiscountedPrice(array $discounts, float $price): float
     {
-        $discountAmount = $this->getDiscountAmount($discountDetails, $price);
+        $discountAmount = 0;
+        foreach ($discounts as $discount) {
+            $discountAmount += $this->getDiscountAmount($discount, $price);
+        }
+
         $finalPrice = $price - $discountAmount;
         return ($finalPrice >= 0) ? $finalPrice : 0;
-    }
-
-    private function buildDiscountDetails(Discounts $discount): array
-    {
-        return [
-            self::DISCOUNT_TYPE => $discount->getDiscountType(),
-            self::DISCOUNT_VALUE => $discount->getDiscount()
-        ];
     }
 }

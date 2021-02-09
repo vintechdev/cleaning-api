@@ -324,13 +324,13 @@ class Booking extends Model
 
     /**
      * @param array $bookingNotes
-     * @return bool
+     * @return $this
      */
-    public function saveBookingNotes(array $bookingNotes): bool
+    public function saveBookingNotes(array $bookingNotes)
     {
         /** @var BookingNote $bookingNote */
         $this->bookingNotes()->saveMany($bookingNotes);
-        return true;
+        return $this;
     }
 
     /**
@@ -359,5 +359,31 @@ class Booking extends Model
         }
 
         return Booking::find($this->parent_booking_id);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function discounts()
+    {
+        return $this->belongsToMany(Discounts::class);
+    }
+
+    /**
+     * @return Collection
+     */
+    public function getDiscounts(): Collection
+    {
+        return $this->discounts()->get();
+    }
+
+    /**
+     * @param array $discounts
+     * @return $this
+     */
+    public function addDiscounts(array $discounts)
+    {
+        $this->discounts()->saveMany($discounts);
+        return $this;
     }
 }

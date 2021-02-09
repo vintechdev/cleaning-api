@@ -17,13 +17,21 @@ class BookingInitialCostCalculator
     private $bookingServicesManager;
 
     /**
+     * @var BookingServicesCostCalculator
+     */
+    private $bookingServicesCostCalculator;
+
+    /**
      * BookingInitialCostCalculator constructor.
      * @param BookingServicesManager $bookingServicesManager
+     * @param BookingServicesCostCalculator $bookingServicesCostCalculator
      */
     public function __construct(
-        BookingServicesManager $bookingServicesManager
+        BookingServicesManager $bookingServicesManager,
+        BookingServicesCostCalculator $bookingServicesCostCalculator
     ) {
         $this->bookingServicesManager = $bookingServicesManager;
+        $this->bookingServicesCostCalculator = $bookingServicesCostCalculator;
     }
 
     /**
@@ -36,8 +44,6 @@ class BookingInitialCostCalculator
     {
         $costDetails = [];
         foreach ($providerIds as $providerId) {
-            $totalCost = 0;
-            $totalHours = 0;
             $bookingServices = [];
             foreach ($serviceIds as $serviceId) {
                 $bookingService = $this
@@ -46,12 +52,12 @@ class BookingInitialCostCalculator
                         $providerId,
                         isset($serviceTimes[$serviceId]) ? $serviceTimes[$serviceId] : null
                     );
-                $totalCost += $bookingService->getInitialServiceCost();
-                $totalHours += $bookingService->getInitialNumberOfHours();
                 $bookingServices[] = $bookingService;
             }
-            $costDetails[$providerId]['total_cost'] = $totalCost;
-            $costDetails[$providerId]['total_hours'] = $totalHours;
+
+            $total = $this->bookingServicesCostCalculator->getInitialTotalsFromBookingServices($bookingServices);
+            $costDetails[$providerId]['total_cost'] = $total[BookingServicesCostCalculator::TOTAL_COST];
+            $costDetails[$providerId]['total_hours'] = $total[BookingServicesCostCalculator::TOTAL_HOURS];
             $costDetails[$providerId]['booking_services'] = $bookingServices;
         }
 

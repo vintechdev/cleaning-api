@@ -29,4 +29,14 @@ class Discounts extends Model
     {
         return $this->discount_type;
     }
+
+    public function isPlanDiscount(): bool
+    {
+        return !is_null($this->plan_id);
+    }
+
+    public function isPromoDiscount(): bool
+    {
+        return !is_null($this->promocode);
+    }
 }

@@ -89,6 +89,7 @@ class BookingService
         $question = $bookingAttributes['question'];
         $providers = $bookingAttributes['provider'];
 
+        $discounts = [];
         if(count($bookings)>0){
             if (!$parent) {
                 $serviceIds = [];
@@ -120,10 +121,12 @@ class BookingService
                         $bookings['plan_type'],
                         $bookings['promocode'],
                         $category,
+                        true,
                         true
                     );
 
                 $bookingServices = $highestTotalPriceDetails['booking_services'];
+                $discounts = $highestTotalPriceDetails['all_discounts'];
             }
 
             DB::beginTransaction();
@@ -170,6 +173,8 @@ class BookingService
                             $address = $bookingAddress->toArray();
                             $address =  $address[0];
                         }
+
+                        $discounts = $parent->getDiscounts()->all();
                     } else {
                         $addresses = Useraddress::where('id', $bookings['addressid'])->get()->toarray();
                         if ($addresses) {
@@ -195,6 +200,9 @@ class BookingService
                         }
                     }
 
+                    if ($discounts) {
+                        $booking->addDiscounts($discounts);
+                    }
 
                     //TODO: Validate if these are available providers. We can't pass any providers
                     if (!empty($providers)) {

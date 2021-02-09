@@ -28,7 +28,8 @@ use Illuminate\Validation\ValidationException;
 use App\Loginactivitylogs;
 use Config;
 use Illuminate\Http\Response;
-
+use App\UserNotification;
+use App\Notification;
 
 class AuthController extends Controller
 {
@@ -41,52 +42,27 @@ class AuthController extends Controller
         
     }
     
-    /**
-     * Create user
-     *
-     * @param  [string] name
-     * @param  [string] email
-     * @param  [string] password
-     * @param  [string] password_confirmation
-     * @return [string] message
-     */
-    // public function signup(Request $request)
-    // {
-    //     $request->validate([
-    //         'name' => 'required|string',
-    //         'email' => 'required|string|email|unique:users',
-    //         'password' => 'required|string|confirmed'
-    //     ]);
-    //     $user = new User([
-    //         'name' => $request->name,
-    //         'email' => $request->email,
-    //         'password' => bcrypt($request->password)
-    //     ]);
-    //     $user->save();
-    //     return response()->json([
-    //         'message' => 'Successfully created user!'
-    //     ], 201);
-    // }
-public function UpdateToken(Request $request)
-{
-    $validator = $request->validate([
-        'email' => 'required|email',
-    ]);
+   
+    public function UpdateToken(Request $request)
+    {
+        $validator = $request->validate([
+            'email' => 'required|email',
+        ]);
 
-    $passwordReset = PasswordReset::updateOrCreate(
-        ['email' => $request->email],
-        [
-            'email' => $request->email,
-            'token' =>Str::random(60)
-         ]
-    );
-    if($passwordReset){
-        return response()->json(['success'=>true,'token'=>$passwordReset->token],201);
-    }else{
+        $passwordReset = PasswordReset::updateOrCreate(
+            ['email' => $request->email],
+            [
+                'email' => $request->email,
+                'token' =>Str::random(60)
+            ]
+        );
+        if($passwordReset){
+            return response()->json(['success'=>true,'token'=>$passwordReset->token],201);
+        }else{
 
+        }
+        
     }
-    
-}
      public function UserExist(Request $request)
     {
         $validator = $request->validate([
@@ -205,6 +181,24 @@ public function UpdateToken(Request $request)
                         $User->providertype = 'freelancer';
                         $User->save();
                     }
+
+                    //add default notification setting
+                    $notification = Notification::get()->toarray();
+                    if(count($notification)>0){
+                        foreach($notification as $key=>$val){
+                            $usernotification = new UserNotification();
+                            $usernotification->user_id = $lastinsertid;
+                            $usernotification->notification_id =$val['id'];
+                            $usernotification->sms =($val['allow_sms']==0)?1:0;
+                            $usernotification->email =($val['allow_email']==0)?1:0;
+                            $usernotification->push =($val['allow_push']==0)?1:0;
+                            $usernotification->save();
+                            
+                        }
+                    }
+                    
+                 //   $usernotification
+
                 }
                 $responseCode = $request->get('id') ? 200 : 201;
                 return response()->json(['success' => $success], $responseCode);

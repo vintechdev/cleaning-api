@@ -58,15 +58,18 @@ class UserRepository{
         //get completed booking statitics
         public function getdashboardstatistics()
         {
-         $query = Bookingrequestprovider::join('bookings','booking_id', '=', 'bookings.id')->where('bookings.booking_status_id',4);
+         $query = Bookingrequestprovider::join('bookings','booking_id', '=', 'bookings.id');
         
-         $query1 =clone $query;
+         $query1 = clone $query;
+         $query2 = clone $query;
+         $cost = $query->where('bookings.booking_status_id',4)->sum('bookings.final_cost');
+         $totalcompletedbooking =  $query1->where('bookings.booking_status_id',4)->count();
 
-         $cost = $query->sum('bookings.final_cost');
+        //total customer
+        $totalcustomer = $query2->where('bookings.booking_status_id','!=',1)->where('bookings.booking_status_id','!=',6)->distinct('bookings.user_id')->count('bookings.user_id');
 
-         $totalcompletedbooking =  $query1->count();
 
-         return ['total_amount'=>$cost,'completedbooking'=>$totalcompletedbooking];
+         return ['total_amount'=>$cost,'completedbooking'=>$totalcompletedbooking,'totalcustomer'=>$totalcustomer];
         }
         
 }

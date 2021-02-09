@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Repository\BookingReqestProviderRepository;
+use App\Services\BookingFinalCostCalculator;
 use App\Services\Bookings\ApproveBookingStrategy;
 use App\Services\Bookings\ArriveBookingStrategy;
 use App\Services\Bookings\BookingServicesManager;
@@ -32,7 +33,8 @@ class BookingStatusChangeServiceProvider extends ServiceProvider implements Defe
                 $app->get(BookingVerificationService::class),
                 $app->get(RecurringBookingService::class),
                 $app->get(BookingServicesManager::class),
-                $app->get(StripePaymentProcessor::class)
+                $app->get(StripePaymentProcessor::class),
+                $app->get(BookingFinalCostCalculator::class)
             );
         });
 

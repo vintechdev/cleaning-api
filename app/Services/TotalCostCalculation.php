@@ -1,9 +1,7 @@
 <?php
 namespace App\Services;
-use App\Booking;
 use App\Bookingservice;
 use App\Service;
-use App\User;
 use Illuminate\Http\Request;
 
 class TotalCostCalculation{
@@ -59,20 +57,22 @@ class TotalCostCalculation{
             $result['booking_services'] = $costDetails[$highestPricedProvider]['booking_services'];
         }
 
+        $discounts = [];
         $planDiscount = null;
         if ($plan_id) {
             $planDiscount = $this->discountManager->getPlanDiscount($plan_id);
         }
+
+        $result['final_cost'] = $totalCost;
         if ($planDiscount) {
+            $discounts[] = $planDiscount;
             $result['plan_discount_price'] = $this->discountManager->getDiscountAmount($planDiscount, $totalCost);
             $result['plan_discount_type'] = $planDiscount->getDiscountType();
             $result['plan_discount'] = $planDiscount->getDiscount();
-            $result['final_cost'] = $this->discountManager->getDiscountedPrice($planDiscount, $totalCost);
         } else {
             $result['plan_discount_price'] = '';
             $result['plan_discount_type'] = '';
             $result['plan_discount'] = '';
-            $result['final_cost'] = $totalCost;
         }
 
         $promoDiscount = null;
@@ -82,9 +82,13 @@ class TotalCostCalculation{
 
         if ($promoDiscount) {
             $result['discount'] = $this->discountManager->getDiscountAmount($promoDiscount, $result['final_cost']);
-            $result['final_cost'] = $this->discountManager->getDiscountedPrice($promoDiscount, $result['final_cost']);
+            $discounts[] = $promoDiscount;
         } else {
             $result['discount'] = '';
+        }
+
+        if ($discounts) {
+            $result['final_cost'] = $this->discountManager->getDiscountedPrice($discounts, $result['final_cost']);
         }
 
         $result['total_cost'] = $totalCost;

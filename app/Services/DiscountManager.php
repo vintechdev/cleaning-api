@@ -79,13 +79,17 @@ class DiscountManager
     }
 
     /**
-     * @param Discounts $discount
+     * @param Discounts[] $discounts
      * @param float $price
      * @return float
      */
-    public function getDiscountedPrice(Discounts $discount, float $price): float
+    public function getDiscountedPrice(array $discounts, float $price): float
     {
-        $discountAmount = $this->getDiscountAmount($discount, $price);
+        $discountAmount = 0;
+        foreach ($discounts as $discount) {
+            $discountAmount += $this->getDiscountAmount($discount, $price);
+        }
+
         $finalPrice = $price - $discountAmount;
         return ($finalPrice >= 0) ? $finalPrice : 0;
     }

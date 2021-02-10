@@ -53,15 +53,15 @@ class BookingFinalCostCalculator
         /** @var Discounts $discount */
         foreach($booking->getDiscounts()->all() as $discount) {
             if ($discount->isPlanDiscount()) {
-                $promoDiscount += $this->discountManager->getDiscountAmount($discount, $totalCost);
+                $planDiscount += $this->discountManager->getDiscountAmount($discount, $totalCost);
                 continue;
             }
 
-            $planDiscount += $this->discountManager->getDiscountAmount($discount, $totalCost);
+            $promoDiscount += $this->discountManager->getDiscountAmount($discount, $totalCost);
         }
 
         $booking->plan_discount = $planDiscount;
-        $booking->discount = $discount;
+        $booking->discount = $promoDiscount;
         $booking->total_cost = $totalCost;
         $booking->final_cost = $this->discountManager->getDiscountedPrice($booking->getDiscounts()->all(), $totalCost);
         $booking->final_hours = $totalHours;

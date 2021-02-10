@@ -154,6 +154,30 @@ class BookingServicesManager
 
     /**
      * @param Booking $booking
+     * @return bool
+     */
+    public function hasBookingDetailsChanged(Booking $booking): bool
+    {
+        /** @var Bookingservice $bookingService */
+        foreach ($booking->getBookingServices() as $bookingService) {
+            if ($bookingService->isRemoved()) {
+                return true;
+            }
+
+            if (!$bookingService->isInitiallyAdded()) {
+                return true;
+            }
+
+            if ($bookingService->hasChanged()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param Booking $booking
      * @param Bookingservice[] $bookingServices
      * @param bool $isInitiallyAdded
      * @return bool

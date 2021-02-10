@@ -11,6 +11,7 @@ use App\Exceptions\Booking\InvalidBookingStatusActionException;
 use App\Exceptions\Booking\RecurringBookingStatusChangeException;
 use App\Exceptions\Booking\UnauthorizedAccessException;
 use App\Repository\BookingReqestProviderRepository;
+use App\Service;
 use App\Services\BookingFinalCostCalculator;
 use App\Services\Bookings\Exceptions\BookingserviceBuilderException;
 use App\Services\Bookings\Exceptions\BookingServicesManagerException;
@@ -109,7 +110,7 @@ class CompleteBookingStrategy extends AbstractBookingStatusChangeStrategy
             throw new BookingStatusChangeException('Unable to update final total for booking');
         }
 
-        if ($this->hasBookingDetailsChanged($booking)) {
+        if ($this->bookingServicesManager->hasBookingDetailsChanged($booking)) {
             if (!$booking->setStatus(Bookingstatus::BOOKING_STATUS_PENDING_APPROVAL)->save()) {
                 throw new BookingStatusChangeException('Unable to save booking status');
             }
@@ -161,41 +162,6 @@ class CompleteBookingStrategy extends AbstractBookingStatusChangeStrategy
     {
         $this->services = $services;
         return $this;
-    }
-
-    /**
-     * @param Booking $booking
-     * @return bool
-     */
-    private function hasBookingDetailsChanged(Booking $booking): bool
-    {
-        if (!$this->services) {
-            throw new InvalidBookingStatusActionException('Can not change status for booking without providing any services details');
-        }
-
-        if (count($this->services) !== $booking->getBookingServices()->count()) {
-            return true;
-        }
-
-        $actualServices = [];
-
-        /** @var Bookingservice $bookingService */
-        foreach ($booking->getBookingServices() as $bookingService) {
-            $actualServices[$bookingService->getService()->getId()] = $bookingService;
-        }
-
-        foreach ($this->services as $bookingService) {
-            if (!in_array($bookingService['service_id'], array_keys($actualServices))) {
-                return true;
-            }
-
-            $actualService = $actualServices[$bookingService['service_id']];
-            if ($actualService->getInitialNumberOfHours() !== $actualService['final_number_of_hours']) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     /**

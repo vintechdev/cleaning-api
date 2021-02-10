@@ -21,7 +21,7 @@ class Setting extends Model
      */
     public static function getStripeServiceFeePercentage(): float
     {
-        $setting = self::where(['type', 'payment'])->where(['key', 'stripe_service_fee_percentage'])->first();
+        $setting = self::where(['type' => 'payment', 'key' => 'stripe_service_fee_percentage'])->first();
         return $setting->value;
     }
 }

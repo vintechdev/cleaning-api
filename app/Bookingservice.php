@@ -201,4 +201,24 @@ class Bookingservice extends Model
             ->getService()
             ->getBaseCost($this->getInitialServiceCost(), $this->getInitialNumberOfHours());
     }
+
+    /**
+     * @return bool
+     */
+    public function hasChanged(): bool
+    {
+        if (!$this->isInitiallyAdded() || $this->isRemoved()) {
+            return false;
+        }
+
+        if (
+            !is_null($this->getFinalServiceCost()) &&
+            $this->getService()->getServiceType() === Service::SERVICE_TYPE_HOURLY &&
+            $this->getInitialNumberOfHours() != $this->getFinalNumberOfHours()
+        ) {
+            return true;
+        }
+
+        return false;
+    }
 }

@@ -13,23 +13,27 @@ class CreateLogsTable extends Migration
      */
     public function up()
     { 
-        DB::statement("DROP TABLE `notification_logs`;");
+      
         DB::statement("CREATE TABLE IF NOT EXISTS `notification_logs` (
-            `id` int(10) UNSIGNED NOT NULL,
+           `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
             `event_type` varchar(255) NOT NULL,
             `user_id` int(10) UNSIGNED NOT NULL,
             `booking_id` int(10) UNSIGNED NOT NULL,
             `created_at` timestamp NULL DEFAULT NULL,
             `updated_at` timestamp NULL DEFAULT NULL,
             `deleted_at` timestamp NULL DEFAULT NULL,
+            PRIMARY KEY (`id`),
             KEY `user_id` (`user_id`),
             KEY `booking_id` (`booking_id`)
           ) ENGINE=InnoDB DEFAULT CHARSET=latin1;");
 
+         // DB::statement("ALTER TABLE `notification_logs` CHANGE `id` `id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT;");
+
           //email logs
+         
           DB::statement("CREATE TABLE IF NOT EXISTS `email_notification_logs` (
-            `id` int(10) UNSIGNED NOT NULL,
-            `notification_id` int(10) UNSIGNED NOT NULL,
+            `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+            `notification_log_id` int(10) UNSIGNED NOT NULL,
             `message` blob,
             `subject` varchar(255) DEFAULT NULL,
             `status` enum('failed','sent') NOT NULL,
@@ -37,14 +41,15 @@ class CreateLogsTable extends Migration
             `updated_at` timestamp NULL DEFAULT NULL,
             `deleted_at` timestamp NULL DEFAULT NULL,
             PRIMARY KEY (`id`),
-            KEY `notification_id` (`notification_id`)
+            KEY `notification_log_id` (`notification_log_id`)
           ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
           ");
 
             //push notification
+           
             DB::statement("CREATE TABLE IF NOT EXISTS `push_notification_logs` (
-                `id` int(10) UNSIGNED NOT NULL,
-                `notification_id` int(10) UNSIGNED NOT NULL,
+                `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+                `notification_log_id` int(10) UNSIGNED NOT NULL,
                 `message` blob,
                 `subject` varchar(255) DEFAULT NULL,
                 `status` enum('failed','sent') NOT NULL,
@@ -52,13 +57,14 @@ class CreateLogsTable extends Migration
                 `updated_at` timestamp NULL DEFAULT NULL,
                 `deleted_at` timestamp NULL DEFAULT NULL,
                 PRIMARY KEY (`id`),
-                KEY `notification_id` (`notification_id`)
+                KEY `notification_log_id` (`notification_log_id`)
               ) ENGINE=InnoDB DEFAULT CHARSET=latin1;");
     
               //sms table
+            
               DB::statement("CREATE TABLE IF NOT EXISTS `sms_notification_logs` (
-                `id` int(10) UNSIGNED NOT NULL,
-                `notification_id` int(10) UNSIGNED NOT NULL,
+                `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+                `notification_log_id` int(10) UNSIGNED NOT NULL,
                 `message` blob,
                 `subject` varchar(255) DEFAULT NULL,
                 `status` enum('failed','sent') NOT NULL,
@@ -66,7 +72,7 @@ class CreateLogsTable extends Migration
                 `updated_at` timestamp NULL DEFAULT NULL,
                 `deleted_at` timestamp NULL DEFAULT NULL,
                 PRIMARY KEY (`id`),
-                KEY `notification_id` (`notification_id`)
+                KEY `notification_log_id` (`notification_log_id`)
               ) ENGINE=InnoDB DEFAULT CHARSET=latin1;");
     }
 

@@ -104,8 +104,10 @@ Route::middleware(['auth:api','scope:customer,provider'])->namespace('Backend\AP
     Route::post('getchat/{bookingid}', 'ChatsController@getchat')->name('getchat');
     Route::get('chats/list/{type}', 'ChatsController@list')->name('chatlist');
     Route::post('profilepicture', 'CustomerusersController@profilepicture')->name('profilepicture');
-    Route::get('profile_view', 'CustomerusersController@profile_view')->name('api.Customeruser.profile_view');
+    Route::get('profile_view','CustomerusersController@profile_view')->name('api.Customeruser.profile_view');
     
+    Route::get('getnotifications', 'NotificationController@getnotifications')->name('api.Notification.getnotifications');
+    Route::post('editnotifications', 'NotificationController@editnotifications')->name('api.Notification.editnotifications');
 
 });
 
@@ -158,9 +160,8 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
 
    
 
-    Route::get('getnotifications', 'NotificationController@getnotifications')->name('api.Notification.getnotifications')->middleware(['scope:customer']);
-
-    Route::post('editnotifications', 'NotificationController@editnotifications')->name('api.Notification.editnotifications')->middleware(['scope:customer']);
+   
+    
     Route::get('getallbookingdetails', 'BookingController@getallbookingdetails')->name('api.Booking.getallbookingdetails')->middleware(['scope:customer']);
 
     Route::get('getpendingbookingdetails', 'BookingController@getpendingbookingdetails')->name('api.Booking.getpendingbookingdetails')->middleware(['scope:customer']);

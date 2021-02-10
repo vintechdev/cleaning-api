@@ -46,10 +46,17 @@ class ProfileRepository extends AbstractBaseRepository
         return Working_hours::class;
     }
 
-    public function getproviderpostcode()
+    public function getproviderpostcode(Request $request)
     {
+        $search = $request->search;
         $user_id = Auth::user()->id;
-        $res =  Providerpostcodemap::with('postcode')->where('provider_id',$user_id)->get()->toArray();
+        $query =  Providerpostcodemap::with([ 'postcode' => function($query) use ($search) {
+            if($search!=''){
+                $query->Where('postcode', 'like', '%' . $search . '%');
+            }
+          }]);
+      
+        $res = $query->where('provider_id',$user_id)->get()->toArray();
        return $res;
     }
     public function addproviderpostcode($postcode){

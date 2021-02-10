@@ -40,7 +40,7 @@ public function addproviderpostcode(Request $request)
 }
 public function getproviderpostcode(Request $request)
 {
-    $res = app(ProfileRepository::class)->getproviderpostcode();
+    $res = app(ProfileRepository::class)->getproviderpostcode($request);
     return response()->json(['data' => $res], 200);
    
 }

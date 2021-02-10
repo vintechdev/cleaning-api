@@ -3,6 +3,7 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Class NotificationLog
@@ -10,6 +11,22 @@ use Illuminate\Database\Eloquent\Model;
  */
 class NotificationLog extends Model
 {
+    protected $table = 'notification_logs';
+    use SoftDeletes;
+    protected $fillable = ['id'];
     const NOTIFICATION_TYPE_BOOKING_CREATED_EMAIL = 'booking_created_email';
     const NOTIFICATION_TYPE_BOOKING_STATUS_CHANGE_EMAIL = 'booking_status_change_email';
+
+    public function emails()
+    {
+        return $this->hasMany(EmailNotificationLogs::class,'notification_log_id','id');
+    }
+    public function sms()
+    {
+        return $this->hasMany(SMSNotificationLogs::class,'notification_log_id','id');
+    }
+    public function push()
+    {
+        return $this->hasMany(PushNotificationLogs::class,'notification_log_id','id');
+    }
 }

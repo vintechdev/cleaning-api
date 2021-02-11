@@ -303,7 +303,7 @@ public function loginlog($data)
             if (!Hash::check($login_password, $user->password)) {
                 $this->incrementLoginAttempts($request);
                 // return an error response
-                return response()->json(['message'=>'Please enter correct password'], 401);
+                return response()->json(['message'=>'Email or Password is incorrect!!'], 401);
             }
             
             $client = DB::table('oauth_clients')

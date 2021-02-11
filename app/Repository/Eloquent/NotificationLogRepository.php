@@ -23,7 +23,7 @@ class NotificationLogRepository extends AbstractBaseRepository
             return NotificationLog::join('push_notification_logs','notification_logs.id','=','push_notification_logs.notification_log_id')->where('push_notification_logs.status','unread')->count();
         }else{
 
-            $result =  NotificationLog::join('push_notification_logs','notification_logs.id','=','push_notification_logs.notification_log_id')->where('user_id',Auth::user()->id)->orderBy('status','desc')->get()->toArray();
+            $result =  NotificationLog::join('push_notification_logs','notification_logs.id','=','push_notification_logs.notification_log_id')->where('user_id',Auth::user()->id)->orderBy('push_notification_logs.status','desc')->orderBy('push_notification_logs.created_at', 'DESC')->get()->toArray();
 
             NotificationLog::join('push_notification_logs','notification_logs.id','=','push_notification_logs.notification_log_id')->where('user_id',Auth::user()->id)->where('status','unread')->update(['status'=>'read']);
 

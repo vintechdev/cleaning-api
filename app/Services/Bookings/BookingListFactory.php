@@ -36,6 +36,9 @@ class BookingListFactory
             case BookingStatus::BOOKING_STATUS_ARRIVED:
                 return (app(ArrivedBookingList::class));
 
+            case Bookingstatus::BOOKING_STATUS_PENDING_APPROVAL:
+                return app(PendingApprovalBookingList::class);
+
             default:
                 throw new \InvalidArgumentException('Invalid booking status received');
         }

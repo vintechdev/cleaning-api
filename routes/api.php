@@ -109,6 +109,9 @@ Route::middleware(['auth:api','scope:customer,provider'])->namespace('Backend\AP
     Route::get('getnotifications', 'NotificationController@getnotifications')->name('api.Notification.getnotifications');
     Route::post('editnotifications', 'NotificationController@editnotifications')->name('api.Notification.editnotifications');
 
+    //top notification
+    Route::get('loadnotifications', 'NotificationLogsController@LoadNotifications')->name('loadnotifications');
+    
 });
 
 Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->prefix('v1/customer')->group(function () {

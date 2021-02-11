@@ -9,10 +9,10 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 
 /**
- * Class CompletedBookingList
+ * Class PendingApprovalBookingList
  * @package App\Services\Bookings
  */
-class CompletedBookingList extends AbstractBookingList
+class PendingApprovalBookingList extends AbstractBookingList
 {
     /**
      * @return Collection
@@ -22,7 +22,7 @@ class CompletedBookingList extends AbstractBookingList
         $bookingQuery = $this->getBookingQuery();
 
         $bookingQuery
-            ->where('booking_status_id', Bookingstatus::BOOKING_STATUS_COMPLETED)
+            ->where('booking_status_id', Bookingstatus::BOOKING_STATUS_PENDING_APPROVAL)
             ->where('plan_type', Plan::ONCEOFF);
 
         $from = $this->getFrom();

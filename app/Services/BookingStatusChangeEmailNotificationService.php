@@ -43,6 +43,7 @@ class BookingStatusChangeEmailNotificationService extends AbstractBookingNotific
     protected function sendNotification(): bool
     {
         //when provider change the status send email to user and provider
+        //return true;
         $useremail = $this->sendEmail();
         if($useremail){
             return true;

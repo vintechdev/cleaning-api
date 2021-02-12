@@ -77,10 +77,6 @@ class RecurringBookingService
             return $recurringBooking;
         }
 
-//        if ($date->lessThan(Carbon::now()->floorDay())) {
-//            throw new RecurringBookingCreationException('Recurring booking can not be created for past date');
-//        }
-
         $childBooking = $this->bookingService->createChildBooking($booking);
 
         /** @var RecurringBooking $recurringBooking */

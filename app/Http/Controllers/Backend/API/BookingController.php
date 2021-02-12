@@ -330,7 +330,7 @@ class BookingController extends Controller
     /**
      * @param Request $request
      * @param Booking $booking
-     * @param BookingStatusChangeContextBuilder $contextBuilder
+     * @param BookingStatusChangeEngine $statusChangeEngine
      * @return \Illuminate\Http\JsonResponse
      */
     public function updateBooking(Request $request, Booking $booking, BookingStatusChangeEngine $statusChangeEngine)

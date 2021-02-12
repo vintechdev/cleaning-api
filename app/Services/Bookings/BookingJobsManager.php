@@ -177,6 +177,41 @@ class BookingJobsManager
 
     /**
      * @param Booking $booking
+     * @param Carbon $newDatetime
+     * @param Carbon|null $recurringDate
+     * @return array
+     * @throws \App\Exceptions\NoSavedCardException
+     */
+    public function changeJobDateTime(Booking $booking, Carbon $newDatetime, Carbon $recurringDate = null): array
+    {
+        if ($booking->isRecurring()) {
+            if ($booking->getStatus() != Bookingstatus::BOOKING_STATUS_PENDING) {
+                if (!$recurringDate) {
+                    throw new \InvalidArgumentException('A valid recurring data needs to be passed with recurring booking id.');
+                }
+                $recurringBooking = $this->recurringBookingService->findOrCreateRecurringBooking($booking, $recurringDate);
+                $booking = $recurringBooking->getBooking();
+            }
+        }
+
+        if ($booking->setStartDateTime($newDatetime)->save()) {
+            $providerDetails = $this->getProviderDetails($booking, true);
+            $services = $this->buildBookingServices($booking);
+            return $this
+                ->buildJob(
+                    $booking,
+                    $providerDetails,
+                    ['from' => $booking->getStartDate(), 'to' => $booking->getFinalBookingDateTime()],
+                    $services,
+                    true
+                );
+        }
+
+        throw new \Exception('Something went wrong when saving booking after changing it to a new date time');
+    }
+
+    /**
+     * @param Booking $booking
      * @return array
      */
     private function buildBookingServices(Booking $booking) : array

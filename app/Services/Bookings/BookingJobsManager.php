@@ -200,18 +200,21 @@ class BookingJobsManager
 
         $recurringBooking = null;
         if ($booking->isRecurring()) {
-            if ($booking->getStatus() != Bookingstatus::BOOKING_STATUS_PENDING) {
-                if (!$recurringDate) {
-                    throw new \InvalidArgumentException('A valid recurring data needs to be passed with recurring booking id.');
-                }
-                $recurringBooking = $this->recurringBookingService->findOrCreateRecurringBooking($booking, $recurringDate);
-                $booking = $recurringBooking->getBooking();
+            if (!$recurringDate) {
+                throw new \InvalidArgumentException('A valid recurring date needs to be passed with recurring booking id.');
             }
+
+            $recurringBooking = $this->recurringBookingService->findOrCreateRecurringBooking($booking, $recurringDate);
+            $booking = $recurringBooking->getBooking();
         } elseif ($booking->isChildBooking()) {
             $recurringBooking = $this->recurringBookingService->findByChildBooking($booking);
         }
 
-        if (!$user->isAdmin() || !$this->bookingVerificationService->isUserAChosenBookingProvider($user, $booking)) {
+        if ($booking->getStatus() != Bookingstatus::BOOKING_STATUS_ACCEPTED) {
+            throw new UnauthorizedAccessException('Bookings can only be rescheduled when it is in accepted state.');
+        }
+
+        if (!$user->isAdmin() && !$this->bookingVerificationService->hasUserAcceptedBooking($user, $booking)) {
             throw new UnauthorizedAccessException('User does not have access to reschedule booking date time.');
         }
 

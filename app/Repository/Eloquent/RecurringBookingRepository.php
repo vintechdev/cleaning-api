@@ -61,7 +61,7 @@ class RecurringBookingRepository extends AbstractBaseRepository
      */
     public function findAllRescheduledByEvent(Event $event): Collection
     {
-        return RecurringBooking::where(['event_id' => $event->getId()])->where(['is_rescheduled', 1]);
+        return RecurringBooking::where(['event_id' => $event->getId()])->where(['is_rescheduled'=> 1])->get();
     }
 
     /**

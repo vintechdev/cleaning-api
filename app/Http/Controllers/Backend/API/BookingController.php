@@ -331,14 +331,16 @@ class BookingController extends Controller
      * @param Request $request
      * @param Booking $booking
      * @param BookingStatusChangeEngine $statusChangeEngine
+     * @param BookingJobsManager $bookingJobsManager
      * @return \Illuminate\Http\JsonResponse
      */
-    public function updateBooking(Request $request, Booking $booking, BookingStatusChangeEngine $statusChangeEngine)
+    public function updateBooking(Request $request, Booking $booking, BookingStatusChangeEngine $statusChangeEngine, BookingJobsManager $bookingJobsManager)
     {
         $validator = Validator::make($request->all(), [
-            'status' => 'in:' . implode(',', BookingStatusChangeTypes::getAll()),
+            'status' => 'nullable|in:' . implode(',', BookingStatusChangeTypes::getAll()),
             'status_change_message' => 'nullable|string',
-            'services' => 'nullable|array'
+            'services' => 'nullable|array',
+            'booking_time' => 'nullable|date_format:dmYHis'
         ]);
 
         if($validator->fails()){
@@ -346,12 +348,24 @@ class BookingController extends Controller
             return response()->json(['message' => $message], 401);
         }
 
-        $statusChangeEngine
-            ->setBooking($booking)
-            ->setUser(auth('api')->user())
-            ->setStatusChangeParameters($request->all());
+        if ($request->has('status')) {
+            $statusChangeEngine
+                ->setBooking($booking)
+                ->setUser(auth('api')->user())
+                ->setStatusChangeParameters([
+                    'status' => $request->get('status'),
+                    'status_change_message' => $request->has('status_change_message') ? $request->get('status_change_message') : null,
+                    'services' => $request->has('services') ? $request->get('services') : []
+                ]);
 
-        return $this->changeBookingStatus($request->get('status'), $statusChangeEngine);
+            return $this->changeBookingStatus($request->get('status'), $statusChangeEngine);
+        }
+
+        if ($request->has('booking_time')) {
+            return $this->handleDateTimeChange($booking, $request->get('booking_time'), $bookingJobsManager);
+        }
+
+        return response()->json(['message' => 'Invalid request parameters'], 400);
     }
 
     /**
@@ -359,19 +373,23 @@ class BookingController extends Controller
      * @param Booking $booking
      * @param string $date
      * @param BookingStatusChangeEngine $statusChangeEngine
+     * @param BookingJobsManager $bookingJobsManager
      * @return \Illuminate\Http\JsonResponse
+     * @throws NoSavedCardException
      */
     public function updateRecurredBooking(
         Request $request,
         Booking $booking,
         string $date,
-        BookingStatusChangeEngine $statusChangeEngine
+        BookingStatusChangeEngine $statusChangeEngine,
+        BookingJobsManager $bookingJobsManager
     ) {
         
         $validator = Validator::make($request->all(), [
-            'status' => 'in:' . implode(',', BookingStatusChangeTypes::getAll()),
+            'status' => 'nullable|in:' . implode(',', BookingStatusChangeTypes::getAll()),
             'status_change_message' => 'string',
-            'services' => 'nullable|array'
+            'services' => 'nullable|array',
+            'booking_time' => 'nullable|date_format:dmYHis'
         ]);
 
         if($validator->fails()) {
@@ -379,13 +397,46 @@ class BookingController extends Controller
             return response()->json(['message' => $message], 401);
         }
 
-        $statusChangeEngine
-            ->setBooking($booking)
-            ->setUser(auth('api')->user())
-            ->setRecurredDate(Carbon::createFromFormat('dmYHis', $date))
-            ->setStatusChangeParameters($request->all());
+        if ($request->has('status')) {
+            $statusChangeEngine
+                ->setBooking($booking)
+                ->setUser(auth('api')->user())
+                ->setRecurredDate(Carbon::createFromFormat('dmYHis', $date))
+                ->setStatusChangeParameters([
+                    'status' => $request->get('status'),
+                    'status_change_message' => $request->has('status_change_message') ? $request->get('status_change_message') : null,
+                    'services' => $request->has('services') ? $request->get('services') : []
+                ]);
 
-        return $this->changeBookingStatus($request->get('status'), $statusChangeEngine);
+            return $this->changeBookingStatus($request->get('status'), $statusChangeEngine);
+        }
+
+        if ($request->has('booking_time')) {
+            return $this->handleDateTimeChange($booking, $request->get('booking_time'), $bookingJobsManager, $date);
+        }
+
+        return response()->json(['message' => 'Invalid request parameters'], 400);
+    }
+
+    private function handleDateTimeChange(Booking $booking, string $newDateTimeString, BookingJobsManager $bookingJobsManager, string $recurredDate = null)
+    {
+        try {
+            $newDateTime = Carbon::createFromFormat('dmYHis', $newDateTimeString);
+        } catch (\Exception $exception) {
+            return response()->json(['message' => 'Invalid date format received for new booking date time'], 400);
+        }
+
+        try {
+            $recurredDate = $recurredDate ? Carbon::createFromFormat('dmYHis', $recurredDate) : null;
+            $job = $bookingJobsManager->changeJobDateTime($booking, $newDateTime, Auth::user(), $recurredDate);
+            return response()->json($job, 201);
+        } catch (\InvalidArgumentException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 400);
+        } catch (UnauthorizedAccessException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 403);
+        } catch (\Exception $exception) {
+            return response()->json(['message' => 'Something went wrong. Please contact the administrator.'], 403);
+        }
     }
 
     /**

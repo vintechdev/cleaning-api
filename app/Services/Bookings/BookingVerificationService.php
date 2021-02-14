@@ -68,4 +68,23 @@ class BookingVerificationService
         return $user->isProvider() &&
             !is_null($this->bookingRequestProviderRepo->getByBookingAndProviderId($booking->getId(), $user->getId()));
     }
+
+    /**
+     * @param User $user
+     * @param Booking $booking
+     * @return bool
+     */
+    public function hasUserAcceptedBooking(User $user, Booking $booking): bool
+    {
+        if (!$user->isProvider()) {
+            return false;
+        }
+
+        $requestProvider = $this->bookingRequestProviderRepo->getAcceptedBookingRequestProvider($booking);
+        if (!$requestProvider) {
+            return false;
+        }
+
+        return $requestProvider->getProviderId() == $user->getId();
+    }
 }

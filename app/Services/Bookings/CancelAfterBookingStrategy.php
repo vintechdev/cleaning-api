@@ -3,7 +3,6 @@
 namespace App\Services\Bookings;
 
 use App\Booking;
-use App\Bookingrequestprovider;
 use App\Bookingstatus;
 use App\Exceptions\Booking\BookingStatusChangeException;
 use App\Exceptions\Booking\InvalidBookingStatusActionException;
@@ -77,11 +76,14 @@ class CancelAfterBookingStrategy extends CancelBookingStrategy
         /** @var RecurringBooking $recurring */
         foreach ($recurringBookings as $recurring) {
             $recurringBooking = $recurring->getBooking();
-            if (in_array($recurringBooking->getStatus(), [
-                Bookingstatus::BOOKING_STATUS_PENDING,
-                Bookingstatus::BOOKING_STATUS_ACCEPTED,
-                Bookingstatus::BOOKING_STATUS_ARRIVED
-            ])) {
+            if (
+                in_array($recurringBooking->getStatus(), [
+                    Bookingstatus::BOOKING_STATUS_PENDING,
+                    Bookingstatus::BOOKING_STATUS_ACCEPTED,
+                    Bookingstatus::BOOKING_STATUS_ARRIVED
+                ]) &&
+                $recurringBooking->getStartDate()->greaterThanOrEqualTo($date)
+            ) {
                 $this->cancelBooking($recurringBooking);
             }
         }

@@ -106,7 +106,7 @@ Route::middleware(['auth:api','scope:customer,provider'])->namespace('Backend\AP
     Route::post('profilepicture', 'CustomerusersController@profilepicture')->name('profilepicture');
     Route::get('profile_view','CustomerusersController@profile_view')->name('api.Customeruser.profile_view');
     
-    Route::get('getnotifications', 'NotificationController@getnotifications')->name('api.Notification.getnotifications');
+    Route::get('/notifications', 'NotificationController@getNotifications')->name('api.Notification.getnotifications');
     Route::post('editnotifications', 'NotificationController@editnotifications')->name('api.Notification.editnotifications');
 
     //top notification

@@ -19,7 +19,7 @@ class Notification extends Model
 
 
 
-    public function usernotification()
+    public function userNotifications(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(UserNotification::class,'notification_id','id');
     }

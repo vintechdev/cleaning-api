@@ -2,6 +2,7 @@
 
 namespace App\Repository\Eloquent;
 
+use App\Booking;
 use App\Event;
 use App\RecurringBooking;
 use Carbon\Carbon;
@@ -52,5 +53,32 @@ class RecurringBookingRepository extends AbstractBaseRepository
     public function findAllByEvent(Event $event): Collection
     {
         return RecurringBooking::where(['event_id' => $event->getId()])->get();
+    }
+
+    /**
+     * @param Event $event
+     * @return Collection
+     */
+    public function findAllRescheduledByEvent(Event $event): Collection
+    {
+        return RecurringBooking::where(['event_id' => $event->getId()])->where(['is_rescheduled', 1]);
+    }
+
+    /**
+     * @param Booking $booking
+     * @return RecurringBooking|null
+     */
+    public function findByChildBooking(Booking $booking): ?RecurringBooking
+    {
+        if (!$booking->isChildBooking()) {
+            return null;
+        }
+
+        $recurringBooking = RecurringBooking::where(['booking_id' => $booking->getId()]);
+        if (!$recurringBooking->count()) {
+            return null;
+        }
+
+        return $recurringBooking->first();
     }
 }

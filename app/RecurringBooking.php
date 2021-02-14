@@ -84,4 +84,22 @@ class RecurringBooking extends Model
         }
         return null;
     }
+
+    /**
+     * @return bool
+     */
+    public function isRescheduled(): bool
+    {
+        return (bool)$this->is_rescheduled;
+    }
+
+    /**
+     * @param bool $isRescheduled
+     * @return $this
+     */
+    public function setRescheduled(bool $isRescheduled = true)
+    {
+        $this->is_rescheduled = $isRescheduled ? 1 : 0;
+        return $this;
+    }
 }

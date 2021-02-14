@@ -146,4 +146,25 @@ class RecurringBookingService
     {
         return $this->recurringBookingRepo->findAllByEvent($event);
     }
+
+    /**
+     * @param Event $event
+     * @return Collection
+     */
+    public function findAllRescheduledByEvent(Event $event): Collection
+    {
+        return $this->recurringBookingRepo->findAllRescheduledByEvent($event);
+    }
+
+    /**
+     * @param Booking $booking
+     * @return RecurringBooking|null
+     */
+    public function findByChildBooking(Booking $booking): ?RecurringBooking
+    {
+        if (!$booking->isChildBooking()) {
+            throw new \InvalidArgumentException('Booking is not a child booking.');
+        }
+        $this->recurringBookingRepo->findByChildBooking($booking);
+    }
 }

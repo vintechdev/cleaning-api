@@ -47,6 +47,16 @@ class CancelBookingStrategy extends AbstractBookingStatusChangeStrategy
                 ->getBooking();
         }
 
+        return $this->cancelBooking($booking);
+    }
+
+    /**
+     * @param Booking $booking
+     * @return Booking
+     * @throws \Exception
+     */
+    protected function cancelBooking(Booking $booking)
+    {
         if ($booking->getStatus() === Bookingstatus::BOOKING_STATUS_CANCELLED) {
             throw new InvalidBookingStatusActionException('Booking is already cancelled');
         }
@@ -56,7 +66,7 @@ class CancelBookingStrategy extends AbstractBookingStatusChangeStrategy
             Bookingstatus::BOOKING_STATUS_ACCEPTED,
             Bookingstatus::BOOKING_STATUS_ARRIVED
         ])) {
-            throw new BookingStatusChangeException('Status of this booking can not be changed to cancelled');
+            throw new InvalidBookingStatusActionException('Status of this booking can not be changed to cancelled');
         }
 
         if (!$booking->setStatus(Bookingstatus::BOOKING_STATUS_CANCELLED)->save()) {

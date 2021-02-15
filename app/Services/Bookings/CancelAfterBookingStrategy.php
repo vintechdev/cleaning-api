@@ -3,12 +3,12 @@
 namespace App\Services\Bookings;
 
 use App\Booking;
-use App\Bookingrequestprovider;
 use App\Bookingstatus;
 use App\Exceptions\Booking\BookingStatusChangeException;
 use App\Exceptions\Booking\InvalidBookingStatusActionException;
 use App\Exceptions\Booking\RecurringBookingStatusChangeException;
 use App\Exceptions\Booking\UnauthorizedAccessException;
+use App\RecurringBooking;
 use App\User;
 use Carbon\Carbon;
 
@@ -38,16 +38,6 @@ class CancelAfterBookingStrategy extends CancelBookingStrategy
             throw new BookingStatusChangeException('This action is not permitted for this booking');
         }
 
-        if (in_array(
-            $booking->getStatus(),
-            [
-                Bookingstatus::BOOKING_STATUS_PENDING,
-                Bookingstatus::BOOKING_STATUS_REJECTED
-            ]
-        )) {
-            throw new BookingStatusChangeException('This action is not permitted for this booking');
-        }
-
         if ($booking->isChildBooking()) {
             $date = $booking->getStartDate();
             $booking = $booking->getParentBooking();
@@ -60,7 +50,17 @@ class CancelAfterBookingStrategy extends CancelBookingStrategy
                 throw new \InvalidArgumentException('Date passed is not a valid recurring date.');
             }
 
-            $date = $recurredDate;
+            $recurringBooking = $this->recurringBookingService->findByEventAndDate($booking->getEvent(), $recurredDate);
+
+            if ($recurringBooking) {
+                $date = $recurringBooking->getBooking()->getStartDate();
+            } else {
+                $date = $recurredDate;
+            }
+        }
+
+        if ($booking->getStatus() != Bookingstatus::BOOKING_STATUS_ACCEPTED) {
+            throw new BookingStatusChangeException('This action is not permitted for this booking');
         }
 
         if (!$this->canUserCancelBooking($booking, $user)) {
@@ -69,6 +69,23 @@ class CancelAfterBookingStrategy extends CancelBookingStrategy
 
         if (!$this->recurringBookingService->cancelAllBookingsAfter($booking, $date)) {
             throw new BookingStatusChangeException('Failed to cancel the bookings');
+        }
+
+        $recurringBookings = $this->recurringBookingService->findAllRescheduledByEvent($booking->getEvent());
+
+        /** @var RecurringBooking $recurring */
+        foreach ($recurringBookings as $recurring) {
+            $recurringBooking = $recurring->getBooking();
+            if (
+                in_array($recurringBooking->getStatus(), [
+                    Bookingstatus::BOOKING_STATUS_PENDING,
+                    Bookingstatus::BOOKING_STATUS_ACCEPTED,
+                    Bookingstatus::BOOKING_STATUS_ARRIVED
+                ]) &&
+                $recurringBooking->getStartDate()->greaterThanOrEqualTo($date)
+            ) {
+                $this->cancelBooking($recurringBooking);
+            }
         }
 
         return $booking;

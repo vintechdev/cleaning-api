@@ -3,6 +3,7 @@
 namespace App\Services\Bookings;
 
 use App\Booking;
+use App\Exceptions\Booking\UnauthorizedAccessException;
 use App\Repository\BookingReqestProviderRepository;
 use App\Repository\UserBadgeReviewRepository;
 use App\Services\BookingEventService;
@@ -50,6 +51,11 @@ class BookingJobsManager
     private $bookingListFactory;
 
     /**
+     * @var BookingVerificationService
+     */
+    private $bookingVerificationService;
+
+    /**
      * BookingManager constructor.
      * @param BookingListFactory $bookingListFactory
      * @param BookingEventService $bookingEventService
@@ -57,6 +63,7 @@ class BookingJobsManager
      * @param RecurringBookingService $recurringBookingService
      * @param BookingService $bookingService
      * @param UserBadgeReviewRepository $badgeReviewRepository
+     * @param BookingVerificationService $bookingVerificationService
      */
     public function __construct(
         BookingListFactory $bookingListFactory,
@@ -64,7 +71,8 @@ class BookingJobsManager
         BookingReqestProviderRepository $bookingReqestProviderRepository,
         RecurringBookingService $recurringBookingService,
         BookingService $bookingService,
-        UserBadgeReviewRepository $badgeReviewRepository
+        UserBadgeReviewRepository $badgeReviewRepository,
+        BookingVerificationService $bookingVerificationService
     ) {
         $this->bookingListFactory = $bookingListFactory;
         $this->bookingEventService = $bookingEventService;
@@ -72,6 +80,7 @@ class BookingJobsManager
         $this->recurringBookingService = $recurringBookingService;
         $this->bookingService = $bookingService;
         $this->badgeReviewRepo = $badgeReviewRepository;
+        $this->bookingVerificationService = $bookingVerificationService;
     }
 
     /**
@@ -173,6 +182,59 @@ class BookingJobsManager
             ],
             $this->buildBookingServices($booking)
         );
+    }
+
+    /**
+     * @param Booking $booking
+     * @param Carbon $newDatetime
+     * @param User $user
+     * @param Carbon|null $recurringDate
+     * @return array
+     * @throws \App\Exceptions\NoSavedCardException
+     */
+    public function changeJobDateTime(Booking $booking, Carbon $newDatetime, User $user, Carbon $recurringDate = null): array
+    {
+        if ($newDatetime->lessThan(Carbon::now())) {
+            throw new \InvalidArgumentException('Can not change to a data lesser than today\'s');
+        }
+
+        $recurringBooking = null;
+        if ($booking->isRecurring()) {
+            if (!$recurringDate) {
+                throw new \InvalidArgumentException('A valid recurring date needs to be passed with recurring booking id.');
+            }
+
+            $recurringBooking = $this->recurringBookingService->findOrCreateRecurringBooking($booking, $recurringDate);
+            $booking = $recurringBooking->getBooking();
+        } elseif ($booking->isChildBooking()) {
+            $recurringBooking = $this->recurringBookingService->findByChildBooking($booking);
+        }
+
+        if ($booking->getStatus() != Bookingstatus::BOOKING_STATUS_ACCEPTED) {
+            throw new UnauthorizedAccessException('Bookings can only be rescheduled when it is in accepted state.');
+        }
+
+        if (!$user->isAdmin() && !$this->bookingVerificationService->hasUserAcceptedBooking($user, $booking)) {
+            throw new UnauthorizedAccessException('User does not have access to reschedule booking date time.');
+        }
+
+        if ($booking->setStartDateTime($newDatetime)->save()) {
+            if ($recurringBooking) {
+                $recurringBooking->setRescheduled()->save();
+            }
+            $providerDetails = $this->getProviderDetails($booking, true);
+            $services = $this->buildBookingServices($booking);
+            return $this
+                ->buildJob(
+                    $booking,
+                    $providerDetails,
+                    ['from' => $booking->getStartDate(), 'to' => $booking->getFinalBookingDateTime()],
+                    $services,
+                    true
+                );
+        }
+
+        throw new \Exception('Something went wrong when saving booking after changing it to a new date time');
     }
 
     /**

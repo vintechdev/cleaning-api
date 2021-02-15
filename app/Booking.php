@@ -164,7 +164,7 @@ class Booking extends Model
     {
         $totalHours = 0;
         /** @var Bookingservice $bookingService */
-        foreach ($this->bookingServices() as $bookingService) {
+        foreach ($this->getBookingServices() as $bookingService) {
             $totalHours += $bookingService->getInitialNumberOfHours() ? : 0;
         }
 

@@ -152,7 +152,7 @@ class BookingService
                 $booking->promocode = $bookings['promocode'];
                 $booking->total_cost = $parent ? $bookings['total_cost'] : $highestTotalPriceDetails['total_cost'];
                 $booking->discount = $parent ? $bookings['discount'] : $highestTotalPriceDetails['discount'];
-                $booking->plan_discount = $parent ? $bookings['plan_discount'] : $highestTotalPriceDetails['plan_discount'];
+                $booking->plan_discount = $parent ? $bookings['plan_discount'] : $highestTotalPriceDetails['plan_discount_price'];
               
                 $booking->final_cost = $parent ? $bookings['final_cost'] : $highestTotalPriceDetails['final_cost'];
                 $booking->final_hours = $parent ? $bookings['final_hours'] : $highestTotalPriceDetails['total_time'];

@@ -6,7 +6,6 @@ use App\Notification;
 use Illuminate\Http\Request;
 use App\Http\Requests\Backend\NotificationRequest;
 use App\Http\Resources\NotificationCollection;
-use App\Http\Resources\Notification as NotificationResource;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
 use Auth;
@@ -48,6 +47,7 @@ class NotificationController extends Controller
 			$notifications = $notifications->where('allow_push', 'LIKE', '%'.$request->get('allow_push').'%');
 		}
         $notifications = $notifications->paginate(20);
+
         return (new NotificationCollection($notifications));
     }
 
@@ -57,7 +57,7 @@ class NotificationController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function post(NotificationRequest $request, Notification $notification)
+    public function post(NotificationRequest $request, Notification $notification): \Illuminate\Http\Response
     {
         $notification = Notification::firstOrNew(['id' => $request->get('id')]);
         $notification->id = $request->get('id');
@@ -86,7 +86,7 @@ class NotificationController extends Controller
     }
 
     //for update notifications by uuid
-    public function updateNotifications(Request $request)
+    public function updateNotifications(Request $request): \Illuminate\Http\JsonResponse
     {
         $validator = Validator::make($request->all(), [
             'id'=>'required|array',
@@ -131,7 +131,7 @@ class NotificationController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function delete(Request $request)
+    public function delete(Request $request): \Illuminate\Http\Response
     {
         $notification = Notification::find($request->get('id'));
         $notification->delete();
@@ -144,7 +144,7 @@ class NotificationController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function restore(Request $request)
+    public function restore(Request $request): \Illuminate\Http\Response
     {
         $notification = Notification::withTrashed()->find($request->get('id'));
         $notification->restore();

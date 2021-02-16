@@ -4,12 +4,10 @@ namespace App\Http\Controllers\Backend\API;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Validator;
 use Auth;
 use Hash;
 use DB;
 use App\Repository\Eloquent\NotificationLogRepository;
-
 
 
 class NotificationLogsController extends Controller
@@ -18,9 +16,9 @@ class NotificationLogsController extends Controller
     {
         $this->notilogs = $notilogs;   
     }
-   public function LoadNotifications(Request $request)
+   public function getNotifications(Request $request)
    {
-       $result = $this->notilogs->LoadNotifications($request);
+       $result = $this->notilogs->getUserPushNotifications($request);
        return response()->json(['data'=>$result]);
    }
 }

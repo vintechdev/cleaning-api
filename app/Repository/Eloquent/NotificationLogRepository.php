@@ -9,6 +9,7 @@ use App\NotificationLog;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class NotificationLogRepository extends AbstractBaseRepository
 {
@@ -23,7 +24,7 @@ class NotificationLogRepository extends AbstractBaseRepository
             return $this->countUserNotification($request);
         }
 
-        $result =  $this->getUserPushNotificationList($request, "unread");
+        $result =  $this->getUserPushNotificationList($request);
 
         $this->updateNotificationStatus($request , "read");
 
@@ -31,24 +32,18 @@ class NotificationLogRepository extends AbstractBaseRepository
     }
 
     private function countUserNotification(Request $request): int {
-        if (!$fromDate = $request->get('fromDate')) {
-            $fromDate = Carbon::now()->subDays('7')
-                ->format('Y-m-d 00:00:00');
-        }
-
         $count = NotificationLog::query()
             ->join('push_notification_logs',
                 'notification_logs.id','=','push_notification_logs.notification_log_id')
             ->where('push_notification_logs.status','unread')
             ->where('notification_logs.user_id', Auth::user()->id)
             ->where('push_notification_logs.user_type', $request->get('userType', 'user'))
-            ->where('push_notification_logs.updated_at', '>',  $fromDate)
             ->count();
 
         return intval($count);
     }
 
-    private function getUserPushNotificationList(Request $request, string $status): array {
+    private function getUserPushNotificationList(Request $request): array {
         if (!$fromDate = $request->get('fromDate')) {
             $fromDate = Carbon::now()->subDays('7')
                 ->format('Y-m-d 00:00:00');
@@ -58,11 +53,17 @@ class NotificationLogRepository extends AbstractBaseRepository
         ->join('push_notification_logs',
             'notification_logs.id','=','push_notification_logs.notification_log_id')
         ->where('user_id', Auth::user()->id)
+        ->where('push_notification_logs.user_type', $request->get('userType', 'user'))
+        ->where(function ($query) use ($fromDate) {
+            $query->where('push_notification_logs.status', DB::raw("'unread'"));
+            $query->orWhere(function ($q) use ($fromDate) {
+                $q->where('push_notification_logs.updated_at', '>',
+                    DB::raw("'".$fromDate . "'"));
+                $q->where('push_notification_logs.status', DB::raw("'read'"));
+            });
+        })
         ->orderBy('push_notification_logs.status','desc')
         ->orderBy('push_notification_logs.created_at', 'DESC')
-        ->where('push_notification_logs.status', $status)
-        ->where('push_notification_logs.user_type', $request->get('userType', 'user'))
-        ->where('push_notification_logs.updated_at', '>', $fromDate)
         ->get()
         ->toArray();
     }

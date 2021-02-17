@@ -227,7 +227,7 @@ class CustomerusersController extends Controller
            /*  $users->leftJoin('user_reviews', function( $join){
                 $join->on('user_reviews.user_review_for', 'users.id');
             });  */
-            $users->select(['users.*','p.avgrate','j.completed_jobs','r.*'])->where('role_id', 2);
+            $users->select(['users.*','p.avgrate','j.completed_jobs','provider_service_maps.amount','provider_service_maps.type', 'services.is_default_service', 'provider_service_maps.provider_id'])->where('role_id', 2);
             if ($request->has('providertype')){
                     $users->where('users.providertype',$request->has('providertype'));
             }
@@ -253,7 +253,7 @@ class CustomerusersController extends Controller
             }
 
             if($request->has('pricerange') && $request->get('pricerange')>0){
-                $users->where('r.amount','<=',$request->get('pricerange'));
+                $users->where('provider_service_maps.amount','<=',$request->get('pricerange'));
             }
             if($request->has('cleaningrange') && $request->get('cleaningrange')>0){
                 $users->where(DB::raw('IFNULL(j.completed_jobs,0)'),'>=',$request->get('cleaningrange'));
@@ -266,10 +266,10 @@ class CustomerusersController extends Controller
                     $column = 'users.created_at';
                     $dir = 'desc';
                 }else if($request->get('sorting')=='pasc'){
-                    $column = 'r.amount';
+                    $column = 'provider_service_maps.amount';
                     $dir = 'asc';
                 }else if($request->get('sorting')=='pdesc'){
-                    $column = 'r.amount';
+                    $column = 'provider_service_maps.amount';
                     $dir = 'desc';
                 }else{
                     $column = 'j.completed_jobs';
@@ -290,7 +290,7 @@ class CustomerusersController extends Controller
             if(count($agency)>0){
                 
            
-                 $arr = $agencyprice->where('providertype','agency')->orderBy('r.amount','desc')->limit(1)->pluck('amount')->toArray();
+                 $arr = $agencyprice->where('providertype','agency')->orderBy('provider_service_maps.amount','desc')->limit(1)->pluck('amount')->toArray();
                  $highagencyprice = $arr[0];
             }
             

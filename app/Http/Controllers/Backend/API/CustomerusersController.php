@@ -202,21 +202,17 @@ class CustomerusersController extends Controller
             
             $users->leftJoin( DB::raw("(SELECT count(provider_user_id) as completed_jobs, booking_request_providers.provider_user_id FROM `booking_request_providers` inner join bookings on(bookings.id=booking_request_providers.booking_id) where booking_request_providers.status='accepted' and bookings.booking_status_id=4 group by booking_request_providers.provider_user_id) as j"), 'j.provider_user_id', '=', 'users.id');
 
-            $users->leftJoin(DB::raw("(SELECT pm.amount,pm.type,sr.is_default_service,pm.provider_id from provider_service_maps pm join services sr on(pm.service_id=sr.id) where sr.is_default_service=1 and sr.deleted_at is null and pm.deleted_at is null and pm.status=1) as r"), 'r.provider_id', '=', 'users.id');
-        
-            if($request->has('servicecategory') || $request->has('serviceid')){
-                $users
-                    ->join('provider_service_maps', 'users.id', '=', 'provider_service_maps.provider_id')
-                    ->join('services', 'provider_service_maps.service_id', '=', 'services.id')
-                    ->join('service_categories', 'services.category_id', '=', 'service_categories.id');
-            } 
+            $users
+                ->join('provider_service_maps', 'users.id', '=', 'provider_service_maps.provider_id')
+                ->join('services', 'provider_service_maps.service_id', '=', 'services.id')
+                ->join('service_categories', 'services.category_id', '=', 'service_categories.id');
 
             if ($request->has('postcode')){
 
                 $users->Join(DB::raw("( select DISTINCT provider_id from `provider_postcode_maps`
                 INNER JOIN `postcodes` 
                         ON `provider_postcode_maps`.`postcode_id` = `postcodes`.`id` 
-                        where postcode = ".$request->get('postcode')."
+                        where postcode = ".$request->get('postcode')." and provider_postcode_maps.deleted_at is null
                 ) as prv"), 'prv.provider_id', '=', 'users.id');
              
 
@@ -231,7 +227,7 @@ class CustomerusersController extends Controller
            /*  $users->leftJoin('user_reviews', function( $join){
                 $join->on('user_reviews.user_review_for', 'users.id');
             });  */
-            $users->select(['users.*','p.avgrate','j.completed_jobs','r.*'])->where('role_id', 2);
+            $users->select(['users.*','p.avgrate','j.completed_jobs','provider_service_maps.amount','provider_service_maps.type', 'services.is_default_service', 'provider_service_maps.provider_id'])->where('role_id', 2);
             if ($request->has('providertype')){
                     $users->where('users.providertype',$request->has('providertype'));
             }
@@ -253,11 +249,11 @@ class CustomerusersController extends Controller
                 $servicearr =  explode(',',$request->get('serviceid'));
              
                 $users->whereIn('provider_service_maps.service_id', $servicearr);
-                $users->groupBy('users.id','p.avgrate','r.amount','r.type','r.is_default_service')->havingRaw("count(provider_service_maps.provider_id)=".count( $servicearr));
+                $users->groupBy('users.id','p.avgrate','provider_service_maps.amount','provider_service_maps.type','services.is_default_service')->havingRaw("count(provider_service_maps.provider_id)=".count( $servicearr));
             }
 
             if($request->has('pricerange') && $request->get('pricerange')>0){
-                $users->where('r.amount','<=',$request->get('pricerange'));
+                $users->where('provider_service_maps.amount','<=',$request->get('pricerange'));
             }
             if($request->has('cleaningrange') && $request->get('cleaningrange')>0){
                 $users->where(DB::raw('IFNULL(j.completed_jobs,0)'),'>=',$request->get('cleaningrange'));
@@ -270,10 +266,10 @@ class CustomerusersController extends Controller
                     $column = 'users.created_at';
                     $dir = 'desc';
                 }else if($request->get('sorting')=='pasc'){
-                    $column = 'r.amount';
+                    $column = 'provider_service_maps.amount';
                     $dir = 'asc';
                 }else if($request->get('sorting')=='pdesc'){
-                    $column = 'r.amount';
+                    $column = 'provider_service_maps.amount';
                     $dir = 'desc';
                 }else{
                     $column = 'j.completed_jobs';
@@ -294,7 +290,7 @@ class CustomerusersController extends Controller
             if(count($agency)>0){
                 
            
-                 $arr = $agencyprice->where('providertype','agency')->orderBy('r.amount','desc')->limit(1)->pluck('amount')->toArray();
+                 $arr = $agencyprice->where('providertype','agency')->orderBy('provider_service_maps.amount','desc')->limit(1)->pluck('amount')->toArray();
                  $highagencyprice = $arr[0];
             }
             

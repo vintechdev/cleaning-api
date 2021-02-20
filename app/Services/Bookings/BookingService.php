@@ -459,6 +459,7 @@ class BookingService
                             $c['created_at'] = $chat[0]['created_at'];
                             $c['sender_id'] = $chat[0]['sender_id'];
                             $c['receiver_id'] = $chat[0]['receiver_id'];
+                            $c['isread'] = $chat[0]['isread'];
                             $d['chat'] =$c;
                             $d['last_chat_date']= $chat[0]['created_at'];
 

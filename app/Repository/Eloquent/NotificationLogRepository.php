@@ -37,7 +37,7 @@ class NotificationLogRepository extends AbstractBaseRepository
                 'notification_logs.id','=','push_notification_logs.notification_log_id')
             ->where('push_notification_logs.status','unread')
             ->where('notification_logs.user_id', Auth::user()->id)
-            ->where('push_notification_logs.user_type', $request->get('userType', 'user'))
+            ->where('notification_logs.user_type', $request->get('userType', 'user'))
             ->count();
 
         return intval($count);
@@ -53,7 +53,7 @@ class NotificationLogRepository extends AbstractBaseRepository
         ->join('push_notification_logs',
             'notification_logs.id','=','push_notification_logs.notification_log_id')
         ->where('user_id', Auth::user()->id)
-        ->where('push_notification_logs.user_type', $request->get('userType', 'user'))
+        ->where('notification_logs.user_type', $request->get('userType', 'user'))
         ->where(function ($query) use ($fromDate) {
             $query->where('push_notification_logs.status', DB::raw("'unread'"));
             $query->orWhere(function ($q) use ($fromDate) {
@@ -75,7 +75,7 @@ class NotificationLogRepository extends AbstractBaseRepository
                 'notification_logs.id','=','push_notification_logs.notification_log_id')
             ->where('user_id', Auth::user()->id)
             ->where('status','unread')
-            ->where('push_notification_logs.user_type', $request->get('userType', 'user'))
+            ->where('notification_logs.user_type', $request->get('userType', 'user'))
             ->update(['status'=> $status]);
     }
 

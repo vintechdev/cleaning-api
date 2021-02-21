@@ -56,9 +56,20 @@ class ProviderServiceMapRespository{
            return $pdr;
         }
 
-        public function GetServicesByProvider($pid)
+        public function GetServicesByProvider($pid, $categoryId = null)
         {
-         return Providerservicemaps::with('service')->where('provider_service_maps.provider_id',$pid)->where('provider_service_maps.status',1)->get()->toarray();
+            $maps =  Providerservicemaps::with('service');
+            if ($categoryId) {
+                $maps->leftJoin('services', function ($join) {
+                    $join->on('services.id', '=', 'provider_service_maps.service_id');
+                });
+            }
+            $maps->where('provider_service_maps.provider_id',$pid)->where('provider_service_maps.status',1);
+            if ($categoryId) {
+                $maps->where('services.category_id', $categoryId);
+            }
+
+            return $maps->get()->toArray();
         }
 
        

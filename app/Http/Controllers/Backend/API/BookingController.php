@@ -80,6 +80,12 @@ class BookingController extends Controller
        $arr = app(ProviderServiceMapRespository::class)->GetServicesByProvider($pid);
        return response()->json(['services'=>$arr]);
     }
+
+    public function getProviderServicesByCategory($userId, $categoryId) {
+        $arr = app(ProviderServiceMapRespository::class)->GetServicesByProvider($userId, $categoryId);
+        return response()->json(['services'=>$arr]);
+    }
+
     /**
      * Display a listing of the resource.
      *

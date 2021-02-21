@@ -225,6 +225,7 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
 
     
     Route::get('getservicebyprovider/{pid}', 'BookingController@GetServiceByProvider')->middleware(['scope:provider']);
+     Route::get('getservicebyprovider/{userId}/categories/{categoryId}', 'BookingController@getProviderServicesByCategory')->middleware(['scope:provider']);
 
     Route::get('getappointment/{uuid}', 'BookingController@provider_getappointment')->name('api.Booking.provider_getappointment')->middleware(['scope:provider']);
     Route::patch('change_booking_status/{uuid}', 'BookingController@change_booking_status')->name('api.Booking.change_booking_status')->middleware(['scope:provider']);

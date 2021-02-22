@@ -53,12 +53,11 @@
                    style="table-layout: fixed;
                    max-width:100% !important;
                    width: 100% !important; min-width: 100%!important;
-                   background: #fff;
                    padding: 15px; background-color:#52b68d;">
                 <tr>
                     <td align="center" valign="middle">
                         {{--<span style="font-size:24px; color:white">{{env('APP_NAME')}}</span>--}}
-                        <img src="{{ asset('/images/email/logo-light.png') }}" alt="Cleaning.com.au">
+                        <img src="{{ asset('/images/email/logo-dark.png') }}" alt="Cleaning.com.au" height="60">
                     </td>
                 </tr>
             </table>

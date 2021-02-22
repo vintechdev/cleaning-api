@@ -1,5 +1,6 @@
         <!-- Start email footer area -->
-        <table border="0" cellpadding="0" cellspacing="0" style="width:100%;">
+        <table border="0" cellpadding="0" cellspacing="0"
+               style="width:100%; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd;">
             <tr>
                 <td style="padding: 15px;">
                     <p style="margin:0;padding:0;margin-bottom:0;margin-top:9px;margin-bottom:9px">

@@ -49,23 +49,17 @@
         <td align="center" valign="top" id="emailContainerCell">
 
             <!-- Start Email Header Area -->
-            <table border="0" cellpadding="0" cellspacing="0" id="emailHeader" style="table-layout: fixed;max-width:100% !important;width: 100% !important;min-width: 100% !important;background: #fff;padding: 15px; background-color:#3f9672;">
+            <table border="0" cellpadding="0" cellspacing="0" id="emailHeader"
+                   style="table-layout: fixed;
+                   max-width:100% !important;
+                   width: 100% !important; min-width: 100%!important;
+                   background: #fff;
+                   padding: 15px; background-color:#52b68d;">
                 <tr>
                     <td align="center" valign="middle">
-                        <table border="0" cellpadding="0" cellspacing="0" mc:repeatable="header_logo" mc:variant="header_logo">
-                            <tr>
-                                <td valign="middle">
-                                    <div mc:edit="header_logo">
-                                       
-                                          <span style="font-size:24px;color:white"> {{env('APP_NAME')}}</span>
-                                       
-                                    </div>
-                                </td>
-                            </tr>
-                        </table>
+                        {{--<span style="font-size:24px; color:white">{{env('APP_NAME')}}</span>--}}
+                        <img src="{{ asset('/images/email/logo-light.png') }}" alt="Cleaning.com.au">
                     </td>
-                    
                 </tr>
             </table>
 
-            

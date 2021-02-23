@@ -16,6 +16,10 @@ class NotificationLog extends Model
     protected $fillable = ['id'];
     const NOTIFICATION_TYPE_BOOKING_CREATED_EMAIL = 'booking_created_email';
     const NOTIFICATION_TYPE_BOOKING_STATUS_CHANGE_EMAIL = 'booking_status_change_email';
+    const NOTIFICATION_TYPE_BOOKING_CREATED_PUSH = 'booking_created_push_notification';
+
+    const NOTIFICATION_LOG_USER_TYPE_USER = 'user';
+    const NOTIFICATION_LOG_USER_TYPE_PROVIDER = 'provider';
 
     public function emails()
     {

@@ -52,12 +52,13 @@
             <table border="0" cellpadding="0" cellspacing="0" id="emailHeader"
                    style="table-layout: fixed;
                    max-width:100% !important;
-                   width: 100% !important; min-width: 100%!important;
-                   padding: 15px; background-color:#52b68d;">
+                   width: 100% !important;
+                   min-width: 100%!important;
+                   padding: 15px;">
                 <tr>
                     <td align="center" valign="middle">
                         {{--<span style="font-size:24px; color:white">{{env('APP_NAME')}}</span>--}}
-                        <img src="{{ asset('/images/email/logo-dark.png') }}" alt="Cleaning.com.au" height="60">
+                        <img src="{{ asset('/images/email/logo-light.png') }}" alt="Cleaning.com.au" height="80">
                     </td>
                 </tr>
             </table>

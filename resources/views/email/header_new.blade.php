@@ -70,29 +70,36 @@
         }
     </style>
 </head>
-<body bgcolor="#ebf0f4" leftmargin="0" marginwidth="0" topmargin="0" marginheight="0" offset="0"
+<body bgcolor="#ebf0f4" leftmargin="0" marginwidth="0" topmargin="40" bottommargin="40" marginheight="0" offset="0"
       style="background-color: #ebf0f4; font-size: 16px; color: #718096;">
 
-<!-- Start Email Container -->
-<table border="0" cellpadding="0" cellspacing="3" id="emailContainer" bgcolor="#ffffff"
-       style="width: 100%; max-width:570px; margin:0 auto; background-color: #ffffff;
-        border-color: #e8e5ef; border-radius: 2px; border-width: 1px;
-        box-shadow: 0 2px 0 rgba(0, 0, 150, 0.025), 2px 4px 0 rgba(0, 0, 150, 0.015)">
+<table border="0" cellspacing="0" cellpadding="0" width="100%" style="width: 100%;">
     <tr>
-        <td align="center" valign="top" id="emailContainerCell">
+        <td style="height: 40px;">&nbsp;</td>
+    </tr>
+    <tr>
+        <td>
 
-            <!-- Start Email Header Area -->
-            <table border="0" cellpadding="0" cellspacing="0" id="emailHeader"
-                   style="table-layout: fixed;
-                   max-width:100% !important;
-                   width: 100% !important;
-                   min-width: 100%!important;
-                   padding: 15px;">
+            <!-- Start Email Container -->
+            <table border="0" cellpadding="0" cellspacing="3" id="emailContainer" bgcolor="#ffffff"
+                   style="width: 100%; max-width:570px; margin:0 auto; background-color: #ffffff;
+                    border-color: #e8e5ef; border-radius: 2px; border-width: 1px;
+                    box-shadow: 0 2px 0 rgba(0, 0, 150, 0.025), 2px 4px 0 rgba(0, 0, 150, 0.015)">
                 <tr>
-                    <td align="center" valign="middle">
-                        {{--<span style="font-size:24px; color:white">{{env('APP_NAME')}}</span>--}}
-                        <img src="{{ asset('/images/email/logo-light.png') }}" alt="Cleaning.com.au" height="80">
-                    </td>
-                </tr>
-            </table>
+                    <td align="center" valign="top" id="emailContainerCell" style="padding-left: 15px; padding-right: 15px;">
+
+                        <!-- Start Email Header Area -->
+                        <table border="0" cellpadding="0" cellspacing="0" id="emailHeader"
+                               style="table-layout: fixed;
+                               max-width:100% !important;
+                               width: 100% !important;
+                               min-width: 100%!important;
+                               padding: 15px;">
+                            <tr>
+                                <td align="center" valign="middle">
+                                    {{--<span style="font-size:24px; color:white">{{env('APP_NAME')}}</span>--}}
+                                    <img src="{{ asset('/images/email/logo-light.png') }}" alt="Cleaning.com.au" height="80">
+                                </td>
+                            </tr>
+                        </table>
 

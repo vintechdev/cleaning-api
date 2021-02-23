@@ -76,8 +76,8 @@
         <td style="border: 1px solid #ddd;"><span>{{Config::get('const.currency').$data['booking']['discount']}}</span></td>
     </tr>
     <tr>
-        <td style="border: 1px solid #ddd;"><b>Final Total</b></td>
-        <td style="border: 1px solid #ddd;"><b>{{Config::get('const.currency').$data['booking']['final_cost']}}</b></td>
+        <td style="border: 1px solid #ddd; color: #3d4852;"><b>Final Total</b></td>
+        <td style="border: 1px solid #ddd; color: #3d4852;"><b>{{Config::get('const.currency').$data['booking']['final_cost']}}</b></td>
     </tr>
     <?php } ?>
     </tbody>

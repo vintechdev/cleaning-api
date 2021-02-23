@@ -102,7 +102,7 @@
     </tr>
     <tr>
         <td style="color: #3d4852; border: 1px solid #ddd;"><b>Final Total</b></td>
-        <td style="color: #718096; border: 1px solid #ddd;">
+        <td style="color: #3d4852; border: 1px solid #ddd;">
             <b>{{Config::get('const.currency').$data['bookings']['final_cost']}}</b>
         </td>
     </tr>

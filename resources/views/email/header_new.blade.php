@@ -7,7 +7,36 @@
     <title>Email template</title>
 
     <style>
-        @import url('https://fonts.googleapis.com/css?family=Fjalla+One|Open+Sans');
+        body,
+        body *:not(html):not(style):not(br):not(tr):not(code) {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif,
+            'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+            position: relative;
+        }
+
+        body {
+            -webkit-text-size-adjust: none;
+            background-color: #ebf0f4;
+            color: #718096;
+            height: 100%;
+            line-height: 1.4;
+            margin: 0;
+            padding: 0;
+            width: 100% !important;
+        }
+
+        p,
+        ul,
+        ol,
+        blockquote {
+            line-height: 1.4;
+            text-align: left;
+        }
+
+        a {
+            color: #3869d4;
+        }
 
         @media screen and (max-width:600px){
             #emailContainer{width: 100%;}
@@ -41,10 +70,14 @@
         }
     </style>
 </head>
-<body bgcolor="#fff" leftmargin="0" marginwidth="0" topmargin="0" marginheight="0" offset="0">
+<body bgcolor="#ebf0f4" leftmargin="0" marginwidth="0" topmargin="0" marginheight="0" offset="0"
+      style="background-color: #ebf0f4; font-size: 16px; color: #718096;">
 
 <!-- Start Email Container -->
-<table border="0" cellpadding="0" cellspacing="3" id="emailContainer" style="max-width:600px;margin:0 auto;" bgcolor="#ffffff">
+<table border="0" cellpadding="0" cellspacing="3" id="emailContainer" bgcolor="#ffffff"
+       style="width: 100%; max-width:570px; margin:0 auto; background-color: #ffffff;
+        border-color: #e8e5ef; border-radius: 2px; border-width: 1px;
+        box-shadow: 0 2px 0 rgba(0, 0, 150, 0.025), 2px 4px 0 rgba(0, 0, 150, 0.015)">
     <tr>
         <td align="center" valign="top" id="emailContainerCell">
 

@@ -20,11 +20,20 @@
 </h3>
 <table cellpadding="10" cellspacing="0" border="0" width="100%" style="font-size: 16px;">
     <tr>
-        <td style="border-bottom: 1px solid #ddd;">
-            <b style="color: #3d4852;">{{ucwords($data['provider_name'])}}</b><br/>
-            <?php if($data['avgrate']>0){ ?>
-            <span><i class="fas fa-star mr-2"></i>{{$data['avgrate']}}</span>
-            <?php } ?>
+        <td style="border-bottom: 1px solid #ddd; text-align: center;">
+            <img src="{{asset('/images/email/user.png')}}" alt="user"
+                 style="display: inline-block; vertical-align: middle; margin-right: 5px;" width="40" height="40">
+            <span style="display: inline-block; vertical-align: middle; text-align: left;">
+                <b style="color: #3d4852;">{{ucwords($data['provider_name'])}}</b>
+                <?php if($data['avgrate']>0){ ?>
+                <br/>
+                <span>
+                    <img src="{{asset('/images/email/star.png')}}" alt="ratings"
+                         style="display: inline-block; vertical-align: middle; margin-right: 4px;">
+                    <span style="display: inline-block; vertical-align: middle;">{{number_format($data['avgrate'],1)}}</span>
+                </span>
+                <?php } ?>
+            </span>
         </td>
     </tr>
     <?php if(count($data['badge'])>0) { ?>
@@ -79,7 +88,7 @@
        style="width: 100%; border: 1px solid #ddd; font-size:16px; border-collapse: collapse;">
 <tbody>
     <tr>
-        <td style="background-color: #3f9672; font-weight:bold; color:white" colspan="2">Service Details</td>
+        <td style="background-color: #52b68d; font-weight:bold; color:white" colspan="2">Service Details</td>
     </tr>
 
       <?php 

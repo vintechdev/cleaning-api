@@ -65,7 +65,7 @@
        style="width: 100%; border: 1px solid #ddd; font-size:16px; border-collapse: collapse;">
     <tbody>
     <tr>
-        <td style="background-color: #3f9672; font-weight:bold; color: #fff; text-align: center;" colspan="2">
+        <td style="background-color: #52b68d; font-weight:bold; color: #fff; text-align: center;" colspan="2">
             Service Details
         </td>
     </tr>

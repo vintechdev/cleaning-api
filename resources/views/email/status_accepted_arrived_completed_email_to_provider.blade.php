@@ -81,7 +81,7 @@
        style="width: 100%; border: 1px solid #ddd; font-size:16px; border-collapse: collapse;">
 <tbody>
 <tr>
-    <td style="background-color: #3f9672; font-weight:bold; color:white" colspan="2">Service Details</td>
+    <td style="background-color: #52b68d; font-weight:bold; color:white" colspan="2">Service Details</td>
 </tr>
       <?php 
     //  dd($data['services']);

@@ -72,7 +72,13 @@
         <td style="border: 1px solid #ddd;"><span>{{Config::get('const.currency').$data['booking']['total_cost']}}</span></td>
     </tr>
     <tr>
-        <td style="border: 1px solid #ddd;"><span>Discount({{$data['booking']['promocode']}})</span></td>
+        <td style="border: 1px solid #ddd;">
+            <span>Discount
+                <span style="background-color: #e7f3ef; border-radius: 6px; color: #52b68d; padding: 3px 5px; display: inline-block; font-size: 12px;">
+                    {{$data['booking']['promocode']}}
+                </span>
+            </span>
+        </td>
         <td style="border: 1px solid #ddd;"><span>{{Config::get('const.currency').$data['booking']['discount']}}</span></td>
     </tr>
     <tr>

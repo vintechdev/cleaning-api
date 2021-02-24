@@ -75,7 +75,22 @@
 
 <table border="0" cellspacing="0" cellpadding="0" width="100%" style="width: 100%;">
     <tr>
-        <td style="height: 40px;">&nbsp;</td>
+        <td>
+            <!-- Start Email Header Area -->
+            <table border="0" cellpadding="0" cellspacing="0" id="emailHeader"
+                   style="table-layout: fixed;
+                               max-width:100% !important;
+                               width: 100% !important;
+                               min-width: 100%!important;
+                               padding: 25px 15px;">
+                <tr>
+                    <td align="center" valign="middle">
+                        {{--<span style="font-size:24px; color:white">{{env('APP_NAME')}}</span>--}}
+                        <img src="{{ asset('/images/email/logo-light.png') }}" alt="Cleaning.com.au" height="80">
+                    </td>
+                </tr>
+            </table>
+        </td>
     </tr>
     <tr>
         <td>
@@ -87,19 +102,4 @@
                     box-shadow: 0 2px 0 rgba(0, 0, 150, 0.025), 2px 4px 0 rgba(0, 0, 150, 0.015)">
                 <tr>
                     <td align="center" valign="top" id="emailContainerCell" style="padding-left: 15px; padding-right: 15px;">
-
-                        <!-- Start Email Header Area -->
-                        <table border="0" cellpadding="0" cellspacing="0" id="emailHeader"
-                               style="table-layout: fixed;
-                               max-width:100% !important;
-                               width: 100% !important;
-                               min-width: 100%!important;
-                               padding: 15px;">
-                            <tr>
-                                <td align="center" valign="middle">
-                                    {{--<span style="font-size:24px; color:white">{{env('APP_NAME')}}</span>--}}
-                                    <img src="{{ asset('/images/email/logo-light.png') }}" alt="Cleaning.com.au" height="80">
-                                </td>
-                            </tr>
-                        </table>
 

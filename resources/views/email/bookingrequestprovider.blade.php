@@ -19,7 +19,14 @@
         <td style="border-bottom: 1px solid #ddd;">
             <b style="color: #3d4852;">Customer:</b>
             <span style="color: #718096; font-weight: normal;">
-                {{ucwords($data['userdetails']['first_name'].' '.$data['userdetails']['last_name'])}}<br>
+                {{ucwords($data['userdetails']['first_name'].' '.$data['userdetails']['last_name'])}}
+            </span>
+        </td>
+    </tr>
+    <tr>
+        <td style="border-bottom: 1px solid #ddd;">
+            <b style="color: #3d4852;">Email:</b>
+            <span style="color: #718096; font-weight: normal;">
                 {{$data['userdetails']['email']}}
             </span>
         </td>
@@ -58,7 +65,7 @@
        style="width: 100%; border: 1px solid #ddd; font-size:16px; border-collapse: collapse;">
     <tbody>
     <tr>
-        <td style="background-color: #3f9672; font-weight:bold; color: #fff;" colspan="2">
+        <td style="background-color: #3f9672; font-weight:bold; color: #fff; text-align: center;" colspan="2">
             Service Details
         </td>
     </tr>

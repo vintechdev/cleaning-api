@@ -21,6 +21,9 @@
     </tr>
 </table>
 
+<h3 style="font-size: 16px; font-weight: bold; color: #3d4852; margin-bottom: 0; text-align: center; background: #f5f5f5; padding: 7px 10px;">
+    Booking Details
+</h3>
 <table cellpadding="10" cellspacing="0" border="0" width="100%" style="font-size: 16px;">
     <tr>
         <td style="border-bottom: 1px solid #ddd;">
@@ -61,8 +64,8 @@
     if($data['booking']['discount'] == null){
     ?>
     <tr>
-        <td style="border: 1px solid #ddd;"><span><b>Total</b></span></td>
-        <td style="border: 1px solid #ddd;">
+        <td style="border: 1px solid #ddd; color: #3d4852;"><span><b>Total</b></span></td>
+        <td style="border: 1px solid #ddd; color: #3d4852;">
             <span><b>{{Config::get('const.currency').$data['booking']['final_cost']}}</b></span>
         </td>
     </tr>

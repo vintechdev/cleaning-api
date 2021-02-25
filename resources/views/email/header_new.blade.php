@@ -38,6 +38,43 @@
             color: #3869d4;
         }
 
+        /* Buttons */
+        .action {
+            -premailer-cellpadding: 0;
+            -premailer-cellspacing: 0;
+            -premailer-width: 100%;
+            margin: 30px auto;
+            padding: 0;
+            text-align: center;
+            width: 100%;
+        }
+
+        .button {
+            -webkit-text-size-adjust: none;
+            border-radius: 4px;
+            color: #fff;
+            display: inline-block;
+            overflow: hidden;
+            text-decoration: none;
+        }
+
+        .button-blue,
+        .button-primary {
+            background-color: #52b68d;
+            border-bottom: 8px solid #52b68d;
+            border-left: 18px solid #52b68d;
+            border-right: 18px solid #52b68d;
+            border-top: 8px solid #52b68d;
+        }
+
+        .button-secondary {
+            background-color: #666;
+            border-bottom: 8px solid #666;
+            border-left: 18px solid #666;
+            border-right: 18px solid #666;
+            border-top: 8px solid #666;
+        }
+
         @media screen and (max-width:600px){
             #emailContainer{width: 100%;}
         }

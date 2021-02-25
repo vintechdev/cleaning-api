@@ -20,3 +20,8 @@ Route::get('/', function () {
 Auth::routes();
 
 Route::get('/home', 'HomeController@index')->name('home');
+
+// Temp route - delete after development along with App/Mail/UserWelcome.php
+Route::get('/welcome', function () {
+    return new App\Mail\UserWelcome();
+});

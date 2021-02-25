@@ -72,7 +72,7 @@
         </td>
     </tr>
     <tr>
-        <td>
+        <td style="border-bottom: 1px solid #ddd;">
             <b style="color: #3d4852;">Frequency:</b>
             <span style="color: #718096; font-weight: normal;">
                 {{ucwords($data['booking']['plan_name'])}}
@@ -80,9 +80,9 @@
         </td>
     </tr>
     <tr>
-        <td style="padding-top: 10px; padding-bottom: 10px;">
-            <span class="status status-accepted" style="padding: 10px 20px;">
-                Accepted
+        <td style="padding-top: 10px; padding-bottom: 10px; text-align: center;">
+            <span class="status-big status-{{$data['status']}}" style="padding: 10px 20px;">
+                {{ ucwords($data['status']) }}
             </span>
         </td>
     </tr>

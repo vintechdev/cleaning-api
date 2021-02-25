@@ -79,7 +79,7 @@
         .status-big {
             font-size: 14px;
             font-weight: 600;
-            line-height: 18px;
+            line-height: 16px;
             color: #fff;
             text-transform: uppercase;
             padding: 10px 20px;
@@ -146,31 +146,6 @@
 
         .status-completed:hover {
             background-color: #32ad66;
-        }
-
-        .status-rejected {
-            background-color: $orange;
-
-        @include hover {
-            background-color: darken($orange,5%);
-        }
-        }
-
-        .status-cancel,
-        .status-cancelled {
-            background-color: $danger;
-
-        @include hover {
-            background-color: darken($danger,5%);
-        }
-        }
-
-        .status-completed {
-            background-color: $green;
-
-        @include hover {
-            background-color: darken($green,5%);
-        }
         }
 
         @media screen and (max-width:600px){

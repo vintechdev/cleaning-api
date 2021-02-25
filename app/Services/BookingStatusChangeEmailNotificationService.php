@@ -138,7 +138,7 @@ class BookingStatusChangeEmailNotificationService extends AbstractBookingNotific
                 $userName = $providername ;
                 $data['text'] = $text;
                 $data['providers_name'] = $providername ;
-                $bookingdata['status'] = $status;
+                $data['status'] = $status;
 
                 $res = $this->mailService->send('email.status_accepted_arrived_completed_email_to_provider', $data, $userEmail, $userName, $subject);
                 return true;

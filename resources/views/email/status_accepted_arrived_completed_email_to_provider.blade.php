@@ -72,6 +72,13 @@
         </td>
     </tr>
     <tr>
+        <td style="padding-top: 10px; padding-bottom: 10px;">
+            <span class="status status-accepted" style="padding: 10px 20px;">
+                Accepted
+            </span>
+        </td>
+    </tr>
+    <tr>
         <td style="height: 15px;"></td>
     </tr>
 </table>

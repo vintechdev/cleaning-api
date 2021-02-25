@@ -75,6 +75,104 @@
             border-top: 8px solid #666;
         }
 
+        /* Status */
+        .status-big {
+            font-size: 14px;
+            font-weight: 600;
+            line-height: 18px;
+            color: #fff;
+            text-transform: uppercase;
+            padding: 10px 20px;
+            height: 40px;
+            border-radius: 20px;
+            display: inline-block;
+            border: 2px solid #fff;
+        }
+
+        .status-big:hover {
+            color: #fff;
+            text-decoration: none;
+        }
+
+        .status-pending,
+        .status-pending_approval {
+            background-color: #ffed4a;
+            color: #495057;
+        }
+
+        .status-pending:hover,
+        .status-pending_approval:hover {
+            background-color: #ffea31;
+            color: #495057;
+        }
+
+        .status-arrived {
+            background-color: #9561e2;
+        }
+
+        .status-arrived:hover {
+            background-color: #874bde;
+        }
+
+        .status-accepted {
+            background-color: #3490dc;
+        }
+
+        .status-accepted:hover {
+            background-color: #2484d2;
+        }
+
+        .status-rejected {
+            background-color: #f6993f;
+        }
+
+        .status-rejected:hover {
+            background-color: #f58c27;
+        }
+
+        .status-cancel,
+        .status-cancelled {
+            background-color: #e3342f;
+        }
+
+        .status-cancel:hover,
+        .status-cancelled:hover {
+            background-color: #db231d;
+        }
+
+        .status-completed {
+            background-color: #38c172;
+        }
+
+        .status-completed:hover {
+            background-color: #32ad66;
+        }
+
+        .status-rejected {
+            background-color: $orange;
+
+        @include hover {
+            background-color: darken($orange,5%);
+        }
+        }
+
+        .status-cancel,
+        .status-cancelled {
+            background-color: $danger;
+
+        @include hover {
+            background-color: darken($danger,5%);
+        }
+        }
+
+        .status-completed {
+            background-color: $green;
+
+        @include hover {
+            background-color: darken($green,5%);
+        }
+        }
+
         @media screen and (max-width:600px){
             #emailContainer{width: 100%;}
         }

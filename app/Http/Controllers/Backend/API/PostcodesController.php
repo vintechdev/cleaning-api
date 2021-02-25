@@ -79,7 +79,7 @@ public function deleteproviderpostcode(Request $request)
         $postcodes = Postcode::query();
         
         if ($request->has('id')) {
-            $postcodes = $postcodes->where('id', 'LIKE', '%'.$request->get('id'));
+            $postcodes = $postcodes->where('id', $request->get('id'));
         }
         
 		if ($request->has('post_code')) {

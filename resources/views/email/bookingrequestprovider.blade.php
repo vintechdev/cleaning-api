@@ -14,6 +14,10 @@
     </tr>
 </table>
 
+<h3 style="font-size: 16px; font-weight: bold; color: #3d4852; margin-bottom: 0; text-align: center; background: #f5f5f5; padding: 7px 10px;">
+    User Details
+</h3>
+
 <table cellpadding="10" cellspacing="0" border="0" width="100%" style="font-size: 16px;">
     <tr>
         <td style="border-bottom: 1px solid #ddd;">
@@ -33,21 +37,32 @@
     </tr>
     <tr>
         <td style="border-bottom: 1px solid #ddd;">
+            <b style="color: #3d4852;">Address:</b>
+            <span style="color: #718096; font-weight: normal;">
+                {{ucwords($data['address']['address_line1'])}}, {{ucwords($data['address']['address_line2'])}},
+            {{ucwords($data['address']['suburb'])}}, {{ucwords($data['address']['state'])}}, {{$data['address']['postcode']}}
+            </span>
+        </td>
+    </tr>
+    <tr>
+        <td style="height: 15px;"></td>
+    </tr>
+
+</table>
+
+<h3 style="font-size: 16px; font-weight: bold; color: #3d4852; margin-bottom: 0; text-align: center; background: #f5f5f5; padding: 7px 10px;">
+    Booking Details
+</h3>
+<table cellpadding="10" cellspacing="0" border="0" width="100%" style="font-size: 16px;">
+    <tr>
+        <td style="border-bottom: 1px solid #ddd;">
             <b style="color: #3d4852;">Date:</b>
             <span style="color: #718096; font-weight: normal;">
                 {{date('d/M/Y',strtotime($data['bookings']['booking_date']))}} {{date('H:i',strtotime($data['bookings']['booking_time']))}}
             </span>
         </td>
     </tr>
-    <tr>
-        <td style="border-bottom: 1px solid #ddd;">
-            <b style="color: #3d4852;">Address:</b>
-            <span style="color: #718096; font-weight: normal;">
-                {{ucwords($data['address']['address_line1'])}}, {{ucwords($data['address']['address_line2'])}}<br>
-            {{ucwords($data['address']['suburb'])}}, {{ucwords($data['address']['state'])}}, {{$data['address']['postcode']}}
-            </span>
-        </td>
-    </tr>
+
     <tr>
         <td>
             <b style="color: #3d4852;">Frequency:</b>
@@ -79,7 +94,12 @@
 
     ?>
     <tr>
-        <td style="color: #3d4852; border: 1px solid #ddd;"><b>{{$val['service_name']}}{{'('.$hourstr.')'}}</b></td>
+        <td style="border: 1px solid #ddd;">
+            <span style="color: #3d4852;">
+                {{$val['service_name']}}
+                <span style="background-color: #e7f3ef; border-radius: 6px; color: #52b68d; padding: 3px 5px; display: inline-block; font-size: 12px;">{{'('.$hourstr.')'}}</span>
+            </span>
+        </td>
         <td style="color: #718096; border: 1px solid #ddd;">
             {{Config::get('const.currency').$val['initial_service_cost']}}
         </td>
@@ -96,13 +116,19 @@
     </tr>
     <?php }else{ ?>
     <tr>
-        <td style="color: #3d4852; border: 1px solid #ddd;"><b>Total</b></td>
+        <td style="color: #3d4852; border: 1px solid #ddd;">Total</td>
         <td style="color: #718096; border: 1px solid #ddd;">
             {{Config::get('const.currency').$data['bookings']['total_cost']}}
         </td>
     </tr>
     <tr>
-        <td style="color: #3d4852; border: 1px solid #ddd;"><b>Discount({{$data['booking']['promocode']}})</b></td>
+        <td style="border: 1px solid #ddd;">
+            <span>Discount
+                <span style="background-color: #e7f3ef; border-radius: 6px; color: #52b68d; padding: 3px 5px; display: inline-block; font-size: 12px;">
+                    {{$data['bookings']['promocode']}}
+                </span>
+            </span>
+        </td>
         <td style="color: #718096; border: 1px solid #ddd;">
             {{Config::get('const.currency').$data['bookings']['discount']}}
         </td>

@@ -179,6 +179,20 @@ img {
     text-decoration: underline;
 }
 
+.copyright {
+    padding-top: 15px;
+    padding-bottom: 15px;
+    text-align: center;
+}
+
+.copyright p {
+    font-size: 12px;
+    line-height: 18px;
+    color: #b0adc5;
+    text-align: center;
+    margin-bottom: 0;
+}
+
 /* Tables */
 
 .table table {

@@ -68,11 +68,12 @@
         }
 
         .button-secondary {
+            font-size: 14px;
             background-color: #666;
-            border-bottom: 8px solid #666;
-            border-left: 18px solid #666;
-            border-right: 18px solid #666;
-            border-top: 8px solid #666;
+            border-bottom: 5px solid #666;
+            border-left: 10px solid #666;
+            border-right: 10px solid #666;
+            border-top: 5px solid #666;
         }
 
         /* Status */

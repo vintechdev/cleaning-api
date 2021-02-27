@@ -39,7 +39,7 @@ class NotificationSettingSeeder extends Seeder
             'new_booking_request_provider' => [
                 'title' => 'New Booking request to provider',
                 'description' => 'You’ll be instantly notified when the user has selected you for booking and send you requests.',
-                'allow_email' => 0,
+                'allow_email' => 1,
                 'allow_sms' => 1,
                 'allow_push' => 1,
                 'default_email' => 1,
@@ -85,7 +85,6 @@ class NotificationSettingSeeder extends Seeder
                 'display_provider' => false,
             ]
         ];
-
 
         foreach ($notificationTypes as $type => $notificationType) {
             $notificationSetting = new \App\Notification();

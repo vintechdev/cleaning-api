@@ -30,7 +30,22 @@ class PushNotificationLogs extends Model
         'booking_time_update' => [
             'title' => 'Booking time updated',
             'message' => 'Booking has been reschedule on {datetime} by provider.'
-        ]
+        ],
+    ];
+
+    const PUSH_NOTIFICATION_LOG_PROVIDER = [
+        'new_booking' => [
+            'title' => 'New Booking Created',
+            'message' => 'New Booking is created'
+        ],
+        'booking_status_update' => [
+            'title' => 'Booking status changed',
+            'message' => 'Booking status has been changed to {status}'
+        ],
+        'booking_time_update' => [
+            'title' => 'Booking time updated',
+            'message' => 'Booking has been reschedule on {datetime} by provider.'
+        ],
     ];
 
    

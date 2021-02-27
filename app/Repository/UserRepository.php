@@ -1,16 +1,11 @@
 <?php 
 namespace App\Repository;
+
 use App\Providerservicemaps;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use App\Service;
 use App\Promocodes;
 use App\User;
 use App\Customeruser;
-use App\Working_hours;
-use App\Providerpostcodemap;
 use App\UserNotification;
-use App\Booking;
 use App\Bookingrequestprovider;
 
 class UserRepository{

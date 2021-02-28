@@ -28,6 +28,16 @@ class PlansService
     }
 
     /**
+     * @param $planId
+     * @param Servicecategory $servicecategory
+     * @return bool
+     */
+    public function isPlanValidForServiceCategory($planId, Servicecategory $servicecategory): bool {
+        $plans = $this->getAllPlanIdsByServiceCategory($servicecategory);
+        return in_array($planId, $plans);
+    }
+
+    /**
      * @param Servicecategory|null $servicecategory
      * @return array
      */

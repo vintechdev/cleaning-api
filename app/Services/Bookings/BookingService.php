@@ -16,6 +16,7 @@ use App\Plan;
 use App\Repository\BookingReqestProviderRepository;
 use App\Repository\Eloquent\StripeUserMetadataRepository;
 use App\Services\Bookings\Exceptions\BookingserviceBuilderException;
+use App\Services\PlansService;
 use App\Services\TotalCostCalculation;
 use App\User;
 use App\Useraddress;
@@ -50,22 +51,30 @@ class BookingService
     private $totalCostCalculator;
 
     /**
+     * @var PlansService
+     */
+    private $planService;
+
+    /**
      * BookingService constructor.
      * @param StripeUserMetadataRepository $stripeUserMetadataRepository
      * @param BookingReqestProviderRepository $reqestProviderRepository
      * @param BookingServicesManager $bookingServicesManager
      * @param TotalCostCalculation $totalCostCalculator
+     * @param PlansService $plansService
      */
     public function __construct(
         StripeUserMetadataRepository $stripeUserMetadataRepository,
         BookingReqestProviderRepository $reqestProviderRepository,
         BookingServicesManager $bookingServicesManager,
-        TotalCostCalculation $totalCostCalculator
+        TotalCostCalculation $totalCostCalculator,
+        PlansService $plansService
     ) {
         $this->stripeUserMetadataRepository = $stripeUserMetadataRepository;
         $this->requestProviderRepo = $reqestProviderRepository;
         $this->bookingServicesManager = $bookingServicesManager;
         $this->totalCostCalculator = $totalCostCalculator;
+        $this->planService = $plansService;
     }
 
     /**
@@ -95,6 +104,7 @@ class BookingService
                 $serviceIds = [];
                 $serviceTimes = [];
                 $providerIds = [];
+
                 foreach ($service as $item) {
                     $serviceIds[] = $item['service_id'];
                     $serviceTimes[$item['service_id']] = $item['initial_number_of_hours'];
@@ -105,7 +115,16 @@ class BookingService
                             throw new \InvalidArgumentException('Invalid service id received');
                         }
                         $category = $service->getCategoryId();
+                        $serviceCategory = $service->getServicecategory();
                     }
+                }
+
+                if (!$serviceCategory->allowMultipleAddons() && count($serviceIds) > 2) {
+                    throw new \InvalidArgumentException('No more that one additional service can be added for this service category.');
+                }
+
+                if (!$this->planService->isPlanValidForServiceCategory($bookings['plan_type'], $serviceCategory)) {
+                    throw new \InvalidArgumentException('Invalid plan received');
                 }
 
                 foreach ($providers as $provider) {

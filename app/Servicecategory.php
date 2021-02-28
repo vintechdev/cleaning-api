@@ -23,8 +23,20 @@ class Servicecategory extends Model
     {
         return $this->hasMany(Service::class, 'category_id', 'id');
     }
-    
-  /*   public function getAllCategory(){
-        return  $result = Servicecategory::where('active',1)->get()->toArray();
-    } */
+
+    /**
+     * @return bool
+     */
+    public function isRecurring(): bool
+    {
+        return (bool)$this->is_recurring;
+    }
+
+    /**
+     * @return bool
+     */
+    public function allowMultipleAddons(): bool
+    {
+        return (bool) $this->allow_multiple_addons;
+    }
 }

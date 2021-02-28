@@ -27,17 +27,25 @@ class Plan extends Model
         if (
             !in_array(
                 $planId,
-                [
-                    self::BIWEEKLY,
-                    self::ONCEOFF,
-                    self::WEEKLY,
-                    self::MONTHLY
-                ]
+                static::getAllPlanIds()
             )
         ) {
             return false;
         }
 
         return true;
+    }
+
+    /**
+     * @return int[]
+     */
+    public static function getAllPlanIds()
+    {
+        return [
+            self::BIWEEKLY,
+            self::ONCEOFF,
+            self::WEEKLY,
+            self::MONTHLY
+        ];
     }
 }

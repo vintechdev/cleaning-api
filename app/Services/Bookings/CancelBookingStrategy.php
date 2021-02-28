@@ -77,7 +77,7 @@ class CancelBookingStrategy extends AbstractBookingStatusChangeStrategy
             ->bookingRequestProviderRepo
             ->getAcceptedBookingRequestProvider($booking);
 
-        if (!$provider->setStatus(Bookingrequestprovider::STATUS_CANCELLED)->save()) {
+        if ($provider && !$provider->setStatus(Bookingrequestprovider::STATUS_CANCELLED)->save()) {
             throw new BookingStatusChangeException('Booking cancellation failed while saving Booking requests');
         }
 

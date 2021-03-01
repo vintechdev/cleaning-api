@@ -282,24 +282,28 @@ class BookingService
                                     $type = $quest['question_type'];
                                     $service_id = $quest['service_id'];
                                 }else{
-                                    $questiondata = Servicequestion::where('id',$quest['service_question_id'])->first()->toArray();
-                                    
-                                    if(count($questiondata)>0){
-                                        $title = $questiondata['title'];
-                                        $type = $questiondata['question_type'];
-                                        $service_id = $questiondata['service_id'];
+                                    $questiondata = Servicequestion::where('id',$quest['service_question_id']);
+                                    if ($questiondata->count()) {
+                                        $questiondata = $questiondata->first()->toArray();
+                                        if(count($questiondata)>0){
+                                            $title = $questiondata['title'];
+                                            $type = $questiondata['question_type'];
+                                            $service_id = $questiondata['service_id'];
+                                        }
                                     }
                                 }
 
-                                $bookingquestion = new Bookingquestion();
-                                $bookingquestion->booking_id = $last_insert_id;
-                                $bookingquestion->question_type = $type;
-                                $bookingquestion->service_id = $service_id;
-                                $bookingquestion->question_title = $title;
-                                $bookingquestion->answer = $quest['answer'];
-                                if (!$bookingquestion->save()){
-                                    DB::rollBack();
-                                    throw new BookingCreationException('Booking questions could not be saved');
+                                if (isset($service_id)) {
+                                    $bookingquestion = new Bookingquestion();
+                                    $bookingquestion->booking_id = $last_insert_id;
+                                    $bookingquestion->question_type = $type;
+                                    $bookingquestion->service_id = $service_id;
+                                    $bookingquestion->question_title = $title;
+                                    $bookingquestion->answer = $quest['answer'];
+                                    if (!$bookingquestion->save()){
+                                        DB::rollBack();
+                                        throw new BookingCreationException('Booking questions could not be saved');
+                                    }
                                 }
                             }
                         }

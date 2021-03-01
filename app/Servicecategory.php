@@ -31,4 +31,12 @@ class Servicecategory extends Model
     {
         return (bool)$this->is_recurring;
     }
+
+    /**
+     * @return bool
+     */
+    public function allowMultipleAddons(): bool
+    {
+        return (bool) $this->allow_multiple_addons;
+    }
 }

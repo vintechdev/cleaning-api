@@ -119,6 +119,10 @@ class BookingService
                     }
                 }
 
+                if (!$serviceCategory->allowMultipleAddons() && count($serviceIds) > 2) {
+                    throw new \InvalidArgumentException('No more that one additional service can be added for this service category.');
+                }
+
                 if (!$this->planService->isPlanValidForServiceCategory($bookings['plan_type'], $serviceCategory)) {
                     throw new \InvalidArgumentException('Invalid plan received');
                 }

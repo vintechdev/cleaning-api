@@ -16,6 +16,7 @@ use App\Plan;
 use App\Repository\BookingReqestProviderRepository;
 use App\Repository\Eloquent\StripeUserMetadataRepository;
 use App\Services\Bookings\Exceptions\BookingserviceBuilderException;
+use App\Services\Bookings\Exceptions\BookingServicesArrayValidatorException;
 use App\Services\PlansService;
 use App\Services\TotalCostCalculation;
 use App\User;
@@ -117,10 +118,6 @@ class BookingService
                         $category = $service->getCategoryId();
                         $serviceCategory = $service->getServicecategory();
                     }
-                }
-
-                if (!$serviceCategory->allowMultipleAddons() && count($serviceIds) > 2) {
-                    throw new \InvalidArgumentException('No more that one additional service can be added for this service category.');
                 }
 
                 if (!$this->planService->isPlanValidForServiceCategory($bookings['plan_type'], $serviceCategory)) {
@@ -265,12 +262,14 @@ class BookingService
                     } catch (BookingserviceBuilderException $exception) {
                         DB::rollBack();
                         throw new BookingCreationException($exception->getMessage());
+                    } catch (BookingServicesArrayValidatorException $exception) {
+                        DB::rollBack();
+                        throw new BookingCreationException($exception->getMessage());
                     } catch (\Exception $exception) {
                         DB::rollBack();
                         throw new BookingCreationException('Booking service could not be saved');
                     }
 
-                   
                     if($parent){
                         $question = Bookingquestion::where('booking_id',$parent->id)->get()->toarray();
                     }

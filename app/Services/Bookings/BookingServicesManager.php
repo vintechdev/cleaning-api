@@ -100,6 +100,9 @@ class BookingServicesManager
             $bookingService->setRemoved(true)->save();
         }
 
+        $this
+            ->bookingServicesArrayValidator
+            ->setBookingServices(array_merge($booking->getBookingServices()->all(), $bookingServices))->isValid();
         return $this->add($booking, $newBookingServices, false);
     }
 

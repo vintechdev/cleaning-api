@@ -38,8 +38,8 @@ class AddDefaultFieldsToNotificationSettingsTable extends Migration
             $table->dropColumn('default_email');
             $table->dropColumn('default_sms');
             $table->dropColumn('default_push');
-           // $table->dropColumn('display_user');
-           // $table->dropColumn('display_provider');
+            $table->dropColumn('display_user');
+            $table->dropColumn('display_provider');
         });
     }
 }

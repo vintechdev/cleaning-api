@@ -25,7 +25,7 @@ class PushNotificationLogs extends Model
         ],
         'booking_status_update' => [
             'title' => 'Booking status changed',
-            'message' => 'Booking status has been changed to {status}'
+            'message' => 'Booking status has been changed to {statusName}'
         ],
         'booking_time_update' => [
             'title' => 'Booking time updated',
@@ -40,7 +40,7 @@ class PushNotificationLogs extends Model
         ],
         'booking_status_update' => [
             'title' => 'Booking status changed',
-            'message' => 'Booking status has been changed to {status}'
+            'message' => 'Booking status has been changed to {statusName}'
         ],
         'booking_time_update' => [
             'title' => 'Booking time updated',

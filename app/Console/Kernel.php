@@ -4,6 +4,7 @@ namespace App\Console;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+use Illuminate\Support\Facades\Config;
 
 class Kernel extends ConsoleKernel
 {
@@ -25,6 +26,11 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         // $schedule->command('inspire')->hourly();
+        // TODO: enable when api and user data setup
+
+        if (Config::get('services.sms.enabled')) {
+           // $schedule->command('send:sms')->runInBackground()->everyFiveMinutes();
+        }
     }
 
     /**

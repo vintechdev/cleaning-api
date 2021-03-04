@@ -34,4 +34,9 @@ class NotificationLog extends Model
     {
         return $this->hasMany(PushNotificationLogs::class,'notification_log_id','id');
     }
+
+    public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(User::class,'user_id','id');
+    }
 }

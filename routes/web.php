@@ -13,13 +13,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
-
-Auth::routes();
-
-Route::get('/home', 'HomeController@index')->name('home');
+Auth::routes(['register' => false, 'login' => false]);
 
 // Temp route - delete after development along with App/Mail/UserWelcome.php
 Route::get('/welcome', function () {

@@ -84,7 +84,7 @@ class BookingStatusChangePushNotificationService extends AbstractBookingNotifica
 
         $notificationSetting = $this->getNotificationSetting($this->booking->getUserId());
 
-        if ($notificationSetting->allow_push != 0 && (!$notificationSetting->push)) {
+        if (!$notificationSetting || ($notificationSetting && $notificationSetting->allow_push != 0 && (!$notificationSetting->push))) {
             return false;
         }
 
@@ -175,7 +175,7 @@ class BookingStatusChangePushNotificationService extends AbstractBookingNotifica
     private function createNotificationLog($userId, $title , $message) {
         $notificationSetting = $this->getNotificationSetting($userId);
 
-        if (!$notificationSetting || ($notificationSetting->push === 0)) {
+        if (!$notificationSetting || ($notificationSetting && $notificationSetting->push === 0)) {
             return;
         }
 

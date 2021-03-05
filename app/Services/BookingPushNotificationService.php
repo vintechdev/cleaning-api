@@ -65,7 +65,7 @@ class BookingPushNotificationService extends AbstractBookingNotificationService
         $notificationSetting = $this->userNotificationRepo
             ->getUserNotificationType(Auth::user()->id, Notification::BOOKING_UPDATES, 'right');
 
-        if ($notificationSetting->allow_push != 0 && (!$notificationSetting->push)) {
+        if (!$notificationSetting || ($notificationSetting && $notificationSetting->allow_push != 0 && (!$notificationSetting->push))) {
             return false;
         }
 
@@ -107,7 +107,7 @@ class BookingPushNotificationService extends AbstractBookingNotificationService
             $notificationSetting = $this->userNotificationRepo
                 ->getUserNotificationType($provider['provider_user_id'], Notification::REQUEST_TO_PROVIDER);
 
-            if (!$notificationSetting || ($notificationSetting && $notificationSetting->push === 0 )) {
+            if (!$notificationSetting || ($notificationSetting && $notificationSetting->push === 0)) {
                 continue;
             }
 

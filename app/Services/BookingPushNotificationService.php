@@ -14,7 +14,7 @@ use App\Repository\BookingReqestProviderRepository;
 use Illuminate\Support\Facades\Auth;
 
 /**
- * Class BookingEmailNotificationService
+ * Class BookingPushNotificationService
  * @package App\Services
  */
 class BookingPushNotificationService extends AbstractBookingNotificationService
@@ -70,7 +70,7 @@ class BookingPushNotificationService extends AbstractBookingNotificationService
         }
 
         $logData = [
-            'event_type' => $this->getUserNotificationType(),
+            'event_type' => $this->getNotificationType(),
             'user_id' => Auth::user()->id,
             'booking_id' => $this->booking->id,
             'user_type' => NotificationLog::NOTIFICATION_LOG_USER_TYPE_USER,

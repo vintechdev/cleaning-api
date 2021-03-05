@@ -6,42 +6,57 @@ use App\Notification;
 use App\NotificationLog;
 use App\PushNotificationLogs;
 use App\Repository\Eloquent\NotificationLogRepository;
+use App\Repository\SmsNotificationLogRepo;
 use App\Repository\UserNotificationRepository;
 use App\Repository\BookingReqestProviderRepository;
 use App\Bookingstatus;
+use App\SMSNotificationLogs;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Str;
 
 /**
- * Class BookingStatusChangeEmailNotificationService
+ * Class BookingStatusChangeSmsNotificationService
  * @package App\Services
  */
-class BookingStatusChangePushNotificationService extends AbstractBookingNotificationService
+class BookingStatusChangeSmsNotificationService extends AbstractBookingNotificationService
 {
-
-   protected $bookingrequestprovider;
+    /**
+     * @var BookingReqestProviderRepository
+     */
+    protected $bookingRequestProvider;
 
     /**
      * @var UserNotificationRepository
      */
     private $userNotificationRepo;
+    /**
+     * @var SmsNotificationLogRepo
+     */
+    private $smsNotificationLogRepo;
 
     public function __construct(
         NotificationLogRepository $notificationLogRepository,
-        BookingReqestProviderRepository $bookingrequestprovider,
+        BookingReqestProviderRepository $bookingRequestProvider,
+        SmsNotificationLogRepo $smsNotificationLogRepo
     ) {
         parent::__construct($notificationLogRepository);
 
-        $this->bookingrequestprovider = $bookingrequestprovider;
+        $this->bookingRequestProvider = $bookingRequestProvider;
         $this->userNotificationRepo =  app(UserNotificationRepository::class);
+        $this->smsNotificationLogRepo = $smsNotificationLogRepo;
     }
     
 
     protected function sendNotification(): bool
     {
+        if (!Config::get('services.sms.enabled')) {
+            return false;
+        }
+
         $status =  $this->getBookingStatusByBooking();
 
-        if ($this->sendUserPushNotification($status)) {
+        if ($this->createUserSmsNotification($status)) {
             return true;
         }
 
@@ -53,19 +68,19 @@ class BookingStatusChangePushNotificationService extends AbstractBookingNotifica
      */
     protected function getNotificationType(): string
     {
-        return NotificationLog::NOTIFICATION_TYPE_BOOKING_STATUS_CHANGE_PUSH;
+        return NotificationLog::NOTIFICATION_TYPE_BOOKING_STATUS_CHANGE_SMS;
     }
 
     private function getBookingStatusByBooking(): string {
         return Bookingstatus::getStatusNameById($this->booking->getStatus());
     }
 
-    public function sendUserPushNotification($status)
+    public function createUserSmsNotification($status)
     {
         $countPendingProviders = 0;
 
         if ($this->booking->getStatus() === Bookingstatus::BOOKING_STATUS_REJECTED) {
-            $countPendingProviders = $this->bookingrequestprovider->getCountWithStatuses([
+            $countPendingProviders = $this->bookingRequestProvider->getCountWithStatuses([
                 Bookingstatus::BOOKING_STATUS_PENDING
             ], $this->booking->getId());
         }
@@ -73,7 +88,6 @@ class BookingStatusChangePushNotificationService extends AbstractBookingNotifica
         /** Notify only to provider if still provider are having pending status **/
         if ($countPendingProviders > 0) {
             $this->createNotificationLog(Auth::user()->id,
-                $this->getProviderNotificationTitle($status),
                 $this->getProviderNotificationMessage($status)
             );
             return true;
@@ -81,7 +95,7 @@ class BookingStatusChangePushNotificationService extends AbstractBookingNotifica
 
         $notificationSetting = $this->getNotificationSetting($this->booking->getUserId());
 
-        if (!$notificationSetting || ($notificationSetting && $notificationSetting->allow_push != 0 && (!$notificationSetting->push))) {
+        if (!$notificationSetting || ($notificationSetting && $notificationSetting->allow_sms != 0 && (!$notificationSetting->sms))) {
             return false;
         }
 
@@ -96,19 +110,18 @@ class BookingStatusChangePushNotificationService extends AbstractBookingNotifica
         $statusMessage = Str::replaceFirst('{statusName}', $status, PushNotificationLogs::PUSH_NOTIFICATION_LOG_USER['booking_status_update']['message']);
 
         // TODO: can be change later in repo
-        PushNotificationLogs::query()->create([
+        $this->smsNotificationLogRepo->create([
             'notification_log_id' => $notificationLog->id,
-            'title' => PushNotificationLogs::PUSH_NOTIFICATION_LOG_USER['booking_status_update']['title'],
             'message' => $statusMessage,
-            'status' => PushNotificationLogs::STATUS_UNREAD,
+            'status' => SMSNotificationLogs::STATUS_PENDING,
         ]);
 
-        $this->sendProviderPushNotfication($status);
+        $this->sendProviderSmsNotfication($status);
 
         return true;
     }
 
-    protected function sendProviderPushNotfication($status) {
+    protected function sendProviderSmsNotfication($status) {
         if(in_array($this->booking->getStatus(),[
             Bookingstatus::BOOKING_STATUS_ACCEPTED,
             Bookingstatus::BOOKING_STATUS_ARRIVED,
@@ -116,30 +129,27 @@ class BookingStatusChangePushNotificationService extends AbstractBookingNotifica
             Bookingstatus::BOOKING_STATUS_APPROVED,
             Bookingstatus::BOOKING_STATUS_PENDING,
         ])) {
-            $bookingProviders = $this->bookingrequestprovider
+            $bookingProviders = $this->bookingRequestProvider
                 ->getBookingAccptedProvidersDetails($this->booking->getId());
 
             foreach ($bookingProviders as $k => $provider) {
                 $this->createNotificationLog($provider['provider_user_id'],
-                    $this->getProviderNotificationTitle($status),
                     $this->getProviderNotificationMessage($status)
                 );
             }
         } else if ($this->booking->getStatus() === Bookingstatus::BOOKING_STATUS_REJECTED) {
             // Notify last provider
             $this->createNotificationLog(Auth::user()->id,
-                $this->getProviderNotificationTitle($status),
                 $this->getProviderNotificationMessage($status)
             );
         } else if ($this->booking->getStatus() === Bookingstatus::BOOKING_STATUS_CANCELLED
             && $this->booking->getUserId() !== Auth::user()->id) {
             $this->createNotificationLog(Auth::user()->id,
-                $this->getProviderNotificationTitle($status),
                 $this->getProviderNotificationMessage($status)
             );
         } else if ($this->booking->getStatus() === Bookingstatus::BOOKING_STATUS_CANCELLED
             && $this->booking->getUserId() === Auth::user()->id) {
-            $bookingProviders = $this->bookingrequestprovider->getBookingProvidersData($this->booking->id);
+            $bookingProviders = $this->bookingRequestProvider->getBookingProvidersData($this->booking->id);
 
             if(count($bookingProviders) === 0){
                 return false;
@@ -147,17 +157,12 @@ class BookingStatusChangePushNotificationService extends AbstractBookingNotifica
 
             foreach ($bookingProviders as $k => $provider) {
                 $this->createNotificationLog($provider['provider_user_id'],
-                    $this->getProviderNotificationTitle($status),
                     $this->getProviderNotificationMessage($status)
                 );
             }
         }
 
         return true;
-    }
-
-    private function getProviderNotificationTitle($status): string {
-       return PushNotificationLogs::PUSH_NOTIFICATION_LOG_PROVIDER['booking_status_update']['title'];
     }
 
     private function getProviderNotificationMessage($status): string {
@@ -169,10 +174,10 @@ class BookingStatusChangePushNotificationService extends AbstractBookingNotifica
             ->getUserNotificationType($userId, Notification::BOOKING_UPDATES);
     }
 
-    private function createNotificationLog($userId, $title , $message) {
+    private function createNotificationLog($userId, $message) {
         $notificationSetting = $this->getNotificationSetting($userId);
 
-        if (!$notificationSetting || ($notificationSetting && $notificationSetting->push === 0)) {
+        if (!$notificationSetting || ($notificationSetting && $notificationSetting->sms === 0)) {
             return;
         }
 
@@ -184,11 +189,10 @@ class BookingStatusChangePushNotificationService extends AbstractBookingNotifica
         ];
 
         $notificationLog = $this->notificationLogRepo->create($logData);
-        PushNotificationLogs::query()->create([
+        $this->smsNotificationLogRepo->create([
             'notification_log_id' => $notificationLog->id,
-            'title' => $title,
             'message' => $message,
-            'status' => PushNotificationLogs::STATUS_UNREAD,
+            'status' => SMSNotificationLogs::STATUS_PENDING,
         ]);
     }
 }

@@ -16,4 +16,13 @@ class SmsNotificationLogRepo
             ->where('status', 'pending')
             ->get();
     }
+
+    public function create($data = []) {
+        if (empty($data)) {
+            return;
+        }
+
+        $this->getModelClass()->newQuery()
+         ->create($data);
+    }
 }

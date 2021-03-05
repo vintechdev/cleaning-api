@@ -11,6 +11,9 @@ use Illuminate\Notifications\Notifiable;
 
 class Providerservicemaps extends Model
 {
+    const SERVICE_TYPE_HOURLY = 'billingrateperhour';
+    const SERVICE_TYPE_ONCEOFF = 'billingrateonetime';
+
     use HasApiTokens, Notifiable;
     use Uuids;
     protected $table = 'provider_service_maps';

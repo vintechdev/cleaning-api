@@ -1,18 +1,20 @@
 <?php
+
 namespace App\Services;
 
 use GuzzleHttp\Client;
 use Exception;
+use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
-use phpDocumentor\Reflection\Types\Boolean;
+use Illuminate\Support\Str;
 
 class SmsApiService
 {
 
     /**
      * @var string
-    */
+     */
     private $url;
 
     /**
@@ -23,7 +25,7 @@ class SmsApiService
     /**
      * @var string
      */
-    private $password;
+    private $apiKey;
 
     /**
      * @var string;
@@ -52,26 +54,29 @@ class SmsApiService
     {
         $smsConfig = Config::get('services.sms', []);
 
-        foreach ($smsConfig as $configKey => $value){
-            $this->{$configKey} = $value;
+        foreach ($smsConfig as $configKey => $value) {
+            $this->{Str::camel($configKey)} = $value;
         }
 
         return $this;
     }
 
-    public function setMessage(string $message = "") : self {
+    public function setMessage(string $message = ""): self
+    {
         $this->message = $message;
 
         return $this;
     }
 
-    public function setMobileNumber(string $mobileNumber = "") : self {
+    public function setMobileNumber(string $mobileNumber = ""): self
+    {
         $this->mobileNumber = $mobileNumber;
 
         return $this;
     }
 
-    private function checkPropertyValues() {
+    private function checkPropertyValues()
+    {
         if (!$this->enabled) {
             Log::info('sms service is not enabled.');
             return false;
@@ -89,33 +94,38 @@ class SmsApiService
         return true;
     }
 
-    public function send(): Boolean {
+    public function send()
+    {
         if (!$this->checkPropertyValues()) {
             return false;
         }
 
         $client = new Client();
         try {
+            $requestData = [
+                'action' => 'send-sms',
+                'api_key' => $this->apiKey,
+                'to' => Str::replaceFirst("+", "", $this->mobileNumber),
+                'from' => $this->sender,
+                'sms' => urlencode($this->message),
+            ];
 
-            $response = $client->post($this->url, [
-                'verify'    =>  false,
-                'form_params' => [
-                    'username' => $this->sender,
-                    'password' => $this->password,
-                    'message' => $this->message,
-                    'phone' => $this->mobileNumber,
-                ],
-            ]);
+            $request = $client->request('GET', $this->url, ['query' => $requestData]);
+            $result = json_decode($request->getBody(), true);
 
-            $response = json_decode($response->getBody(), true);
-            Log::info('sms sent to: '.  $this->mobileNumber, $response);
+            if (in_array(strtolower($result["code"]) , ["ok", true, "success"])) {
+                return true;
+            }
 
+            Log::info('sms sent to: ' . $this->mobileNumber, $result);
+            return false;
         } catch (Exception $exception) {
-            Log::error("Unable to send sms: " . $exception->getMessage(), (array) $exception);
+            Log::error("Unable to send sms: " . $exception->getMessage(), (array)$exception);
+            return false;
+        } catch (GuzzleException $exception) {
+            Log::error("Unable to send sms: " . $exception->getMessage(), (array)$exception);
             return false;
         }
-
-        return true;
     }
 
 }

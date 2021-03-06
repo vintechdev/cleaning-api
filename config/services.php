@@ -34,7 +34,7 @@ return [
        'enabled' => env('APP_SMS_ENABLED'),
        'url' => env('APP_SMS_URL'),
        'sender' => env('APP_SMS_SENDER_ID'),
-       'password' => env('APP_SMS_PASSWORD'),
+       'api_key' => env('APP_SMS_API_KEY'),
     ]
 
 ];

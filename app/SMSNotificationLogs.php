@@ -21,6 +21,6 @@ class SMSNotificationLogs extends Model
 
     public function notificationlogs()
     {
-        return $this->belongsTo(NotificationLogs::class,'notification_log_id','id');
+        return $this->belongsTo(NotificationLog::class,'notification_log_id','id');
     }
 }

@@ -29,7 +29,7 @@ class Kernel extends ConsoleKernel
         // TODO: enable when api and user data setup
 
         if (Config::get('services.sms.enabled')) {
-           // $schedule->command('send:sms')->runInBackground()->everyFiveMinutes();
+            $schedule->command('send:sms')->runInBackground()->everyFiveMinutes();
         }
     }
 

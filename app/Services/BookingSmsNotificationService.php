@@ -77,7 +77,7 @@ class BookingSmsNotificationService extends AbstractBookingNotificationService
         $notificationSetting = $this->userNotificationRepo
             ->getUserNotificationType(Auth::user()->id, Notification::BOOKING_UPDATES, 'right');
 
-        if ($notificationSetting->allow_sms != 0 && (!$notificationSetting->sms)) {
+        if (!$notificationSetting || ($notificationSetting && $notificationSetting->allow_sms != 0 && (!$notificationSetting->sms))) {
             return false;
         }
 

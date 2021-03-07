@@ -3,10 +3,6 @@
 namespace App\Services;
 
 use GuzzleHttp\Client;
-use Exception;
-use GuzzleHttp\Exception\GuzzleException;
-use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class SmsApiService
@@ -15,17 +11,17 @@ class SmsApiService
     /**
      * @var string
      */
-    private $url;
+    private $smsApiUrl;
 
     /**
      * @var string
      */
-    private $sender;
+    private $smsSenderId;
 
     /**
      * @var string
      */
-    private $apiKey;
+    private $smsApiKey;
 
     /**
      * @var string;
@@ -37,26 +33,20 @@ class SmsApiService
      */
     private $mobileNumber;
 
-    /*
-    * @var Boolean
-    */
-    private $enabled;
+    public function setSmsApiUrl($value = ""): self {
+        $this->smsApiUrl = $value;
 
-    /**
-     * SmsApiService constructor.
-     */
-    public function __construct()
-    {
-        $this->setProperties();
+        return $this;
     }
 
-    private function setProperties(): self
-    {
-        $smsConfig = Config::get('services.sms', []);
+    public function setSmsSenderId($value = ""): self {
+        $this->smsSenderId = $value;
 
-        foreach ($smsConfig as $configKey => $value) {
-            $this->{Str::camel($configKey)} = $value;
-        }
+        return $this;
+    }
+
+    public function setSmsApiKey($value = ""): self {
+        $this->smsApiKey = $value;
 
         return $this;
     }
@@ -75,57 +65,21 @@ class SmsApiService
         return $this;
     }
 
-    private function checkPropertyValues()
-    {
-        if (!$this->enabled) {
-            Log::info('sms service is not enabled.');
-            return false;
-        } elseif (empty($this->url)) {
-            Log::error('sms service url is missing.');
-            return false;
-        } elseif (empty($this->sender)) {
-            Log::error('sms service sender id is missing.');
-            return false;
-        } elseif (empty($this->mobileNumber)) {
-            Log::error('sms service receiver mobile number is missing.');
-            return false;
-        }
-
-        return true;
-    }
-
     public function send()
     {
-        if (!$this->checkPropertyValues()) {
-            return false;
-        }
-
         $client = new Client();
-        try {
-            $requestData = [
-                'action' => 'send-sms',
-                'api_key' => $this->apiKey,
-                'to' => Str::replaceFirst("+", "", $this->mobileNumber),
-                'from' => $this->sender,
-                'sms' => urlencode($this->message),
-            ];
 
-            $request = $client->request('GET', $this->url, ['query' => $requestData]);
-            $result = json_decode($request->getBody(), true);
+        $requestData = [
+            'action' => 'send-sms',
+            'api_key' => $this->smsApiKey,
+            'to' => Str::replaceFirst("+", "", $this->mobileNumber),
+            'from' => $this->smsSenderId,
+            'sms' => urlencode($this->message),
+        ];
 
-            if (in_array(strtolower($result["code"]) , ["ok", true, "success"])) {
-                return true;
-            }
+        $request = $client->request('GET', $this->smsApiUrl, ['query' => $requestData]);
 
-            Log::info('sms sent to: ' . $this->mobileNumber, $result);
-            return false;
-        } catch (Exception $exception) {
-            Log::error("Unable to send sms: " . $exception->getMessage(), (array)$exception);
-            return false;
-        } catch (GuzzleException $exception) {
-            Log::error("Unable to send sms: " . $exception->getMessage(), (array)$exception);
-            return false;
-        }
+        return json_decode($request->getBody(), true);
     }
 
 }

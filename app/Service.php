@@ -46,7 +46,7 @@ class Service extends Model
      */
     public function getTotalCost(float $hours = null, float $cost = null): float
     {
-        $cost = $cost ?: $this->getServiceCost();
+        $cost = ($cost && $this->getAllowPriceOverride()) ? $cost : $this->getServiceCost();
         if ($this->getServiceType() === self::SERVICE_TYPE_ONCE_OFF) {
             return $cost;
         }
@@ -110,5 +110,10 @@ class Service extends Model
     public function getCategoryId(): int
     {
         return $this->category_id;
+    }
+
+    public function getAllowPriceOverride(): bool
+    {
+        return (bool) $this->allow_price_override;
     }
 }

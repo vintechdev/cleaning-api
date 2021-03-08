@@ -87,7 +87,15 @@ class ProviderServiceMapRespository{
                 $maps->where('services.category_id', $categoryId);
             }
 
-            return $maps->get()->toArray();
+            $maps = $maps->get()->toArray();
+
+            foreach ($maps as &$map) {
+                if ($map['service']['allow_price_override'] == 0 || is_null($map['amount'])) {
+                    $map['amount'] = $map['service']['service_cost'];
+                }
+            }
+
+            return $maps;
         }
 
        

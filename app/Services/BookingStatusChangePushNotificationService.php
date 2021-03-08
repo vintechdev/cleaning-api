@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
 /**
- * Class BookingStatusChangeEmailNotificationService
+ * Class BookingStatusChangePushNotificationService
  * @package App\Services
  */
 class BookingStatusChangePushNotificationService extends AbstractBookingNotificationService
@@ -28,7 +28,7 @@ class BookingStatusChangePushNotificationService extends AbstractBookingNotifica
 
     public function __construct(
         NotificationLogRepository $notificationLogRepository,
-        BookingReqestProviderRepository $bookingrequestprovider,
+        BookingReqestProviderRepository $bookingrequestprovider
     ) {
         parent::__construct($notificationLogRepository);
 

@@ -51,45 +51,66 @@ class SendSmsNotificationService
        ->setSmsApiKey($settings['sms_api_key'])
        ->setSmsSenderId($settings['sms_sender_id']);
 
-        $data = $this->getAllPendingSms();
+        $pendingSms = $this->getAllPendingSms();
 
-        if ($data->count() === 0) {
+        if ($pendingSms->count() === 0) {
             Log::error('No pending available');
             return;
         }
 
-        $phoneNumberUtil = PhoneNumberUtil::getInstance();
+        $data = $pendingSms->groupBy('notificationlogs.user.mobile_number');
+       
 
-        $mobileNumber = "";
-        $phoneNumber = null;
-        foreach ($data as $smsLog) {
-            if (!$smsLog->notificationlogs->user->mobile_number || empty($smsLog->notificationlogs->user->mobile_number)) {
+       foreach ($data as $mobileNumber => $smsLogs) {
+            if (!$mobileNumber || empty($mobileNumber)) {
                 continue;
             }
 
-            if ($mobileNumber != $smsLog->notificationlogs->user->mobile_number) {
-                $phoneUtilObject = $phoneNumberUtil->parse($smsLog->notificationlogs->user->mobile_number, 'AU');
-                $phoneNumber = $phoneNumberUtil->format($phoneUtilObject, PhoneNumberFormat::E164);
-                $mobileNumber = $smsLog->notificationlogs->user->mobile_number;
-            }
-
-            if (!$phoneNumber) {
+            try {
+                $phoneUtil  = PhoneNumberUtil::getInstance();
+                $phoneUtilObject = $phoneUtil->parse((string) $mobileNumber, "AU");
+            } catch (\libphonenumber\NumberParseException $e) {
+                $message = "Mobile number parsing error - $mobileNumber";
+                $this->updateFailedSmsLog($smsLogs, $message);
                 continue;
             }
 
-            $response = $this->smsApiService->setMessage($smsLog->message)
-                ->setMobileNumber($phoneNumber)
-                ->send();
-
-            $status = 'sent';
-            if (isset($response) && $response['code'] !== "ok") {
-                $status = "failed";
+            $isValid = $phoneUtil->isValidNumber($phoneUtilObject);
+            
+            if ($isValid === false){
+                $this->updateFailedSmsLog($smsLogs, "Invalid Mobile number  - $mobileNumber");
+                continue;
             }
 
-            $smsLog->update([
-                'status' =>  $status,
-                'response' => ($status === 'failed') ? $response : null
-            ]);
+            $phoneNumber = $phoneUtil->format($phoneUtilObject, PhoneNumberFormat::E164);
+            $this->smsApiService->setMobileNumber($phoneNumber);
+
+            foreach ($smsLogs as $smsLog) {
+                $response = $this->smsApiService->setMessage($smsLog->message)->send();
+                $status = 'sent';
+
+                if (isset($response) && $response['code'] !== "ok") {
+                    $status = "failed";
+                }
+
+                $smsLog->update([
+                    'status' =>  $status,
+                    'response' => ($status === 'failed') ? $response : null
+                ]);
+            }
         }
+    }
+
+    public function updateFailedSmsLog($smsLogs, $message) {
+        foreach ($smsLogs as $smsLog) {
+            $this->updateLog($smsLog, ['code' => 'invalid', 'message' => $message], 'failed');
+        }
+    }
+
+    private function updateLog($smsLog, $response, $status) {
+        $smsLog->update([
+            'status' =>  $status,
+            'response' => $response,
+        ]);
     }
 }

@@ -227,7 +227,7 @@ class CustomerusersController extends Controller
            /*  $users->leftJoin('user_reviews', function( $join){
                 $join->on('user_reviews.user_review_for', 'users.id');
             });  */
-            $users->select(['users.*','p.avgrate','j.completed_jobs','provider_service_maps.amount','provider_service_maps.type', 'services.is_default_service', 'provider_service_maps.provider_id'])->where('role_id', 2);
+            $users->select(['users.*','p.avgrate','j.completed_jobs',DB::raw('case when services.allow_price_override=1 AND provider_service_maps.amount is not null THEN provider_service_maps.amount ELSE services.service_cost END as amount'),'services.unit_type', 'provider_service_maps.type', 'services.is_default_service', 'provider_service_maps.provider_id'])->where('role_id', 2);
             if ($request->has('providertype')){
                     $users->where('users.providertype',$request->has('providertype'));
             }

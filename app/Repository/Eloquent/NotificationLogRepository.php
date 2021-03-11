@@ -1,15 +1,15 @@
 <?php
 
-
 namespace App\Repository\Eloquent;
 
 
 use App\NotificationLog;
-
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\PushNotificationLogs;
+
 
 class NotificationLogRepository extends AbstractBaseRepository
 {
@@ -74,9 +74,22 @@ class NotificationLogRepository extends AbstractBaseRepository
             ->join('push_notification_logs',
                 'notification_logs.id','=','push_notification_logs.notification_log_id')
             ->where('user_id', Auth::user()->id)
-            ->where('status','unread')
+            ->where('push_notification_logs.status','unread')
             ->where('notification_logs.user_type', $request->get('userType', 'user'))
+            ->whereNull('notification_logs.booking_id')
             ->update(['status'=> $status]);
+    }
+
+    public function updatePushNotificationByNotificationLog($notificationLogId, Request $request)
+    {
+        return NotificationLog::query()
+        ->join('push_notification_logs',
+            'notification_logs.id','=','push_notification_logs.notification_log_id')
+        ->where('user_id', Auth::user()->id)
+        ->where('push_notification_logs.status','unread')
+        ->where('notification_logs.user_type', $request->get('userType', 'user'))
+        ->where('push_notification_logs.notification_log_id', $notificationLogId)
+        ->update(['status' => $request->input('status')]);
     }
 
 }

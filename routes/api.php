@@ -112,7 +112,10 @@ Route::middleware(['auth:api','scope:customer,provider'])->namespace('Backend\AP
     //top notification
     Route::get('/user-notifications', 'NotificationLogsController@getNotifications')->name('api.user-notifications');
     // trying to reduce load
+    
     Route::get('/provider-notifications', 'NotificationLogsController@getNotifications')->name('api.provider-notifications');
+
+    Route::post('update-push-notification-logs', 'NotificationLogsController@updatePushNotificationLog')->name('api.push-notifcation-logs.update');
 });
 
 Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->prefix('v1/customer')->group(function () {

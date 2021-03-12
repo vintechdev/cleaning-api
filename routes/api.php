@@ -106,12 +106,16 @@ Route::middleware(['auth:api','scope:customer,provider'])->namespace('Backend\AP
     Route::post('profilepicture', 'CustomerusersController@profilepicture')->name('profilepicture');
     Route::get('profile_view','CustomerusersController@profile_view')->name('api.Customeruser.profile_view');
     
-    Route::get('getnotifications', 'NotificationController@getnotifications')->name('api.Notification.getnotifications');
-    Route::post('editnotifications', 'NotificationController@editnotifications')->name('api.Notification.editnotifications');
+    Route::get('/notifications', 'NotificationController@getNotifications')->name('api.notifications.list');
+    Route::post('/notifications', 'NotificationController@updateNotifications')->name('api.notifications.update');
 
     //top notification
-    Route::get('loadnotifications', 'NotificationLogsController@LoadNotifications')->name('loadnotifications');
+    Route::get('/user-notifications', 'NotificationLogsController@getNotifications')->name('api.user-notifications');
+    // trying to reduce load
     
+    Route::get('/provider-notifications', 'NotificationLogsController@getNotifications')->name('api.provider-notifications');
+
+    Route::post('update-push-notification-logs', 'NotificationLogsController@updatePushNotificationLog')->name('api.push-notifcation-logs.update');
 });
 
 Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->prefix('v1/customer')->group(function () {
@@ -224,6 +228,7 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
 
     
     Route::get('getservicebyprovider/{pid}', 'BookingController@GetServiceByProvider')->middleware(['scope:provider']);
+     Route::get('getservicebyprovider/{userId}/categories/{categoryId}', 'BookingController@getProviderServicesByCategory')->middleware(['scope:provider']);
 
     Route::get('getappointment/{uuid}', 'BookingController@provider_getappointment')->name('api.Booking.provider_getappointment')->middleware(['scope:provider']);
     Route::patch('change_booking_status/{uuid}', 'BookingController@change_booking_status')->name('api.Booking.change_booking_status')->middleware(['scope:provider']);

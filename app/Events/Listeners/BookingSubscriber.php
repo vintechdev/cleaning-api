@@ -8,8 +8,12 @@ use App\Events\BookingCreated;
 use App\Events\BookingStatusChanged;
 use App\Events\Interfaces\BookingEvent;
 use App\Services\BookingEmailNotificationService;
+use App\Services\BookingPushNotificationService;
 use App\Services\Bookings\BookingActivityLogger;
+use App\Services\BookingSmsNotificationService;
 use App\Services\BookingStatusChangeEmailNotificationService;
+use App\Services\BookingStatusChangePushNotificationService;
+use App\Services\BookingStatusChangeSmsNotificationService;
 use App\Services\CompositeBookingNotificationService;
 
 /**
@@ -65,6 +69,8 @@ class BookingSubscriber
 
         $notificationService
             ->add(app(BookingEmailNotificationService::class))
+            ->add(app(BookingPushNotificationService::class))
+            ->add(app(BookingSmsNotificationService::class))
             ->setBooking($event->getBooking());
 
         $notificationService->send();
@@ -72,13 +78,13 @@ class BookingSubscriber
 
     public function sendBookingStatusChangeNotifications(BookingEvent $event)
     {
-
-
-        /** @var CompositeBookingNotificationService $notificationService */
+      /** @var CompositeBookingNotificationService $notificationService */
         $notificationService = app(CompositeBookingNotificationService::class);
     
         $notificationService
             ->add(app(BookingStatusChangeEmailNotificationService::class))
+            ->add(app(BookingStatusChangePushNotificationService::class))
+            ->add(app(BookingStatusChangeSmsNotificationService::class))
             ->setBooking($event->getBooking());
 
             //set another class

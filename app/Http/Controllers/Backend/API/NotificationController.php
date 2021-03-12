@@ -6,7 +6,6 @@ use App\Notification;
 use Illuminate\Http\Request;
 use App\Http\Requests\Backend\NotificationRequest;
 use App\Http\Resources\NotificationCollection;
-use App\Http\Resources\Notification as NotificationResource;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
 use Auth;
@@ -48,6 +47,7 @@ class NotificationController extends Controller
 			$notifications = $notifications->where('allow_push', 'LIKE', '%'.$request->get('allow_push').'%');
 		}
         $notifications = $notifications->paginate(20);
+
         return (new NotificationCollection($notifications));
     }
 
@@ -57,7 +57,7 @@ class NotificationController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function post(NotificationRequest $request, Notification $notification)
+    public function post(NotificationRequest $request, Notification $notification): \Illuminate\Http\Response
     {
         $notification = Notification::firstOrNew(['id' => $request->get('id')]);
         $notification->id = $request->get('id');
@@ -75,21 +75,19 @@ class NotificationController extends Controller
     }
 
     //for get notifications
-    public function getnotifications(Request $request)
+    public function getNotifications(Request $request): \Illuminate\Http\JsonResponse
     {
-        $user_id = Auth::user()->id;
-        $Notification = Notification::with(array('usernotification'=>function($query) use ($user_id){
-            $query->where('user_id',$user_id);
-        }))->get();
+        $notifications = Notification::query()
+            ->with(['userNotifications' => function ($query) {
+            $query->where('user_id', Auth::user()->id);
+        }])->get();
 		
-        return response()->json( $Notification, 200);
-       // return (new NotificationCollection($Notification));
+        return response()->json($notifications, 200);
     }
 
     //for update notifications by uuid
-    public function editnotifications(Request $request)
+    public function updateNotifications(Request $request): \Illuminate\Http\JsonResponse
     {
- 
         $validator = Validator::make($request->all(), [
             'id'=>'required|array',
             'allow_sms' => 'nullable|array',
@@ -103,24 +101,28 @@ class NotificationController extends Controller
         }
        
         $id = $request->id;
-        $allow_sms = $request->allow_sms;
-        $allow_email = $request->allow_email;
-        $allow_push = $request->allow_push;
-        if(count($id)>0){
-           
-            foreach($id as $k=>$v){
-                $Notification = UserNotification::firstOrNew(['notification_id' => $v,'user_id'=>Auth::user()->id]);
-                $Notification->notification_id = $v;
-                $Notification->user_id =Auth::user()->id;
-                $Notification->sms = ($allow_sms!= null && array_key_exists($v,$allow_sms )?$allow_sms[$v]:0);
-                $Notification->email = ($allow_email!= null && array_key_exists($v,$allow_email )?$allow_email[$v]:0);
-                $Notification->push = ($allow_push!= null && array_key_exists($v,$allow_push )?$allow_push[$v]:0);
-                $Notification->save();
-            }
 
+        if (count($id) <= 0) {
+            return response()->json(['message' => "Something went wrong"], 201);
         }
+
+        $allowSms = $request->allow_sms;
+        $allowEmail = $request->allow_email;
+        $allowPushNotification = $request->allow_push;
+        $notification = null;
+
+        foreach ($id as $k => $v) {
+            $notification = UserNotification::firstOrNew(['notification_id' => $v, 'user_id' => Auth::user()->id]);
+            $notification->notification_id = $v;
+            $notification->user_id = Auth::user()->id;
+            $notification->sms = ($allowSms != null && array_key_exists($v, $allowSms) ? $allowSms[$v] : 0);
+            $notification->email = ($allowEmail != null && array_key_exists($v, $allowEmail) ? $allowEmail[$v] : 0);
+            $notification->push = ($allowPushNotification != null && array_key_exists($v, $allowPushNotification) ? $allowPushNotification[$v] : 0);
+            $notification->save();
+        }
+
         $responseCode = $request->get('id') ? 200 : 201;
-        return response()->json(['saved' => $Notification], $responseCode);
+        return response()->json(['saved' => $notification], $responseCode);
     }
 
     /**
@@ -129,7 +131,7 @@ class NotificationController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function delete(Request $request)
+    public function delete(Request $request): \Illuminate\Http\Response
     {
         $notification = Notification::find($request->get('id'));
         $notification->delete();
@@ -142,7 +144,7 @@ class NotificationController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function restore(Request $request)
+    public function restore(Request $request): \Illuminate\Http\Response
     {
         $notification = Notification::withTrashed()->find($request->get('id'));
         $notification->restore();

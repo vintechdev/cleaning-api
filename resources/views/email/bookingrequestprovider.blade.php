@@ -1,86 +1,159 @@
 @include('email.header_new')
-<style>
-  span { padding-left:10px;}
-  table td{border: 1px solid #000;padding: 10px;}
-  .grey{background-color:#00000008;}
-</style>
-
 <?php //dd($data['bookings']);;exit;?>
   
-
-<h3 style="text-align: left;">{{__('Hello')}}, {{ ucwords($data['providers_name']) }}</h3>
-<p style="font-size: 15px;text-align: left;">
-  {{__('New Service Request has been Received. Please find below the Service Request Details.')}}
-</p>
-
-<table cellpadding="5" cellspacing ="0" style="width: 100%;border: 1px solid #000;font-size:16px" border="1">
-<tbody>
-<tr>
-
-      <td class="grey" style="width:60%;"><span>Customer</span></td>
-      <td  class="grey" style="width: 40%;"><span>{{ucwords($data['userdetails']['first_name'].' '.$data['userdetails']['last_name'])}}<br>
-      {{$data['userdetails']['email']}}</span></td>
-   </tr>
-   <tr>
-      <td class="grey" style="width: 60%;"><span>Date</span></td>
-      <td  class="grey" style="width: 40%;"><span>{{date('d/M/Y',strtotime($data['bookings']['booking_date']))}} {{date('H:i',strtotime($data['bookings']['booking_time']))}}</span></td>
-   </tr>
+<table cellpadding="0" cellspacing="0" width="100%" style="width: 100%;">
     <tr>
-      <td class="grey" style="width: 60%;"><span>Address</span></td>
-      <td  class="grey" style="width: 40%;"><span>{{ucwords($data['address']['address_line1'])}}, {{ucwords($data['address']['address_line2'])}}<br>
-      {{ucwords($data['address']['suburb'])}}, {{ucwords($data['address']['state'])}}, {{$data['address']['postcode']}}</span></td>
-   </tr>
-    <tr>
-      <td class="grey" style="width: 60%;"><span>Frequency</span></td>
-      <td  class="grey" style="width: 40%;"><span>{{ucwords($data['bookings']['plan_name'])}}</span></td>
-   </tr>
-<tr style="background-color: #3f9672;font-weight:bold">
-<td style="width: 72.7273%;color:white" colspan="2">&nbsp;Service Details</td>
+        <td style="padding-left: 5px; padding-right: 5px;">
+            <h3 style="font-size: 18px; font-weight: bold; color: #3d4852; margin-bottom: 12px; text-align: left;">
+                {{__('Hello')}}, {{ ucwords($data['providers_name']) }}
+            </h3>
+            <p style="font-size: 16px; color: #718096; text-align: left;">
+                {{__('New Service Request has been Received. Please find below the Service Request Details.')}}
+            </p>
+        </td>
+    </tr>
+</table>
 
-</tr >
-      <?php 
+<h3 style="font-size: 16px; font-weight: bold; color: #3d4852; margin-bottom: 0; text-align: center; background: #f5f5f5; padding: 7px 10px;">
+    User Details
+</h3>
+
+<table cellpadding="10" cellspacing="0" border="0" width="100%" style="font-size: 16px;">
+    <tr>
+        <td style="border-bottom: 1px solid #ddd;">
+            <b style="color: #3d4852;">Customer:</b>
+            <span style="color: #718096; font-weight: normal;">
+                {{ucwords($data['userdetails']['first_name'].' '.$data['userdetails']['last_name'])}}
+            </span>
+        </td>
+    </tr>
+    <tr>
+        <td style="border-bottom: 1px solid #ddd;">
+            <b style="color: #3d4852;">Email:</b>
+            <span style="color: #718096; font-weight: normal;">
+                {{$data['userdetails']['email']}}
+            </span>
+        </td>
+    </tr>
+    <tr>
+        <td style="border-bottom: 1px solid #ddd;">
+            <b style="color: #3d4852;">Address:</b>
+            <span style="color: #718096; font-weight: normal;">
+                {{ucwords($data['address']['address_line1'])}}, {{ucwords($data['address']['address_line2'])}},
+            {{ucwords($data['address']['suburb'])}}, {{ucwords($data['address']['state'])}}, {{$data['address']['postcode']}}
+            </span>
+        </td>
+    </tr>
+    <tr>
+        <td style="height: 15px;"></td>
+    </tr>
+
+</table>
+
+<h3 style="font-size: 16px; font-weight: bold; color: #3d4852; margin-bottom: 0; text-align: center; background: #f5f5f5; padding: 7px 10px;">
+    Booking Details
+</h3>
+<table cellpadding="10" cellspacing="0" border="0" width="100%" style="font-size: 16px;">
+    <tr>
+        <td style="border-bottom: 1px solid #ddd;">
+            <b style="color: #3d4852;">Date:</b>
+            <span style="color: #718096; font-weight: normal;">
+                {{date('d/M/Y',strtotime($data['bookings']['booking_date']))}} {{date('H:i',strtotime($data['bookings']['booking_time']))}}
+            </span>
+        </td>
+    </tr>
+
+    <tr>
+        <td>
+            <b style="color: #3d4852;">Frequency:</b>
+            <span style="color: #718096; font-weight: normal;">
+                {{ucwords($data['bookings']['plan_name'])}}
+            </span>
+        </td>
+    </tr>
+    <tr>
+        <td style="height: 15px;"></td>
+    </tr>
+</table>
+
+<table cellpadding="5" cellspacing="0" border="1"
+       style="width: 100%; border: 1px solid #ddd; font-size:16px; border-collapse: collapse;">
+    <tbody>
+    <tr>
+        <td style="background-color: #52b68d; font-weight:bold; color: #fff; text-align: center;" colspan="2">
+            Service Details
+        </td>
+    </tr>
+    <?php
     //  dd($data['services']);
-      if(count($data['services'])>0){
-          foreach($data['services'] as $key=>$val){
-              $h = $val['initial_number_of_hours'];
-              $converthours = ['hours'=>floor($h),'mins'=> (floor($h * 60) % 60),'secs'=> floor($h * 3600) % 60];
-              $hourstr = (($converthours['hours']!=0)?$converthours['hours'].' hours ':'').(($converthours['mins']!=0)?$converthours['mins'].' minutes ':' ').(($converthours['secs']!=0)?$converthours['secs'].' seconds':'');
-             
-            ?>
-     
-        <tr><td style="width: 60%;" ><span>{{$val['service_name']}}{{'('.$hourstr.')'}}</span></td>
-        
-        <td  style="width:40%;">{{Config::get('const.currency').$val['initial_service_cost']}}</td>
-        </tr>
-      <?php } }
-      
-       if($data['bookings']['discount']==null){
-      ?>
+    if(count($data['services']) > 0){
+    foreach($data['services'] as $key=>$val){
+    $h = $val['initial_number_of_hours'];
+    $converthours = ['hours' => floor($h), 'mins' => (floor($h * 60) % 60), 'secs' => floor($h * 3600) % 60];
+    $hourstr = (($converthours['hours'] != 0) ? $converthours['hours'] . ' hours ' : '') . (($converthours['mins'] != 0) ? $converthours['mins'] . ' minutes ' : ' ') . (($converthours['secs'] != 0) ? $converthours['secs'] . ' seconds' : '');
 
-<tr class="grey">
-<td style="width: 60%;"><span><b>Total</span></b></td>
-<td style="width: 40%;"><span><b>{{Config::get('const.currency').$data['bookings']['final_cost']}}</b></span></td>
-</tr>
-<?php }else{ ?>
-  <tr class="grey">
-      <td style="width: 60%;"><span>Total</span></td>
-      <td style="width: 40%;"><span>{{Config::get('const.currency').$data['bookings']['total_cost']}}</span></td>
-  </tr>
-  <tr class="grey">
-      <td style="width: 60%;"><span>Discount({{$data['booking']['promocode']}})</span></td>
-      <td style="width: 40%;"><span>{{Config::get('const.currency').$data['bookings']['discount']}}</span></td>
-  </tr>
-  <tr class="grey">
-      <td style="width: 60%;"><span><b>Final Total</b></span></td>
-      <td style="width: 40%;"><span><b>{{Config::get('const.currency').$data['bookings']['final_cost']}}</b></span></td>
-  </tr>
-  <?php } ?>
-</tbody>
+    ?>
+    <tr>
+        <td style="border: 1px solid #ddd;">
+            <span style="color: #3d4852;">
+                {{$val['service_name']}}
+                <span style="background-color: #e7f3ef; border-radius: 6px; color: #52b68d; padding: 3px 5px; display: inline-block; font-size: 12px;">{{'('.$hourstr.')'}}</span>
+            </span>
+        </td>
+        <td style="color: #718096; border: 1px solid #ddd;">
+            {{Config::get('const.currency').$val['initial_service_cost']}}
+        </td>
+    </tr>
+    <?php } }
+
+    if($data['bookings']['discount'] == null){
+    ?>
+    <tr>
+        <td style="color: #3d4852; border: 1px solid #ddd;"><b>Total</b></td>
+        <td style="color: #718096; border: 1px solid #ddd;">
+            <b>{{Config::get('const.currency').$data['bookings']['final_cost']}}</b>
+        </td>
+    </tr>
+    <?php }else{ ?>
+    <tr>
+        <td style="color: #3d4852; border: 1px solid #ddd;">Total</td>
+        <td style="color: #718096; border: 1px solid #ddd;">
+            {{Config::get('const.currency').$data['bookings']['total_cost']}}
+        </td>
+    </tr>
+    <tr>
+        <td style="border: 1px solid #ddd;">
+            <span>Discount
+                <span style="background-color: #e7f3ef; border-radius: 6px; color: #52b68d; padding: 3px 5px; display: inline-block; font-size: 12px;">
+                    {{$data['bookings']['promocode']}}
+                </span>
+            </span>
+        </td>
+        <td style="color: #718096; border: 1px solid #ddd;">
+            {{Config::get('const.currency').$data['bookings']['discount']}}
+        </td>
+    </tr>
+    <tr>
+        <td style="color: #3d4852; border: 1px solid #ddd;"><b>Final Total</b></td>
+        <td style="color: #3d4852; border: 1px solid #ddd;">
+            <b>{{Config::get('const.currency').$data['bookings']['final_cost']}}</b>
+        </td>
+    </tr>
+    <?php } ?>
+    </tbody>
 </table>
 <!-- DivTable.com -->
 
-<p>
-  {{__('Thanks a lot for being with us.')}} <br/>
- 
-</p>
+<table cellpadding="0" cellspacing="0" width="100%" style="width: 100%;">
+    <tr>
+        <td style="height: 15px;"></td>
+    </tr>
+    <tr>
+        <td style="padding-left: 5px; padding-right: 5px;">
+            <p>
+              {{__('Thanks a lot for being with us.')}}
+            </p>
+        </td>
+    </tr>
+</table>
 @include('email.footer_new')

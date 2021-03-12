@@ -20,11 +20,29 @@ class ProviderServiceMapRespository{
         
          // $service_ids = array_values($service_ids);
          //  dd($service_ids);
+          $services = [];
          foreach($data as $k=>$v){
-            $Providerservicemaps = Providerservicemaps::updateOrInsert(
-               ['provider_id' =>$pid, 'service_id'=>$v['service_id']],
-               ['amount' => $v['amount'],'status'=>1]
-            );
+             if (!isset($services[$v['service_id']])) {
+                 $services[$v['service_id']] = Service::find($v['service_id']);
+                 if (!$services[$v['service_id']]) {
+                     continue;
+                 }
+             }
+             /** @var Service $service */
+             $service = $services[$v['service_id']];
+
+             if (!$service->getAllowPriceOverride() && $v['amount']) {
+                 $v['amount'] = null;
+             }
+
+             $serviceType = ($service->getServiceType() == Service::SERVICE_TYPE_HOURLY) ?
+                 Providerservicemaps::SERVICE_TYPE_HOURLY:
+                 Providerservicemaps::SERVICE_TYPE_ONCEOFF;
+
+             $Providerservicemaps = Providerservicemaps::updateOrInsert(
+                 ['provider_id' =>$pid, 'service_id'=>$v['service_id']],
+                 ['amount' => $v['amount'],'status'=>1, 'type' => $serviceType]
+             );
          }
          Providerservicemaps::whereNotIn('service_id',  $service_ids)->where('provider_id',$pid)->forceDelete();
          return true;
@@ -56,9 +74,28 @@ class ProviderServiceMapRespository{
            return $pdr;
         }
 
-        public function GetServicesByProvider($pid)
+        public function GetServicesByProvider($pid, $categoryId = null)
         {
-         return Providerservicemaps::with('service')->where('provider_service_maps.provider_id',$pid)->where('provider_service_maps.status',1)->get()->toarray();
+            $maps =  Providerservicemaps::with('service');
+            if ($categoryId) {
+                $maps->leftJoin('services', function ($join) {
+                    $join->on('services.id', '=', 'provider_service_maps.service_id');
+                });
+            }
+            $maps->where('provider_service_maps.provider_id',$pid)->where('provider_service_maps.status',1);
+            if ($categoryId) {
+                $maps->where('services.category_id', $categoryId);
+            }
+
+            $maps = $maps->get()->toArray();
+
+            foreach ($maps as &$map) {
+                if ($map['service']['allow_price_override'] == 0 || is_null($map['amount'])) {
+                    $map['amount'] = $map['service']['service_cost'];
+                }
+            }
+
+            return $maps;
         }
 
        

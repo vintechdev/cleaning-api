@@ -3,6 +3,8 @@
 namespace App\Services\Bookings\Validators;
 
 use App\Bookingservice;
+use App\Servicecategory;
+use App\Services\Bookings\Exceptions\BookingServicesArrayValidatorException;
 use App\Services\Bookings\Exceptions\BookingServicesDifferentCategoryException;
 use App\Services\Bookings\Exceptions\MissingDefaultServiceException;
 use App\Services\Interfaces\ValidatorInterface;
@@ -51,6 +53,12 @@ class BookingServicesArrayValidator implements ValidatorInterface
 
         if (!$hasDefaultService) {
             throw new MissingDefaultServiceException('List of service does not have a default service');
+        }
+
+        /** @var Servicecategory $category */
+        $category = Servicecategory::find($categoryId);
+        if (!$category->allowMultipleAddons() && count($this->bookingServices) > 2) {
+            throw new BookingServicesArrayValidatorException('Service category does not allow multiple addons');
         }
 
         return true;

@@ -34,13 +34,13 @@ class RecurringPatternService
      * @param int $offset
      * @return array
      */
-    public function getRecurringDateTimes(Event $event, int $limit = 10, int $offset = 1)
+    public function getRecurringDateTimes(Event $event, int $limit = 10, int $offset = 1): array
     {
-        /** @var Collection $recurringPattern */
-        $recurringPatterns = $this->recurringPatternRepository->findByEvent($event);
+        $recurringPatternable = $this->getRecurringPatternFromEvent($event);
 
-        /** @var RecurringDateInterface $recurringPatternable */
-        $recurringPatternable = $recurringPatterns->first()->recurringPatternable;
+        if (!$recurringPatternable) {
+            return [];
+        }
 
         $dates = [];
         $date = $recurringPatternable->getDateByOffset($offset);
@@ -48,6 +48,9 @@ class RecurringPatternService
 
         for ($i = 1; $i < $limit; $i++) {
             $date = $recurringPatternable->getNextValidDateRelativeTo($date);
+            if (!$date) {
+                break;
+            }
             $dates[] = clone $date;
         }
 
@@ -64,18 +67,12 @@ class RecurringPatternService
      */
     public function getRecurringDateTimesPostDateTime(Carbon $relativeDate, Event $event, $limit = 10, int $offset = 1): array
     {
-        /** @var Collection $recurringPattern */
-        $recurringPatterns = $this->recurringPatternRepository->findByEvent($event);
-
-        if (!$recurringPatterns->count()) {
+        $recurringPatternable = $this->getRecurringPatternFromEvent($event);
+        if (!$recurringPatternable) {
             return [];
         }
 
-        /** @var RecurringDateInterface $recurringPatternable */
-        $recurringPatternable = $recurringPatterns->first()->recurringPatternable;
-
         $dates = [];
-
         $date = $relativeDate;
 
         $j = 0;
@@ -87,6 +84,9 @@ class RecurringPatternService
 
         for ($i = $j; $i < $limit; $i++) {
             $date = $recurringPatternable->getNextValidDateRelativeTo($date);
+            if (!$date) {
+                break;
+            }
             $dates[] = clone $date;
         }
 
@@ -101,27 +101,74 @@ class RecurringPatternService
      */
     public function getRecurringDateTimeBetween(Carbon $fromDate, Carbon $toDate, Event $event): array
     {
-        /** @var Collection $recurringPattern */
-        $recurringPatterns = $this->recurringPatternRepository->findByEvent($event);
-
-        if (!$recurringPatterns->count()) {
+        $recurringPatternable = $this->getRecurringPatternFromEvent($event);
+        if (!$recurringPatternable) {
             return [];
         }
-
-        /** @var RecurringDateInterface $recurringPatternable */
-        $recurringPatternable = $recurringPatterns->first()->recurringPatternable;
 
         $date = $fromDate;
         $dates = [];
 
         while (true) {
             $date = $recurringPatternable->getNextValidDateRelativeTo($date);
-            if (!$toDate->greaterThan($date)) {
+            if (
+                !$date ||
+                !$toDate->greaterThan($date)
+            ) {
                 break;
             }
             $dates[] = clone $date;
         }
 
         return $dates;
+    }
+
+    /**
+     * @param Event $event
+     * @param Carbon $date
+     * @return bool
+     */
+    public function isValidRecurringDate(Event $event, Carbon $date): bool
+    {
+        if ($event->getEndDateTime() && $date->greaterThanOrEqualTo($event->getEndDateTime())) {
+            return false;
+        }
+
+        $recurringPatternable = $this->getRecurringPatternFromEvent($event);
+        if (!$recurringPatternable) {
+            return false;
+        }
+
+        return $recurringPatternable->isValidRecurringDate($date);
+    }
+
+    /**
+     * @param Event $event
+     * @param Carbon $date
+     * @return bool
+     */
+    public function cancelEventAfter(Event $event, Carbon $date): bool
+    {
+        if ($event->getStartDateTime()->greaterThan($date)) {
+            throw new \InvalidArgumentException('Date passed is lesser than start date of the booking');
+        }
+
+        return $event->setEndDateTime($date)->save();
+    }
+
+    /**
+     * @param Event $event
+     * @return RecurringDateInterface|null
+     */
+    private function getRecurringPatternFromEvent(Event $event): ?RecurringDateInterface
+    {
+        /** @var Collection $recurringPattern */
+        $recurringPatterns = $this->recurringPatternRepository->findByEvent($event);
+
+        if (!$recurringPatterns->count()) {
+            return null;
+        }
+
+        return $recurringPatterns->first()->recurringPatternable;
     }
 }

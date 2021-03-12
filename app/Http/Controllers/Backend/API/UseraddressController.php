@@ -22,25 +22,25 @@ class UseraddressController extends Controller
         if ($users_uuid) {
             $useraddresses = $useraddresses->where('user_uuid', 'LIKE', '%'.$users_uuid);
         }
-        if ($request->has('type')) {
+        if($request->has('type')) {
             $useraddresses = $useraddresses->where('type', 'LIKE', '%'.$request->get('type').'%');
         }
-        if ($request->has('address_line1')) {
+        if($request->has('address_line1')) {
             $useraddresses = $useraddresses->where('address_line1', 'LIKE', '%'.$request->get('address_line1').'%');
         }
-        if ($request->has('address_line2')) {
+        if($request->has('address_line2')) {
             $useraddresses = $useraddresses->where('address_line2', 'LIKE', '%'.$request->get('address_line2').'%');
         }
-        if ($request->has('subrub')) {
+        if($request->has('subrub')){
             $useraddresses = $useraddresses->where('subrub', 'LIKE', '%'.$request->get('subrub').'%');
         }
-        if ($request->has('state')) {
+        if ($request->has('state')){
             $useraddresses = $useraddresses->where('state', 'LIKE', '%'.$request->get('state').'%');
         }
-        if ($request->has('postcode')) {
+        if ($request->has('postcode')){
             $useraddresses = $useraddresses->where('postcode', 'LIKE', '%'.$request->get('postcode').'%');
         }
-        if ($request->has('country')) {
+        if ($request->has('country')){
             $useraddresses = $useraddresses->where('country', 'LIKE', '%'.$request->get('country').'%');
         }
         $useraddresses = $useraddresses->paginate(20);
@@ -112,21 +112,37 @@ class UseraddressController extends Controller
     //for add address
     public function addaddress(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'address_label'=>'nullable|string',
+            'address_line1' => 'required',
+            'suburb' => 'required',
+            'state' => 'required',
+            'postcode' => 'required|numeric'
+        ]);
+        
+        if($validator->fails()){
+            $message = $validator->messages()->all();
+            return response()->json(['message' => $message], 401);
+        }
         $user = Auth::user();
         $user_id = $user->id;
         $Useraddress = Useraddress::firstOrNew(['id' => $request->get('id')]);
         $Useraddress->id = $request->get('id');
+        $Useraddress->address_label = $request->get('address_label');
         $Useraddress->uuid = $request->get('uuid');
         $Useraddress->user_id = $user_id;
         $Useraddress->type = 'home';//$request->get('type');
         $Useraddress->address_line1 = $request->get('address_line1');
-        $Useraddress->address_line2 = $request->get('address_line2');
-        $Useraddress->subrub = $request->get('subrub');
+        if($request->has('address_line2') && $request->get('address_line2')!=''){
+            $Useraddress->address_line2 = $request->get('address_line2');
+        }
+        $Useraddress->suburb = $request->get('suburb');
         $Useraddress->state = $request->get('state');
         $Useraddress->postcode = $request->get('postcode');
         $Useraddress->save();
-        $responseCode = $request->get('id') ? 200 : 201;
-        return response()->json(['saved' => true], $responseCode);
+        $id = $Useraddress->id;
+      
+        return response()->json(['saved' => true,'id'=>$id], 200);
         
     }
 
@@ -135,9 +151,9 @@ class UseraddressController extends Controller
     {
 
         $validator = Validator::make($request->all(), [
+            'address_label'=>'nullable|string',
             'address_line1' => 'required',
-            'address_line2' => 'required',
-            'subrub' => 'required',
+            'suburb' => 'required',
             'state' => 'required',
             'postcode' => 'required|numeric'
         ]);
@@ -147,34 +163,19 @@ class UseraddressController extends Controller
             return response()->json(['message' => $message], 401);
         }
 
-        // $type = $request->get('type');
-        // print_r($type);exit;
+        
 
         $user = Auth::user();
         $user_id = $user->id;
-        // dd($user_id);
-
-        // $types = DB::table('user_addresses')->where('user_id', $user_id)->pluck('type')->toArray();
-        // $types = json_decode(json_encode($types), true);
-        // print_r($types);
-        
-        // if (($key = array_search($type, $types)) !== false) {
-        //     unset($types[$key]);
-        // }
-        // print_r($types);exit;
-
-        // if (in_array($type, $types))
-        // {
-        //     return response()->json(['message' => 'Type '.$type.' already exist with this user! Please use other type.']);
-            
-        // }
-        // else
-        // {
+       
             $Useraddress = Useraddress::firstOrNew(['uuid' => $uuid]);
             // $Useraddress->type = $request->get('type');
+            $Useraddress->address_label = $request->get('address_label');
             $Useraddress->address_line1 = $request->get('address_line1');
-            $Useraddress->address_line2 = $request->get('address_line2');
-            $Useraddress->subrub = $request->get('subrub');
+            if($request->has('address_line2') && $request->get('address_line2')!=''){
+                $Useraddress->address_line2 = $request->get('address_line2');
+            }
+            $Useraddress->suburb = $request->get('suburb');
             $Useraddress->state = $request->get('state');
             $Useraddress->postcode = $request->get('postcode');
             $Useraddress->save();
@@ -192,13 +193,12 @@ class UseraddressController extends Controller
         // print_r($user_id);exit;
 
         $useraddresses = Useraddress::query();
-        
-		if ($user_id){
-			$useraddresses = $useraddresses->where('user_id', '=', $user_id);
+      	if ($user_id){
+			$useraddresses = $useraddresses->where('user_id', '=', $user_id)->orderBy('id','desc');
 		}
-		
-        $useraddresses = $useraddresses->paginate(20);
-        return (new UseraddressCollection($useraddresses));
+      
+        $address =  $useraddresses->get();
+        return response()->json(['data'=>$address]);
     }
 
     /**
@@ -209,6 +209,14 @@ class UseraddressController extends Controller
      */
     public function delete(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'id' => 'required',
+        ]);
+        
+        if($validator->fails()){
+            $message = $validator->messages()->all();
+            return response()->json(['message' => $message], 401);
+        }
         $useraddress = Useraddress::find($request->get('id'));
         $useraddress->delete();
         return response()->json(['no_content' => true], 200);

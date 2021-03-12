@@ -9,21 +9,77 @@ use App\Http\Requests\Backend\PostcodeRequest;
 use App\Http\Resources\PostcodeCollection;
 use App\Http\Resources\Postcode as PostcodeResource;
 use App\Http\Controllers\Controller;
-
+use App\Repository\Eloquent\ProfileRepository;
+use DB;
+use Illuminate\Http\Client\Request as ClientRequest;
+use Illuminate\Support\Facades\Validator;
 class PostcodesController extends Controller
 {
+
+
+public function addproviderpostcode(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'postcode' => 'required|numeric',
+    ]);
+    
+    if($validator->fails()){
+        $message = $validator->messages()->all();
+        return response()->json(['message' => $message], 401);
+    }
+
+    $postcode = $request->postcode;
+    $res = app(ProfileRepository::class)->addproviderpostcode($postcode);
+    
+    if($res){
+        return response()->json(['data' => $res], 200);
+    }else{
+        return response()->json(['error' => true], 201); 
+    }
+
+}
+public function getproviderpostcode(Request $request)
+{
+    $res = app(ProfileRepository::class)->getproviderpostcode($request);
+    return response()->json(['data' => $res], 200);
+   
+}
+public function deleteproviderpostcode(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'postcode' => 'required|numeric',
+    ]);
+    
+    if($validator->fails()){
+        $message = $validator->messages()->all();
+        return response()->json(['message' => $message], 401);
+    }
+    $postcode = $request->postcode;
+    $res = app(ProfileRepository::class)->deleteproviderpostcode($postcode);
+    
+    if($res){
+        return response()->json(['success' => true], 200);
+    }else{
+        return response()->json(['error' => true], 201); 
+    }
+}
+
+
+
    // use CanUpload;
     /**
      * Display a listing of the resource.
      *
      * @return \Illuminate\Http\Response
      */
+
+
     public function index(Request $request)
     {
         $postcodes = Postcode::query();
         
         if ($request->has('id')) {
-            $postcodes = $postcodes->where('id', 'LIKE', '%'.$request->get('id'));
+            $postcodes = $postcodes->where('id', $request->get('id'));
         }
         
 		if ($request->has('post_code')) {
@@ -44,16 +100,16 @@ class PostcodesController extends Controller
      */
     
 
-    public function search_provider_postcode(request $request){
+    public function search_postcode(request $request){
 
     $postcode = Postcode::query();
       if ($request->has('postcode')) {
 
-            $postcode = postcode::select('postcode','suburb','state')->where('postcode', 'LIKE', '%'.$request->get('postcode').'%')->orwhere('suburb', 'LIKE', '%'.$request->get('postcode').'%');
+            $postcode = postcode::select('id as value',DB::raw("CONCAT(postcode,', ',suburb,', ',state) AS text"),'postcode')->where('postcode', 'LIKE', '%'.$request->get('postcode').'%')->orwhere('suburb', 'LIKE', '%'.$request->get('postcode').'%');
         }
 
-        $postcode = $postcode->paginate(10);
-        return (new ServicecategoryCollection($postcode));
+        $postcode = $postcode->get();
+        return response()->json(['success'=>true,'data'=>$postcode],200);
 
     }
 

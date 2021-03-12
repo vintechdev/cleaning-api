@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Redirect;
 class VerificationApiController extends Controller
 {
     use VerifiesEmails;
@@ -23,30 +24,30 @@ class VerificationApiController extends Controller
     * @param \Illuminate\Http\Request $request
     * @return \Illuminate\Http\Response
     */
-    public function verify(Request $request) {
-        // echo $request->get('expires');exit;
-        $userID = $request['id'];
+    public function verify($id,Request $request){
+       
+        $userID = $id;
         $user = User::findOrFail($userID);
-        // print_r($user->email_verified_at);exit;
-
+       
         if($user->email_verified_at !== NULL){
-            return response()->json('Email already verified!');
+            return response()->json(['error'=>true,'message'=>'Email has been already verified!'],401);
         }
 
         $expires_at = $request->get('expires');
         $current_timestamp = time();
         if($current_timestamp > $expires_at){
             $user->sendApiEmailVerificationNotification();
-            return response()->json('This link is expired! Check your email for new link.');
+            return response()->json(['error'=>true,'message'=>'This link is expired! Check your email for new link.'],401);
         }
         
-        $date = date('Y-m-d g:i:s');
+        $date = date('Y-m-d h:i:s');
         $user->email_verified_at = $date; // to enable the “email_verified_at field of that user be a current time stamp by mimicing the must verify email feature
         $user->status = "active";
         $user->save();
-        return response()->json('Email verified!');
+        return response()->json(['success'=>true,'message'=>'Email has been verified successfully!! Please login.'],200);
     }
     /**
+     * 
     * Resend the email verification notification.
     *
     * @param \Illuminate\Http\Request $request

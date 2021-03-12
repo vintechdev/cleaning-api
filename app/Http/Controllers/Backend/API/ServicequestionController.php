@@ -11,7 +11,7 @@ use App\Http\Requests\Backend\ServicequestionRequest;
 use App\Http\Resources\ServicequestionCollection;
 use App\Http\Resources\Servicequestion as ServicequestionResource;
 use App\Http\Controllers\Controller;
-
+use Illuminate\Support\Facades\Validator;
 class ServicequestionController extends Controller
 {
     /**
@@ -78,30 +78,11 @@ class ServicequestionController extends Controller
     // for get service questions by service uuid
     public function getservicequestions(Request $request, $uuid)
     {
-        // $user = Auth::user();
-        // $user_id = $user->id;
-        
-        // $Service = Service::query();
-        // $Service = $Service->where('uuid', 'LIKE', '%'.$uuid);
-        // $Service = $Service->paginate(20);
-        // $Service = new ServiceCollection($Service);
-        //$Service = DB::table('services')->where('uuid', $uuid )->orwhere('name', $uuid)->get();
-        //$service_id = $Service[0]->id;
-		
-		//dd( $Service);
-        
-        // $Servicequestion = Servicequestion::query();
-        
+       
 		if ($uuid) {
-            // $Servicequestion = $Servicequestion->where('service_id', 'LIKE', '%'.$service_id);
-            $Servicequestion = DB::table('service_questions')->where('service_id', $uuid)->get();
+            $Servicequestion = Servicequestion::where('service_id', $uuid)->get();
 		}
-        
-		
-        // $Servicequestion = $Servicequestion->paginate(20);
-        // $Servicequestion = new ServicequestionCollection($Servicequestion);
-        // return (new ServicequestionCollection($Servicequestion));
-        return $Servicequestion;
+         return $Servicequestion;
     }
 
     /**

@@ -85,8 +85,50 @@ class User extends Authenticatable implements MustVerifyEmail
     return false;
     }
 
-    public function sendApiEmailVerificationNotification()
+    public function sendApiEmailVerificationNotification( $url='')
     {
-        $this->notify(new VerifyApiEmail); // my notification
+        $this->notify(new VerifyApiEmail( $url)); // my notification
+    }
+
+    /**
+     * @return bool
+     */
+    public function isAdmin(): bool
+    {
+        return $this->hasRole(Role::ROLE_ADMIN);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isCustomer(): bool
+    {
+        return $this->hasRole(Role::ROLE_CUSTOMER);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isProvider(): bool
+    {
+        return $this->hasRole(Role::ROLE_PROVIDER);
+    }
+
+    /**
+     * @return int
+     */
+    public function getId(): int
+    {
+        return $this->id;
+    }
+
+    public function getAccessToken()
+    {
+        return $this->accessToken;
+    }
+
+    public function getScopes()
+    {
+        return $this->getAccessToken() ? $this->getAccessToken()->scopes : [];
     }
 }

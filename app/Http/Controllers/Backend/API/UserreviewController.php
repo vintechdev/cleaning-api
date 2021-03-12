@@ -9,6 +9,7 @@ use App\Http\Resources\UserreviewCollection;
 use App\Http\Resources\Userreview as UserreviewResource;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
+use App\Repository\UserBadgeReviewRepository;
 use Auth;
 use Hash;
 use DB;
@@ -136,33 +137,27 @@ class UserreviewController extends Controller
         return response()->json(['users' =>$users,'total_reviews'=>count($reviews),'badges'=>$badges,'review_and_rating'=>$reviews]);
     }
     //for add provider review
-    public function addproviderreview(Request $request, $uuid)
+    public function addreview(Request $request, $id)
     {
         $user = Auth::user();
         $user_id = $user->id;
-        // print_r($user_id);exit;
 
-        // DB::enableQueryLog();
-        $data = DB::table('booking_services')
-            ->join('bookings', 'booking_services.booking_id', '=', 'bookings.id')
-            ->select('bookings.provider_id', 'booking_services.booking_id')
-            ->where('booking_services.uuid', $uuid)
-            ->get();
-        // $query = DB::getQueryLog();
-        // print_r($data[);exit;
+        $validator = Validator::make($request->all(), [
+            'ratings' => 'required|numeric',
+            'review_for' => 'required|numeric',
+        ]);
 
-        $Userreview = Userreview::firstOrNew(['id' => $request->get('id')]);
-        $Userreview->id = $request->get('id');
-		$Userreview->uuid = $request->get('uuid');
-		$Userreview->comments = $request->get('comments');
-		$Userreview->rating = $request->get('rating');
-		$Userreview->user_review_for = $data[0]->provider_id;
-		$Userreview->user_review_by = $user_id;
-		$Userreview->booking_id = $data[0]->booking_id;
-        $Userreview->save();
-        
-        $responseCode = $request->get('id') ? 200 : 201;
-        return response()->json(['saved' => true], $responseCode);
+        if($validator->fails()) {
+            $message = $validator->messages()->all();
+            return response()->json(['message' => $message], 401);
+        }
+
+        $response = app(UserBadgeReviewRepository::class)->addreview($request,$id);
+
+        if($response){
+            return response()->json(['saved' => true], 200);
+        }
+       
     }
 
     //for get rating review data

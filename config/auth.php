@@ -113,5 +113,7 @@ return [
     */
 
     'password_timeout' => 10800,
+    'MAX_ATTEMPT'=>5,
+    'DECAY_TIME'=>1 //mins
 
 ];

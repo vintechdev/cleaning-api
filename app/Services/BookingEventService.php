@@ -8,6 +8,7 @@ use App\Exceptions\Booking\Factory\RecurringPatternFactoryException;
 use App\Factory\Booking\RecurringPatternFactory;
 use App\Interfaces\RecurringDateInterface;
 use App\Plan;
+use App\RecurringBooking;
 use App\RecurringPattern;
 use App\Traits\RecurringPatternTrait;
 use Carbon\Carbon;
@@ -33,26 +34,38 @@ class BookingEventService
     private $recurringPatternService;
 
     /**
+     * @var RecurringBookingService
+     */
+    private $recurringBookingService;
+
+    /**
      * BookingEventService constructor.
      * @param RecurringPatternFactory $recurringPatternFactory
      * @param EventService $eventService
+     * @param RecurringPatternService $recurringPatternService
+     * @param RecurringBookingService $recurringBookingService
      */
     public function __construct(
         RecurringPatternFactory $recurringPatternFactory,
         EventService $eventService,
-        RecurringPatternService $service
+        RecurringPatternService $recurringPatternService,
+        RecurringBookingService $recurringBookingService
     ) {
         $this->recurringPatternFactory = $recurringPatternFactory;
         $this->eventService = $eventService;
-        $this->recurringPatternService = $service;
+        $this->recurringPatternService = $recurringPatternService;
+        $this->recurringBookingService = $recurringBookingService;
     }
 
     /**
      * @param Booking $booking
-     * @return Event
+     * @return Event|null
      */
-    public function createBookingEvent(Booking $booking): Event
+    public function createBookingEvent(Booking $booking): ?Event
     {
+        if ($booking->getPlanType() === Plan::ONCEOFF) {
+            return null;
+        }
         $event = new Event();
         $event->start_date = $booking->getStartDate();
         $event->end_date = $booking->getEndDate();
@@ -103,7 +116,7 @@ class BookingEventService
                 ->getRecurringDateTimesPostDateTime($fromDateTime, $booking->getEvent(), $limit, $offset);
         }
 
-        return $this->formatReturnDates($booking, $dates);
+        return $this->removeAllDatesWhichHasRecurringBooking($booking, $dates);
     }
 
     /**
@@ -115,16 +128,81 @@ class BookingEventService
     public function listBookingDatesBetween(Booking $booking, Carbon $fromDate, Carbon $toDate): array
     {
         if ($booking->getPlanType() === Plan::ONCEOFF) {
-            $dates = $this->getOnceOffBookingDate($booking, $fromDate);
+            $dates = $this->getOnceOffBookingDate($booking, $fromDate, $toDate);
         } else {
             $dates = $this
                 ->recurringPatternService
                 ->getRecurringDateTimeBetween($fromDate, $toDate, $booking->getEvent());
         }
+
+        return $this->removeAllDatesWhichHasRecurringBooking($booking, $dates);
+    }
+
+    /**
+     * @param Booking $booking
+     * @param Carbon $recurringDate
+     * @return bool
+     */
+    public function isValidRecurringDate(Booking $booking, Carbon $recurringDate): bool
+    {
+        if (!$booking->isRecurring()) {
+            return false;
+        }
+
+        return $this->recurringPatternService->isValidRecurringDate($booking->getEvent(), $recurringDate);
+    }
+
+    /**
+     * @param Booking $booking
+     * @param array $dates
+     * @return array
+     */
+    private function removeAllDatesWhichHasRecurringBooking(Booking $booking, array $dates)
+    {
+        if (!$dates) {
+            return [];
+        }
+
+        if (!$booking->getEvent()) {
+            return $this->formatReturnDates($booking, $dates);
+        }
+
+        $recurringBookings = $this
+            ->recurringBookingService
+            ->findByEventAndDates($booking->getEvent(), $dates);
+
+        if (!$recurringBookings->count()) {
+            return $this->formatReturnDates($booking, $dates);
+        }
+
+        /** @var RecurringBooking $recurringBooking */
+        foreach ($recurringBookings as $recurringBooking) {
+            $key = $this->getDateKeyByValue($dates, $recurringBooking->getRecurredDate());
+            unset($dates[$key]);
+        }
+
         return $this->formatReturnDates($booking, $dates);
     }
 
     /**
+     * @param array $dates
+     * @param Carbon $lookUpDate
+     * @return int|null
+     */
+    private function getDateKeyByValue(array $dates, Carbon $lookUpDate): ?int
+    {
+        /** @var Carbon $date */
+        foreach ($dates as $key => $date) {
+            if ($date->equalTo($lookUpDate)) {
+                return $key;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param Booking $booking
      * @param array $dates
      * @return array
      */
@@ -133,11 +211,8 @@ class BookingEventService
         $returnDates = [];
         /** @var Carbon $date */
         foreach ($dates as $date) {
-            $from = $date->format('d-m-Y H:i:s');
-            $to = Booking::getFinalBookingDateTime($date, $booking->getFinalHours());
-            if ($to) {
-                $to = $to->format('d-m-Y H:i:s');
-            }
+            $from = clone $date;
+            $to = Booking::calculateFinalBookingDateTime($date, $booking->getTotalHours());
             $returnDates[] = ['from' => $from, 'to' => $to];
         }
 
@@ -147,14 +222,18 @@ class BookingEventService
     /**
      * @param Booking $booking
      * @param Carbon|null $fromDateTime
+     * @param null $toDateTime
      * @return array|Carbon[]
      */
-    private function getOnceOffBookingDate(Booking $booking, Carbon $fromDateTime = null): array
+    private function getOnceOffBookingDate(Booking $booking, Carbon $fromDateTime = null, $toDateTime = null): array
     {
-        /** @var Carbon $date */
-        $date = $booking->event->start_date;
+        if ($booking->getEvent()) {
+            $date = $booking->getEvent()->getStartDateTime();
+        } else {
+            $date = $booking->getStartDate();
+        }
 
-        if (!$date || $fromDateTime->greaterThan($date)) {
+        if (!$date || $fromDateTime->greaterThan($date) || $date->greaterThan($toDateTime)) {
             return [];
         }
 

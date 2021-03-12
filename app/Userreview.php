@@ -15,4 +15,13 @@ class Userreview extends Model
     protected $table = 'user_reviews';
     use SoftDeletes;
     protected $fillable = ['id'];
+
+    public function reviewby()
+    {
+        return $this->belongsTo(User::class,'user_review_by','id');
+    }
+    public function reviewfor()
+    {
+        return $this->belongsTo(User::class,'user_review_for','id');
+    }
 }

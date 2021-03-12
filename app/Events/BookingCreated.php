@@ -3,13 +3,15 @@
 namespace App\Events;
 
 use App\Booking;
+use App\Events\Interfaces\BookingEvent;
+use App\User;
 use Illuminate\Queue\SerializesModels;
 
 /**
  * Class BookingCreated
  * @package App\Events
  */
-class BookingCreated
+class BookingCreated implements BookingEvent
 {
     use SerializesModels;
 
@@ -19,19 +21,34 @@ class BookingCreated
     private $booking;
 
     /**
+     * @var User
+     */
+    private $user;
+
+    /**
      * BookingCreated constructor.
      * @param Booking $booking
+     * @param User $user
      */
-    public function __construct(Booking $booking)
+    public function __construct(Booking $booking, User $user)
     {
         $this->booking = $booking;
+        $this->user = $user;
     }
 
     /**
      * @return Booking
      */
-    public function getBooking()
+    public function getBooking(): Booking
     {
         return $this->booking;
+    }
+
+    /**
+     * @return User
+     */
+    public function getUser(): User
+    {
+        return $this->user;
     }
 }

@@ -19,21 +19,33 @@ class Plan extends Model
     protected $fillable = ['id'];
     public $incrementing = false;
 
+    /**
+     * @param $planId
+     * @return bool
+     */
     public static function isValidPlan($planId) {
         if (
             !in_array(
                 $planId,
-                [
-                    self::BIWEEKLY,
-                    self::ONCEOFF,
-                    self::WEEKLY,
-                    self::MONTHLY
-                ]
+                static::getAllPlanIds()
             )
         ) {
             return false;
         }
 
         return true;
+    }
+
+    /**
+     * @return int[]
+     */
+    public static function getAllPlanIds()
+    {
+        return [
+            self::BIWEEKLY,
+            self::ONCEOFF,
+            self::WEEKLY,
+            self::MONTHLY
+        ];
     }
 }

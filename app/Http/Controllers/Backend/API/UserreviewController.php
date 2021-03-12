@@ -178,19 +178,6 @@ class UserreviewController extends Controller
         return response()->json(['data' => $data]);
     }
 
-    //for get users cancelled booking data
-    public function getcancelbookingdata(Request $request, $uuid)
-    {
-        $data = DB::table('booking_changes')
-            ->join('users', 'booking_changes.changed_by_user', '=', 'users.id')
-            ->select('booking_changes.booking_datetime', 'users.first_name', 'users.last_name', 'users.profilepic')
-            ->where('booking_changes.uuid', $uuid)
-            ->get();
-        // print_r($data);exit;
-
-        return response()->json(['data' => $data]);
-    }
-
     /**
      * Remove the specified resource from storage.
      *

@@ -33,7 +33,7 @@ class BookingRequest extends FormRequest
 			'booking_datetime' => ['required', 'date_format:Y-m-d H:i:s' ],
 			'booking_postcode' => ['required'],
 			'booking_provider_type' => ['required', Rule::in(['freelancer','agency'])],
-			'plan_type' => ['required', Rule::in(['just once','weekly','beweekly','monthly'])],
+			'plan_type' => ['required', Rule::in(['just once','weekly','biweekly','monthly'])],
 			'promocode' => ['required'],
 			'completed_work_total_cost' => ['required'],
 			'completed_work_service_fee' => ['required'],

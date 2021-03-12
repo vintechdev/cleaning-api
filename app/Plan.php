@@ -4,11 +4,10 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Emadadly\LaravelUuid\Uuids;
 
 class Plan extends Model
 {
-	use uuids, SoftDeletes;
+	use SoftDeletes;
 
 	const BIWEEKLY = 1;
 	const ONCEOFF = 2;

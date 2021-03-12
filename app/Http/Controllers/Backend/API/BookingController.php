@@ -18,11 +18,15 @@ use App\Bookingaddress;
 use App\Bookingquestion;
 use App\Bookingservice;
 use App\Customermetadata;
+use App\Services\Bookings\BookingJobsManager;
 use App\Services\Bookings\BookingService as BookingServiceAlias;
 use App\Services\Bookings\BookingStatusChangeContext;
 use App\Services\Bookings\BookingStatusChangeEngine;
 use App\Services\Bookings\BookingStatusChangeFactory;
+use App\Services\Bookings\BookingStatusChangeTypes;
+use App\Services\Bookings\BookingVerificationService;
 use App\Services\Bookings\Builder\BookingStatusChangeContextBuilder;
+use App\Services\Payments\Exceptions\PaymentFailedException;
 use App\Services\RecurringBookingService;
 use App\User;
 use App\Useraddress;
@@ -31,24 +35,57 @@ use App\Bookingchange;
 use App\OnceBookingAlternateDate;
 use App\Bookingrequestprovider;
 use Carbon\Carbon;
+use Carbon\Exceptions\InvalidFormatException;
 use Illuminate\Http\Request;
 use App\Http\Requests\Backend\BookingRequest;
 use App\Http\Resources\BookingCollection;
 use App\Http\Resources\Booking as BookingResource;
 use App\Http\Controllers\Controller;
+use App\Repository\BookingAddressRepository;
 use Illuminate\Support\Facades\Validator;
 use App\Repository\BookingServiceRepository;
 use App\Repository\BookingReqestProviderRepository;
+use App\Repository\UserRepository;
 use Auth;
 use Hash;
 use DB;
 use Input;
 use App\Services\TotalCostCalculation;
 use App\Repository\Eloquent\StripeUserMetadataRepository;
-use App\Repository\ProviderBadgeReviewRepository;
-
+use App\Repository\UserBadgeReviewRepository;
+use App\Services\MailService;
+use Storage;
+use App\Bookingactivitylogs;
+use App\Repository\ProviderServiceMapRespository;
 class BookingController extends Controller
 {
+    private $userrepo;
+    
+    public  function __construct(UserRepository $userrepo)
+    {
+        $this->userrepo = $userrepo;
+    }
+    public function getdashboardstatistics()
+    {
+       $data =  $this->userrepo->getdashboardstatistics();
+       return response()->json($data);
+    }
+
+    public function listAllStatus()
+    {
+        return Bookingstatus::all()->toArray();
+    }
+    public function GetServiceByProvider($pid)
+    {
+       $arr = app(ProviderServiceMapRespository::class)->GetServicesByProvider($pid);
+       return response()->json(['services'=>$arr]);
+    }
+
+    public function getProviderServicesByCategory($userId, $categoryId) {
+        $arr = app(ProviderServiceMapRespository::class)->GetServicesByProvider($userId, $categoryId);
+        return response()->json(['services'=>$arr]);
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -159,20 +196,26 @@ class BookingController extends Controller
 
     public function promocode_discount(Request $request)
     { 
+        $validator = Validator::make($request->all(), [
+            'serviceid'=>'required|array',
+            'servicetime'=>'required|array',
+            'servicecategory'=>'required|numeric',
+            'promocode'=>'required|string',
+            'booking_provider_type'=>'required|string',
+        ]);
+        
+        if($validator->fails()){
+            $message = $validator->messages()->all();
+            return response()->json(['message' => $message], 401);
+        }
+
+
         
         $result = app(TotalCostCalculation::class)->PromoCodeDiscount($request);
-        return response()->json($result);
+        return $result;
 
     }
 
-    public function promocode_discount2(Request $request)
-    {
-
-       
-        
-         return response()->json();
-
-    }
     public function index($uuid,$uuid1)
     {
 
@@ -228,6 +271,53 @@ class BookingController extends Controller
     {
         $user=auth('api')->user();
 
+        $validator = Validator::make($request->all('bookings'), [
+            '*.booking_date'=>'required|date|date_format:Y-m-d',
+            '*.booking_time'=>'required|date_format:H:i:s',
+            '*.booking_postcode'=>'required|numeric',
+            '*.booking_provider_type'=>'required|string',
+            '*.plan_type'=>'required|numeric',
+            '*.promocode'=>'nullable|string',
+            '*.total_cost'=>'required|numeric',
+            '*.discount'=>'nullable|numeric',
+            '*.final_cost'=>'required|numeric',
+        ]);
+
+        
+        if ($validator->fails()){
+            $message = $validator->messages()->all();
+          
+            return response()->json(['message' => $message], 400);
+        }
+
+        /*  $validator1 = Validator::make($request->all('provider'), [
+            'provider.provider_user_id' => 'required|integer',
+            'provider.booking_request_providers_status' => 'required|string',
+            'provider.service_id'    => 'required|numeric',
+        ]);
+        if ($validator1->fails()){
+            $message = $validator1->messages()->all();
+             return response()->json(['message' => $message], 400);
+         }
+        $validator2 = Validator::make($request->all('service'), [
+            '*.service_id' => 'required|integer',
+            '*.initial_service_cost' => 'required|numeric',
+            '*.initial_number_of_hours'    => 'nullable|numeric',
+        ]);
+        if ($validator2->fails()){
+            $message = $validator2->messages()->all();
+             return response()->json(['message' => $message], 400);
+         }
+        $validator3 = Validator::make($request->all('question'), [
+            '*.service_question_id' => 'nullable|integer',
+            '*.answer' => 'nullable|string',
+        ]);  
+        if ($validator3->fails()){
+            $message = $validator3->messages()->all();
+             return response()->json(['message' => $message], 400);
+         }*/
+
+
         try {
             $booking = $bookingService->createBooking($request->all(), $user);
         } catch (\InvalidArgumentException $exception) {
@@ -235,9 +325,9 @@ class BookingController extends Controller
         } catch (NoSavedCardException $exception) {
             return response()->json(['message' => 'No saved card found.'], 402);
         } catch (BookingCreationException $exception) {
-            return response()->json(['message' => 'Something went wrong. Please contact administrator.'], 500);
+            return response()->json(['message' => $exception->getMessage()], 500);
         } catch (\Exception $exception) {
-            return response()->json(['message' => 'Something went wrong. Please contact administrator.'], 500);
+            return response()->json(['message' => $exception->getMessage()], 500);
         }
 
         return response()->json(['booking' => new BookingResource($booking)], 201);
@@ -246,28 +336,42 @@ class BookingController extends Controller
     /**
      * @param Request $request
      * @param Booking $booking
-     * @param BookingStatusChangeContextBuilder $contextBuilder
+     * @param BookingStatusChangeEngine $statusChangeEngine
+     * @param BookingJobsManager $bookingJobsManager
      * @return \Illuminate\Http\JsonResponse
      */
-    public function updateBooking(Request $request, Booking $booking, BookingStatusChangeEngine $statusChangeEngine)
+    public function updateBooking(Request $request, Booking $booking, BookingStatusChangeEngine $statusChangeEngine, BookingJobsManager $bookingJobsManager)
     {
         $validator = Validator::make($request->all(), [
-            'status' => 'required|in:cancelled,rejected,accepted,arrived,completed',
-            'status_change_message' => 'string',
-            'services' => 'array'
+            'status' => 'nullable|in:' . implode(',', BookingStatusChangeTypes::getAll()),
+            'status_change_message' => 'nullable|string',
+            'services' => 'nullable|array',
+            'booking_time' => 'nullable|date_format:dmYHis'
         ]);
 
-        if($validator->fails()) {
+        if($validator->fails()){
             $message = $validator->messages()->all();
             return response()->json(['message' => $message], 401);
         }
 
-        $statusChangeEngine
-            ->setBooking($booking)
-            ->setUser(auth('api')->user())
-            ->setStatusChangeParameters($request->all());
+        if ($request->has('status')) {
+            $statusChangeEngine
+                ->setBooking($booking)
+                ->setUser(auth('api')->user())
+                ->setStatusChangeParameters([
+                    'status' => $request->get('status'),
+                    'status_change_message' => $request->has('status_change_message') ? $request->get('status_change_message') : null,
+                    'services' => $request->has('services') ? $request->get('services') : []
+                ]);
 
-        return $this->changeBookingStatus($request->get('status'), $statusChangeEngine);
+            return $this->changeBookingStatus($request->get('status'), $statusChangeEngine);
+        }
+
+        if ($request->has('booking_time')) {
+            return $this->handleDateTimeChange($booking, $request->get('booking_time'), $bookingJobsManager);
+        }
+
+        return response()->json(['message' => 'Invalid request parameters'], 400);
     }
 
     /**
@@ -275,18 +379,23 @@ class BookingController extends Controller
      * @param Booking $booking
      * @param string $date
      * @param BookingStatusChangeEngine $statusChangeEngine
+     * @param BookingJobsManager $bookingJobsManager
      * @return \Illuminate\Http\JsonResponse
+     * @throws NoSavedCardException
      */
     public function updateRecurredBooking(
         Request $request,
         Booking $booking,
         string $date,
-        BookingStatusChangeEngine $statusChangeEngine
+        BookingStatusChangeEngine $statusChangeEngine,
+        BookingJobsManager $bookingJobsManager
     ) {
+        
         $validator = Validator::make($request->all(), [
-            'status' => 'required|in:cancelled,rejected,accepted,arrived,completed',
+            'status' => 'nullable|in:' . implode(',', BookingStatusChangeTypes::getAll()),
             'status_change_message' => 'string',
-            'services' => 'array'
+            'services' => 'nullable|array',
+            'booking_time' => 'nullable|date_format:dmYHis'
         ]);
 
         if($validator->fails()) {
@@ -294,13 +403,46 @@ class BookingController extends Controller
             return response()->json(['message' => $message], 401);
         }
 
-        $statusChangeEngine
-            ->setBooking($booking)
-            ->setUser(auth('api')->user())
-            ->setRecurredDate(Carbon::createFromFormat('dmYHis', $date))
-            ->setStatusChangeParameters($request->all());
+        if ($request->has('status')) {
+            $statusChangeEngine
+                ->setBooking($booking)
+                ->setUser(auth('api')->user())
+                ->setRecurredDate(Carbon::createFromFormat('dmYHis', $date))
+                ->setStatusChangeParameters([
+                    'status' => $request->get('status'),
+                    'status_change_message' => $request->has('status_change_message') ? $request->get('status_change_message') : null,
+                    'services' => $request->has('services') ? $request->get('services') : []
+                ]);
 
-        return $this->changeBookingStatus($request->get('status'), $statusChangeEngine);
+            return $this->changeBookingStatus($request->get('status'), $statusChangeEngine);
+        }
+
+        if ($request->has('booking_time')) {
+            return $this->handleDateTimeChange($booking, $request->get('booking_time'), $bookingJobsManager, $date);
+        }
+
+        return response()->json(['message' => 'Invalid request parameters'], 400);
+    }
+
+    private function handleDateTimeChange(Booking $booking, string $newDateTimeString, BookingJobsManager $bookingJobsManager, string $recurredDate = null)
+    {
+        try {
+            $newDateTime = Carbon::createFromFormat('dmYHis', $newDateTimeString);
+        } catch (\Exception $exception) {
+            return response()->json(['message' => 'Invalid date format received for new booking date time'], 400);
+        }
+
+        try {
+            $recurredDate = $recurredDate ? Carbon::createFromFormat('dmYHis', $recurredDate) : null;
+            $job = $bookingJobsManager->changeJobDateTime($booking, $newDateTime, Auth::user(), $recurredDate);
+            return response()->json($job, 201);
+        } catch (\InvalidArgumentException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 400);
+        } catch (UnauthorizedAccessException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 403);
+        } catch (\Exception $exception) {
+            return response()->json(['message' => 'Something went wrong. Please contact the administrator.'], 403);
+        }
     }
 
     /**
@@ -322,17 +464,93 @@ class BookingController extends Controller
             return response()->json(['message' => $exception->getMessage()], 403);
         } catch (RecurringBookingCreationException $exception) {
             return response()->json(['message' => $exception->getMessage()], 400);
+        } catch (PaymentFailedException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 402);
         } catch (\Exception $exception) {
-            throw $exception;
-            return response()->json(['message' => 'Something went wrong. Please contact administrator.'], 500);
+            return response()->json(['message' => $exception->getMessage()], 500);
         }
 
         if ($booking) {
-            return response()->json(['booking' => new BookingResource($booking)], 201);
+            $bookingResource = new BookingResource($booking);
+            $bookingResource['is_recurring'] = $booking->isRecurring();
+            return response()->json(['booking' => $bookingResource], 201);
         }
         return response()->json(['message' => 'Something went wrong. Please contact administrator.'], 500);
     }
 
+    public function SendBookingProviderEmail($bookingid,$user_id)
+    {
+        # code...
+        $bookingproviders = app(BookingReqestProviderRepository::class)->getBookingProvidersData($bookingid);
+        $bookingaddress = app(BookingAddressRepository::class)->Bookingaddress($bookingid);
+        $userdetails = app(UserRepository::class)->getUserDetails($user_id);
+        $services = app(BookingServiceRepository::class)->getServiceDetails($bookingid);
+        $bookings = Booking::leftJoin('plans','plans.id','=','bookings.plan_type')->where('bookings.id',$bookingid)->get(['bookings.*','plans.plan_name'])->toArray();
+        $data['bookings']=$bookings[0];
+        $mailService = app(MailService::class);
+
+        $data['address']=$bookingaddress;
+        $data['userdetails'] = $userdetails;
+        $data['services'] = $services;
+       
+        
+      //  dd( $bookingproviders);
+        if(count($bookingproviders)>0){
+
+            foreach($bookingproviders as $k=>$v){
+                $userEmail = $v['email'];
+                $userName = $v['first_name'];
+                $subject = 'New Service Request Received.';
+                $data['providers_name'] = $v['first_name'];
+                $res = $mailService->send('email.bookingrequestprovider', $data, $userEmail, $userName, $subject);
+               
+            }
+        }
+       
+       
+        if($res){
+            return true;
+        }else{
+            return false;
+        }
+
+
+    }
+
+    public function SendBookingEmail($bookingid){
+        
+        Storage::put('file.txt', 'Your name');
+        
+        $bdata = Booking::join('booking_status', 'bookings.booking_status_id', '=', 'booking_status.id')
+            ->join('plans','bookings.plan_type','=','plans.id')
+            ->join('users','users.id','=','bookings.user_id')
+            ->select('bookings.*','plans.plan_name','users.first_name','users.email')
+            ->where('bookings.id', $bookingid)
+            ->get()->toArray();
+        
+
+        $data =[];
+        $data['plan']=$bdata[0]['plan_name'];
+        $data['name']=$bdata[0]['first_name'];
+        $services = app(BookingServiceRepository::class)->getServiceDetails($bookingid);
+        $mailService = app(MailService::class);
+      
+       // $companyName = isset($default['company']) && !empty($default['company']) ? $default['company'] : __('Trade By Trade');
+        $subject = 'Service Booked : '.$bookingid;
+        $data['booking'] = $bdata[0];
+        $data['services'] = $services;
+       
+        $userEmail ='keepicks@gmail.com';//$bdata[0]['email']
+        $userName = 'Keepicks';//$bdata[0]['first_name']
+        $res = $mailService->send('email.bookingcreated', $data, $userEmail, $userName, $subject);
+        //dd($res);
+        if($res){
+            return true;
+        }else{
+            return false;
+        }
+        # code...
+    }
     // for customer get appointment
     public function getappointment(Request $request, $uuid)
     {
@@ -523,45 +741,57 @@ class BookingController extends Controller
 
     }
 
-    public function getbookingdetails(Request $request){
-       
-        if(!$request->has('id')){
-           return  response()->json(['data' => 'id not found'], 404);
-        }
-
-      
+    public function getbookingdetails(Request $request, Booking $booking, string $dateString = null) {
+        /** @var User $user */
         $user = Auth::user();
-        $user_id = $user->id;
-        $id = $request->id;
-        // print_r($user_id);exit;
 
-        $data = Booking::join('booking_status', 'bookings.booking_status_id', '=', 'booking_status.id')
-                ->join('plans','bookings.plan_type','=','plans.id')
-                ->select('bookings.*','plans.plan_name')
-                ->where('bookings.id', $id)
-                ->get();
-       
+        /** @var BookingVerificationService $bookingVerificationService */
+        $bookingVerificationService = app(BookingVerificationService::class);
+        if (
+            !$user->isAdmin() &&
+            !$bookingVerificationService->isUserTheBookingCustomer($user, $booking) &&
+            !$bookingVerificationService->isUserAChosenBookingProvider($user, $booking)
+        ) {
+            return response()->json(['message' => 'Access denied to view the booking details'], 403);
+        }
 
-        $services = app(BookingServiceRepository::class)->getServiceDetails($id);
-        $providerscount = app(BookingReqestProviderRepository::class)->getBookingProvidersCount($id);
-        if( $providerscount[0]['accepted_count']>0){
-            $providers = app(BookingReqestProviderRepository::class)->getBookingAccptedProvidersDetails($id);
+        /** @var BookingJobsManager $bookingJobsManager */
+        $bookingJobsManager = app(BookingJobsManager::class);
+        try {
+            $date = !is_null($dateString) ? Carbon::createFromFormat('dmYHis', $dateString) : null;
+        } catch (InvalidFormatException $exception) {
+            return response()->json(['message' => 'Invalid date format received'], 400);
+        }
+
+        try {
+            $job = $bookingJobsManager->getBookingJob($booking, $date);
+        } catch (\InvalidArgumentException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 400);
+        }
+        return response()->json(['details' => $job]);
+    }
+
+    public function providerdetails(Request $request)
+    {
+
+        $rules = array(
+            'id' => 'required|numeric',
+        );
+        $params = $request->all();
+        $validator = Validator::make($params, $rules);
+        if ($validator->fails()){
+            $message = $validator->messages()->all();
+            return response()->json(['message' => $message], 400);
         }else{
-            $providers = app(BookingReqestProviderRepository::class)->getBookingPendingProvidersDetails($id);
+            $id = $request->id;
+
+            $providers = app(UserRepository::class)->getProviderDetails($id); 
+            $providers[0]['badges'] = app(UserBadgeReviewRepository::class)->getBadgeDetails($id );
+            $providers[0]['review'] = app(UserBadgeReviewRepository::class)->getReviewDetails($id );
+            $providers[0]['avgrate'] = app(UserBadgeReviewRepository::class)->getAvgRating($id);
+            return response()->json(['data' => $providers]);
         }
-
-        if(count($providers)>0){
-            foreach($providers as $key=>$val){
-                $providers[$key]['badges'] = app(ProviderBadgeReviewRepository::class)->getBadgeDetails($val['provider_user_id']);
-                $providers[$key]['review'] = app(ProviderBadgeReviewRepository::class)->getReviewDetails($val['provider_user_id']);
-                $providers[$key]['avgrate'] = app(ProviderBadgeReviewRepository::class)->getAvgRating($val['provider_user_id']);
-            
-            }
-
-        }
-      // dd($data);
-        return response()->json(['data' => $data,'services'=>$services,'providers'=>$providers,'providerscount'=>$providerscount]);
-
+        # code...
     }
 
     //for get future booking details
@@ -661,7 +891,7 @@ class BookingController extends Controller
     }
 
     //for provider cancel booking by uuid
-    public function provider_cancelbooking(Request $request, $uuid)
+    public function provider_cancelbooking(Request $getbookingdetails, $uuid)
     {
          $user = Auth::user();
 
@@ -719,6 +949,17 @@ class BookingController extends Controller
     //for cancel booking by uuid
     public function cancelbooking(Request $request)
     {
+
+        $validator = Validator::make($request->all(), [
+            'id'=>'required|numeric',
+            'reason'=>'nullable|string',
+        ]);
+
+        
+        if ($validator->fails()){
+            $message = $validator->messages()->all();
+            return response()->json(['message' => $message], 400);
+        }
         $user = Auth::user();
         $user_id = $user->id;
         $bookingid = $request->id;
@@ -727,7 +968,7 @@ class BookingController extends Controller
         $data = DB::table('bookings')
             ->join('booking_status', 'bookings.booking_status_id', '=', 'booking_status.id')
             ->join('booking_services', 'bookings.id', '=', 'booking_services.booking_id')
-            ->select('bookings.id as booking_id','bookings.booking_date','bookings.booking_time', 'booking_status.status as booking_status', 'booking_services.initial_number_of_hours as number_of_hours', 'booking_services.initial_service_cost as agreed_service_amount')
+            ->select('bookings.id as booking_id','bookings.booking_postcode','bookings.booking_date','bookings.booking_time', 'booking_status.status as booking_status', 'booking_services.initial_number_of_hours as number_of_hours', 'booking_services.initial_service_cost as agreed_service_amount')
             ->where('bookings.id', $bookingid)
             ->get();
         // print_r($data);exit;
@@ -750,9 +991,22 @@ class BookingController extends Controller
             $Bookingchange->booking_time = $booking_time;
             $Bookingchange->number_of_hours = $number_of_hours;
             $Bookingchange->agreed_service_amount = $agreed_service_amount;
-            $Bookingchange->comments = $request->get('comments');
+            $Bookingchange->comments = $request->get('reason');
             $Bookingchange->changed_by_user = $user_id;
             $Bookingchange->save();
+
+            
+            //insert into booking logs
+            $logs = new Bookingactivitylogs;
+            $logs->booking_id = $booking_id;
+            $logs->user_id = $user_id;
+            $logs->booking_date = $booking_date;
+            $logs->booking_time = $booking_time;
+            $logs->booking_postcode = $data[0]->booking_postcode;
+            $logs->action ='cancel';
+            $logs->detail = 'cancel_booking';
+            $logs->save();
+
 
             $lastinserteduuid = $Bookingchange->uuid;
 
@@ -761,14 +1015,14 @@ class BookingController extends Controller
                 $Booking->booking_status_id = '5';
                 $Booking->save();
 
-                $cancelbooking = app(BookingReqestProviderRepository::class)->CancelBooking($booking_id);
+               // $cancelbooking = app(BookingReqestProviderRepository::class)->CancelBooking($booking_id);
                
                // $success['message'] = 'Booking cancelled successfully.';
                 $success['cancelled_booking_uuid'] = $lastinserteduuid;
 
-                return response()->json(['success' => $success,'message' => 'Booking cancelled successfully.']);
+                return response()->json(['success' => $success,'message' => 'Booking cancelled successfully.'],200);
             } else{
-                return response()->json(['message' => 'Failed to cancel this booking.']);
+                return response()->json(['message' => 'Failed to cancel this booking.'],201);
             }
         }
     }

@@ -18,9 +18,43 @@ use DB;
 use Input;
 use Response;
 use App\Services\TotalCostCalculation;
+use App\Repository\UserRepository;
+use App\Repository\ProviderServiceMapRespository;
 
 class ServiceController extends Controller
 {
+    public $providerservicemap;
+
+    public function __construct(ProviderServiceMapRespository $providerservicemap)
+    {
+        $this->providerservicemap = $providerservicemap;
+    }
+
+
+
+    public function save_provider_servicemap(Request $request)
+    {
+        # code...
+        $validator = Validator::make($request->all(), [
+            'data' => 'nullable|array'
+        ]);
+
+        if($validator->fails()) {
+            $message = $validator->messages()->all();
+            return response()->json(['message' => $message], 401);
+        }
+
+        $arr =  $this->providerservicemap->save_provider_servicemap($request);
+
+        if($arr){
+            return response()->json(['success' => true,'message'=>'Services have been added sucessfully.'], 200);
+        }else{
+            return response()->json(['error' => true,'message'=>'Services have not been added sucessfully.'], 401);
+        }
+
+       
+
+    }
     /**
      * Display a listing of the resource.
      *
@@ -51,15 +85,33 @@ class ServiceController extends Controller
 
     public function geserviceprice(Request $request){
 
-        $validated =  $request->validate([
+        $validator = Validator::make($request->all(), [
             'serviceid' => 'required',
+           
+            'servicetime'=>'nullable|array',
+            'booking_provider_type'=>'nullable|string'
         ]);
+        
+        if($validator->fails()){
+            $message = $validator->messages()->all();
+            return response()->json(['message' => $message], 201);
+        }
+        
         //  dd($validated);
         $id = $request->get('serviceid');
         $servicetime = $request->get('servicetime');
-        $providerid = $request->get('providerid');
+        $providerid = $request->has('providerid')?$request->get('providerid'):'';
+
+        if($request->get('booking_provider_type')=='agency'){
+            $providerid = app(UserRepository::class)->getAgencyData();
+        }
         $servicetime = (is_array($id))?$request->get('servicetime'):$request->get('gettimeslot');
-        $result = app(TotalCostCalculation::class)->GetHighestTotalPrice($id,$providerid,$servicetime);
+
+        if (is_array($id)) {
+            $result = app(TotalCostCalculation::class)->GetHighestTotalPrice($id,$providerid,$servicetime,$request->plan_id,$request->promocode,$request->categoryid);
+        } else {
+            $result = app(TotalCostCalculation::class)->getServicePriceDetails($id, $servicetime);
+        }
        
         return Response::json($result);
         

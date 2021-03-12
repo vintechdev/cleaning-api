@@ -1,6 +1,7 @@
 <?php 
 namespace App\Repository;
 
+use App\Booking;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -24,11 +25,20 @@ class BookingReqestProviderRepository{
         ->get(['booking_request_providers.*','users.first_name as provider_first_name','users.last_name as provider_last_name', 'users.profilepic as provider_profilepic','users.mobile_number as provider_mobile_number','users.email'])->toArray();
         return $result;
     }
-    public function CancelBooking($bookingid){
-        $result = Bookingrequestprovider::where('booking_id',$bookingid)->update(array('status' => 'rejected'));
-        return $result;
 
-    }
+    public function getBookingProvidersData($bookingid){
+        return Bookingrequestprovider::leftJoin('users','users.id', '=','booking_request_providers.provider_user_id')
+            ->where('booking_request_providers.booking_id',$bookingid)
+            ->get([
+                'booking_request_providers.*',
+                'users.email',
+                'users.first_name as provider_first_name',
+                'users.last_name as provider_last_name',
+                'users.profilepic as provider_profilepic',
+                'users.mobile_number as provider_mobile_number',
+                'users.email'
+            ])->toArray();
+  }
 
     /**
      * @param int $bookingId
@@ -77,5 +87,21 @@ class BookingReqestProviderRepository{
     public function getCountWithStatuses(array $statuses, int $bookingId): int
     {
         return $this->getAllWithStatuses($statuses, $bookingId)->count();
+    }
+
+    /**
+     * @param Booking $booking
+     * @return Bookingrequestprovider|null
+     */
+    public function getAcceptedBookingRequestProvider(Booking $booking): ?Bookingrequestprovider
+    {
+        $requestProviders = $this
+            ->getAllWithStatuses([Bookingrequestprovider::STATUS_ACCEPTED], $booking->getId());
+
+        if (!$requestProviders->count()) {
+            return null;
+        }
+
+        return $requestProviders->first();
     }
 }

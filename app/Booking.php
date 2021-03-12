@@ -28,6 +28,47 @@ class Booking extends Model
         return $this->belongsTo(Event::class);
     }
 
+    public function users()
+    {
+        return $this->belongsTo(Customeruser::class,'user_id','id');
+    }
+
+    public function address()
+    {
+        return $this->hasOne(Bookingaddress::class);
+    }
+    public function bookingstatus()
+    {
+        return $this->belongsTo(Bookingstatus::class,'booking_status_id','id');
+    }
+
+    public function plan()
+    {
+        return $this->belongsTo(Plan::class,'plan_type','id');
+    }
+
+    public function getPlan(): Plan
+    {
+        return $this->plan;
+    }
+
+    public function bookingquestions()
+    {
+        return $this->hasMany(Bookingquestion::class,'booking_id','id');
+    }
+
+    public function bookingrequestprovider()
+    {
+        return $this->hasMany(Bookingrequestprovider::class,'booking_id','id');
+    }
+
+    public function bookingchat()
+    {
+        return $this->hasMany(Chats::class,'booking_id','id')->orderBy('created_at','desc');
+    }
+    /**
+     * @return Event|null
+     */
     public function getEvent(): ?Event
     {
         return $this->event;
@@ -105,16 +146,61 @@ class Booking extends Model
     }
 
     /**
+     * @return Carbon|null
+     */
+    public function getFinalBookingDateTime(): ?Carbon
+    {
+        if ($this->isRecurring()) {
+            return null;
+        }
+
+        return self::calculateFinalBookingDateTime($this->getStartDate(), $this->getTotalHours());
+    }
+
+    /**
+     * @return float
+     */
+    public function getTotalHours(): float
+    {
+        $totalHours = 0;
+        /** @var Bookingservice $bookingService */
+        foreach ($this->getBookingServices() as $bookingService) {
+            $totalHours += $bookingService->getInitialNumberOfHours() ? : 0;
+        }
+
+        return $totalHours;
+    }
+
+    /**
+     * @param float $finalCost
+     * @return $this
+     */
+    public function setFinalCost(float $finalCost)
+    {
+        $this->final_cost = $finalCost;
+        return $this;
+    }
+
+    /**
+     * @return float|null
+     */
+    public function getFinalCost(): ?float
+    {
+        return $this->final_cost;
+    }
+
+    /**
      * @param Carbon $dateTime
      * @param float $finalHours
      * @return Carbon
      */
-    public static function getFinalBookingDateTime(Carbon $dateTime, float $finalHours): Carbon
+    public static function calculateFinalBookingDateTime(Carbon $dateTime, float $finalHours): Carbon
     {
+        $clonedDateTime = clone $dateTime;
         $hours = floor($finalHours);
         $mins = round(($finalHours - $hours) * 60);
         $timeInMinutes = ($hours * 60) + $mins;
-        return $dateTime->addMinutes($timeInMinutes);
+        return $clonedDateTime->addMinutes($timeInMinutes);
     }
 
     /**
@@ -217,11 +303,17 @@ class Booking extends Model
     /**
      * @return Collection
      */
-    public function getBookingServices(): Collection
+    public function getBookingServices(): collection
     {
         return $this->bookingServices;
     }
-
+    public function getBookingServicesArr(): array
+    {
+        return $this->bookingServices->toArray();
+    }
+    public function getUserDetails(){
+        return $this->users->toArray();
+    }
     /**
      * @return Collection
      */
@@ -232,13 +324,13 @@ class Booking extends Model
 
     /**
      * @param array $bookingNotes
-     * @return bool
+     * @return $this
      */
-    public function saveBookingNotes(array $bookingNotes): bool
+    public function saveBookingNotes(array $bookingNotes)
     {
         /** @var BookingNote $bookingNote */
         $this->bookingNotes()->saveMany($bookingNotes);
-        return true;
+        return $this;
     }
 
     /**
@@ -267,5 +359,31 @@ class Booking extends Model
         }
 
         return Booking::find($this->parent_booking_id);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function discounts()
+    {
+        return $this->belongsToMany(Discounts::class);
+    }
+
+    /**
+     * @return Collection
+     */
+    public function getDiscounts(): Collection
+    {
+        return $this->discounts()->get();
+    }
+
+    /**
+     * @param array $discounts
+     * @return $this
+     */
+    public function addDiscounts(array $discounts)
+    {
+        $this->discounts()->saveMany($discounts);
+        return $this;
     }
 }

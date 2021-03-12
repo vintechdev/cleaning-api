@@ -19,8 +19,24 @@ class Servicecategory extends Model
     public function __construct(){
         parent::__construct();
     }
-    
-  /*   public function getAllCategory(){
-        return  $result = Servicecategory::where('active',1)->get()->toArray();
-    } */
+    public function services()
+    {
+        return $this->hasMany(Service::class, 'category_id', 'id');
+    }
+
+    /**
+     * @return bool
+     */
+    public function isRecurring(): bool
+    {
+        return (bool)$this->is_recurring;
+    }
+
+    /**
+     * @return bool
+     */
+    public function allowMultipleAddons(): bool
+    {
+        return (bool) $this->allow_multiple_addons;
+    }
 }

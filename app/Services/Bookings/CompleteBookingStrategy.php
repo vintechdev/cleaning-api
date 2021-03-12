@@ -10,6 +10,14 @@ use App\Exceptions\Booking\BookingStatusChangeException;
 use App\Exceptions\Booking\InvalidBookingStatusActionException;
 use App\Exceptions\Booking\RecurringBookingStatusChangeException;
 use App\Exceptions\Booking\UnauthorizedAccessException;
+use App\Repository\BookingReqestProviderRepository;
+use App\Service;
+use App\Services\BookingFinalCostCalculator;
+use App\Services\Bookings\Exceptions\BookingserviceBuilderException;
+use App\Services\Bookings\Exceptions\BookingServicesManagerException;
+use App\Services\Bookings\Traits\BookingPaymentHandlerTrait;
+use App\Services\Payments\Interfaces\PaymentProcessorInterface;
+use App\Services\RecurringBookingService;
 use App\User;
 use Carbon\Carbon;
 
@@ -19,10 +27,50 @@ use Carbon\Carbon;
  */
 class CompleteBookingStrategy extends AbstractBookingStatusChangeStrategy
 {
+    use BookingPaymentHandlerTrait;
+
     /**
      * @var array
      */
     private $services = [];
+
+    /**
+     * @var BookingServicesManager
+     */
+    private $bookingServicesManager;
+
+    /**
+     * @var PaymentProcessorInterface
+     */
+    private $paymentProcessor;
+
+    /**
+     * @var BookingFinalCostCalculator
+     */
+    private $finalCostCalculator;
+
+    /**
+     * CompleteBookingStrategy constructor.
+     * @param BookingReqestProviderRepository $bookingRequestProviderRepository
+     * @param BookingVerificationService $bookingVerificationService
+     * @param RecurringBookingService $recurringBookingService
+     * @param BookingServicesManager $bookingServicesManager
+     * @param PaymentProcessorInterface $paymentProcessor
+     * @param BookingFinalCostCalculator $finalCostCalculator
+     */
+    public function __construct(
+        BookingReqestProviderRepository $bookingRequestProviderRepository,
+        BookingVerificationService $bookingVerificationService,
+        RecurringBookingService $recurringBookingService,
+        BookingServicesManager $bookingServicesManager,
+        PaymentProcessorInterface $paymentProcessor,
+        BookingFinalCostCalculator $finalCostCalculator
+    ) {
+        parent::__construct($bookingRequestProviderRepository, $bookingVerificationService, $recurringBookingService);
+        $this->bookingServicesManager = $bookingServicesManager;
+        $this->paymentProcessor = $paymentProcessor;
+        $this->finalCostCalculator = $finalCostCalculator;
+    }
 
     /**
      * @param Booking $booking
@@ -44,12 +92,37 @@ class CompleteBookingStrategy extends AbstractBookingStatusChangeStrategy
             throw new UnauthorizedAccessException('User does not have access to this function');
         }
 
-        $this->updateBookingServices($booking);
+        $bookingRequestProvider = $this
+            ->bookingRequestProviderRepo
+            ->getByBookingAndProviderId($booking->getId(), $user->getId());
+
+        $provider = ($user->getId() === $bookingRequestProvider->provider_user_id) ?
+            $user :
+            User::find($bookingRequestProvider->provider_user_id);
+
+        $this
+            ->updateBookingServices(
+                $booking,
+                $provider
+            );
+
+        if (!$this->finalCostCalculator->updateBookingGrandTotal($booking)) {
+            throw new BookingStatusChangeException('Unable to update final total for booking');
+        }
+
+        if ($this->bookingServicesManager->hasBookingDetailsChanged($booking)) {
+            if (!$booking->setStatus(Bookingstatus::BOOKING_STATUS_PENDING_APPROVAL)->save()) {
+                throw new BookingStatusChangeException('Unable to save booking status');
+            }
+
+            return $booking;
+        }
 
         if (!$booking->setStatus(Bookingstatus::BOOKING_STATUS_COMPLETED)->save()) {
             throw new BookingStatusChangeException('Unable to save booking status');
         }
 
+        $this->handlePayment($booking, $provider);
         return $booking;
     }
 
@@ -95,40 +168,32 @@ class CompleteBookingStrategy extends AbstractBookingStatusChangeStrategy
      * @param Booking $booking
      * @return bool
      */
-    private function updateBookingServices(Booking $booking): bool
+    private function updateBookingServices(Booking $booking, User $user): bool
     {
         if (!$this->services) {
             throw new InvalidBookingStatusActionException('Can not change status for booking without providing any services details');
         }
 
-        if (!$booking->getBookingServices()->count()) {
-            throw new BookingStatusChangeException('No services found for this booking');
+        foreach ($this->services as &$service) {
+            $service['provider_id'] = $user->getId();
         }
 
-        $bookingServices = $booking->getBookingServices();
-
-        $serviceIds = array_map(function ($service) {
-            return $service['service_id'];
-        }, $this->services);
-
-        $services = array_combine($serviceIds, $this->services);
-
-        /** @var Bookingservice $bookingService */
-        foreach ($bookingServices as $bookingService) {
-            if (in_array($bookingService->getService()->getId(), $serviceIds)) {
-                $service = $services[$bookingService->getService()->getId()];
-                if (isset($service['final_number_of_hours'])) {
-                    $bookingService->setFinalNumberOfHours($service['final_number_of_hours'])->save();
-                }
-                continue;
-            }
-
-            if ($bookingService->getService()->isDefaultService()) {
-                throw new InvalidBookingStatusActionException('Default service can not be removed');
-            }
-            $bookingService->setRemoved(true)->save();
+        try {
+            $this->bookingServicesManager->updateBookingServicesFromArray($booking, $this->services);
+        } catch (BookingserviceBuilderException $exception) {
+            throw new InvalidBookingStatusActionException($exception->getMessage());
+        } catch (BookingServicesManagerException $exception) {
+            throw new InvalidBookingStatusActionException($exception->getMessage());
         }
 
         return true;
+    }
+
+    /**
+     * @return PaymentProcessorInterface
+     */
+    protected function getPaymentProcessor(): PaymentProcessorInterface
+    {
+        return $this->paymentProcessor;
     }
 }

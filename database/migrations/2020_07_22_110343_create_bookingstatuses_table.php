@@ -16,7 +16,7 @@ class CreateBookingstatusesTable extends Migration
         Schema::create('booking_status', function (Blueprint $table) {
             $table->increments('id')->unsigned();
             $table->uuid('uuid')->unique()->nullable();
-            $table->enum('status', ['pending', 'approved', 'arrived', 'completed', 'rejected'])->nullable();
+            $table->enum('status', ['pending', 'accepted', 'arrived', 'completed', 'rejected'])->nullable();
             $table->char('description', 191)->nullable();
             $table->timestamps();   
             $table->softDeletes();

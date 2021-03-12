@@ -14,5 +14,5 @@ class Working_hours extends Model
     use Uuids;
     protected $table = 'provider_working_hours';
     use SoftDeletes;
-    protected $fillable = ['id'];
+    protected $fillable = ['provider_id', 'working_days', 'start_time', 'end_time'];
 }

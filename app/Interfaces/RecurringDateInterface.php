@@ -27,7 +27,7 @@ interface RecurringDateInterface
      * @param Carbon $date
      * @return Carbon
      */
-    public function getNextValidDateRelativeTo(Carbon $date): Carbon;
+    public function getNextValidDateRelativeTo(Carbon $date): ?Carbon;
 
     /**
      * Returns the date on the offset passed

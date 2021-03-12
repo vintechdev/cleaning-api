@@ -42,6 +42,7 @@ class BookingStatusChanged implements BookingEvent
      */
     public function __construct(Booking $booking, User $user, int $oldStatus, int $newStatus)
     {
+       
         $this->booking = $booking;
         $this->user = $user;
         $this->oldStatus = $oldStatus;

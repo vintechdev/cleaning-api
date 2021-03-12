@@ -1,25 +1,114 @@
 <?php
 
 namespace App\Http\Controllers\Backend\API;
-
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 use App\Customeruser;
 use App\Http\Requests\Backend\CustomeruserRequest;
 use App\Http\Resources\CustomeruserCollection;
 use App\Http\Resources\Customeruser as CustomeruserResource;
 use App\Http\Controllers\Controller;
+use App\Repository\UserBadgeReviewRepository;
 use Illuminate\Support\Facades\Validator;
 // for change password
-use Auth;
+
 use Hash;
 use DB;
+use App\Userreview;
+use Session;
+use File;
+use Config;
+use Illuminate\Support\Facades\Auth;
+use App\Repository\Eloquent\ProfileRepository;
+
 class CustomerusersController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
+    protected $profileRepository;
+    protected $userbage;
+
+    public function __construct(ProfileRepository $profileRepository,UserBadgeReviewRepository $userbage){
+        $this->profileRepository = new ProfileRepository();
+        $this->userbage = $userbage;
+    }
+
+    public function getBadges()
+    {
+        # code...
+        $arr = $this->userbage->getBadgeDetails(Auth::user()->id);
+        return response()->json(['data'=>$arr],200);
+    }
+    public function profilepicture(Request $request){
+         $rules = array(
+           'file_content'=>'required|string'
+        ); 
+
+     
+        $params = $request->all();
+        $validator = Validator::make($params, $rules);
+        if ($validator->fails()){
+            $message = $validator->messages()->all();
+            return response()->json(['message' => $message], 401);
+        }else{
+
+            $image = $request->input('file_content'); 
+             $user_id = Auth::user()->id;
+            
+
+            $Customeruser = Customeruser::firstOrNew(['id' => $user_id]);
+            if($image!=''){
+                $type = $request->file_type;
+               
+                $image = str_replace('data:'.$type.';base64,', '', $image);
+              
+                $ext = str_replace('image/','',$type);
+                $image = str_replace(' ', '+', $image);
+                
+                $imageName = time().'.'. $ext ;
+                $destinationPath = \Config::get('const.PROFILE_PATH'); //public_path().'/images/upload/profile/';
+          //    echo $imageName;exit;
+                \File::put( $destinationPath . $imageName, base64_decode($image));
+                $Customeruser->profilepic = $imageName;
+                $Customeruser->save();
+                return response()->json(['message' => 'Profile Image has been updated successfully!!'], 200);
+            }else{
+                return response()->json(['message' => 'Profile picture is not found. Try again!!'], 401);
+            }
+            
+        }
+    }
+
+
+    public function CheckProfileCompleted(Request $request)
+    {
+        $res = $this->profileRepository->CheckProfileCompleted();
+
+        if($res['working_hour']>0 && $res['provider_service']>0 && $res['postcode']>0 && $res['payment']>0){
+            $arr = ['success'=>true,'data'=>$res];
+        }else{
+            if($res['working_hour']==0 && $res['provider_service']==0 && $res['postcode']==0 && $res['payment']==0){
+                $arr = ['data'=>$res,'success'=>false,'message'=>'Please fill details to complete the profile.'];
+            }else if($res['working_hour']==0 && $res['provider_service']>0 && $res['postcode']>0 && $res['payment']>0){
+                $arr = ['data'=>$res,'success'=>false,'message'=>'Please fill working hours details to complete profile.'];
+            }else if($res['working_hour']>0 && $res['provider_service']==0 && $res['postcode']>0 && $res['payment']>0){
+                $arr = ['data'=>$res,'success'=>false,'message'=>'Please fill service details to complete profile.'];
+            }else if($res['working_hour']>0 && $res['provider_service']>0 && $res['postcode']==0 && $res['payment']>0){
+                $arr = ['data'=>$res,'success'=>false,'message'=>'Please fill postcode details to complete profile.'];
+            }else if($res['working_hour']>0 && $res['provider_service']>0 && $res['postcode']>0 && $res['payment']==0){
+                $arr = ['data'=>$res,'success'=>false,'message'=>'Please fill payment details to complete profile.'];
+            }else{
+                $arr = ['data'=>$res,'success'=>false,'message'=>'Please fill details to complete the profile.'];
+            }
+        }
+        return response()->json($arr);
+    }
+
+    public function checkproviderstripeverified()
+    {
+        $res = $this->profileRepository->CheckProviderStripeVarified();
+        return response()->json(['varified'=>(($res>0)?1:0)],200);
+    }
+
+
     
     public function index(Request $request)
     {
@@ -88,64 +177,126 @@ class CustomerusersController extends Controller
         $Customerusers = $Customerusers->paginate(20);
         return (new CustomeruserCollection($Customerusers));
     }
-    public function getallprovider(Request $request)
-    {
-        $users = DB::table('users')
-            ->join('role_user', 'users.id', '=', 'role_user.user_id');
+    public function getallprovider(Request $request){
+    
+        $rules = array(
+            'postcode' => 'required|numeric',
+            'serviceid'=>'required|string',
+            'servicecategory'=>'required|numeric',
+            'start_time'=>'nullable|string',
+            'end_time'=>'nullable|string',
+            'day'=>'nullable|string'
+        );
 
-        if ($request->has('servicecategory') || $request->has('serviceid')) {
+     
+        $params = $request->all();
+        $validator = Validator::make($params, $rules);
+        if ($validator->fails()){
+            $message = $validator->messages()->all();
+            return response()->json(['message' => $message], 400);
+        }else{
+
+            $users = Customeruser::join('role_user', 'users.id', '=', 'role_user.user_id');
+            $users->leftJoin( DB::raw("(SELECT AVG(user_reviews.rating) as avgrate, user_reviews.user_review_for FROM `user_reviews`  group by user_reviews.user_review_for) as p "), 'p.user_review_for', '=', 'users.id');
+            // $query =  $users->fromSub($subQuery, 'subquery');
+            
+            $users->leftJoin( DB::raw("(SELECT count(provider_user_id) as completed_jobs, booking_request_providers.provider_user_id FROM `booking_request_providers` inner join bookings on(bookings.id=booking_request_providers.booking_id) where booking_request_providers.status='accepted' and bookings.booking_status_id=4 group by booking_request_providers.provider_user_id) as j"), 'j.provider_user_id', '=', 'users.id');
+
             $users
                 ->join('provider_service_maps', 'users.id', '=', 'provider_service_maps.provider_id')
                 ->join('services', 'provider_service_maps.service_id', '=', 'services.id')
                 ->join('service_categories', 'services.category_id', '=', 'service_categories.id');
-        }
 
-        if ($request->has('postcode')) {
-            $users
-            ->join('provider_postcode_maps', 'users.id', '=', 'provider_postcode_maps.provider_id')
-            ->join('postcodes', 'provider_postcode_maps.postcode_id', '=', 'postcodes.id');
+            if ($request->has('postcode')){
 
-        }
-        if ($request->has('day') || ($request->has('start_time') && $request->has('end_time'))) {
-            $users
-                ->join('provider_working_hours', 'users.id', '=', 'provider_working_hours.provider_id');
-        }
+                $users->Join(DB::raw("( select DISTINCT provider_id from `provider_postcode_maps`
+                INNER JOIN `postcodes` 
+                        ON `provider_postcode_maps`.`postcode_id` = `postcodes`.`id` 
+                        where postcode = ".$request->get('postcode')." and provider_postcode_maps.deleted_at is null
+                ) as prv"), 'prv.provider_id', '=', 'users.id');
+             
 
-        $users
-            ->select('users.*')
-            ->where('role_id', 2);
+            //    $users->join('provider_postcode_maps', 'users.id', '=', 'provider_postcode_maps.provider_id')
+              //  ->join('postcodes', 'provider_postcode_maps.postcode_id', '=', 'postcodes.id');
 
-            if ($request->has('providertype')) {
-                $users->where(
-                    'users.providertype',
-                    $request->has('providertype')
-                );
+            }
+            if ($request->has('day') || ($request->has('start_time') && $request->has('end_time'))){
+                $users
+                    ->join('provider_working_hours', 'users.id', '=', 'provider_working_hours.provider_id');
+            }
+           /*  $users->leftJoin('user_reviews', function( $join){
+                $join->on('user_reviews.user_review_for', 'users.id');
+            });  */
+            $users->select(['users.*','p.avgrate','j.completed_jobs','provider_service_maps.amount','provider_service_maps.type', 'services.is_default_service', 'provider_service_maps.provider_id'])->where('role_id', 2);
+            if ($request->has('providertype')){
+                    $users->where('users.providertype',$request->has('providertype'));
+            }
+            if ($request->has('servicecategory')){
+                $users->where('service_categories.id', $request->get('servicecategory'));
+            }
+            
+            if ($request->has('day') || ($request->has('start_time') )) {//&& $request->has('end_time')
+                if ($request->get('day')) {
+                    $users->where('provider_working_hours.working_days', 'LIKE', '%' . $request->get('day') . '%');
+                }
+                if ($request->has('start_time')){
+                    $users->whereTime('provider_working_hours.start_time', '<=', $request->get('start_time'));
+                    // ->whereTime('provider_working_hours.end_time', '>=', $request->get('end_time'));
+                }
+            }
+        
+            if($request->has('serviceid')){
+                $servicearr =  explode(',',$request->get('serviceid'));
+             
+                $users->whereIn('provider_service_maps.service_id', $servicearr);
+                $users->groupBy('users.id','p.avgrate','provider_service_maps.amount','provider_service_maps.type','services.is_default_service')->havingRaw("count(provider_service_maps.provider_id)=".count( $servicearr));
             }
 
-        if ($request->has('servicecategory')) {
-            $users->where('service_categories.id', $request->get('servicecategory'));
-        }
-     
-        if ($request->has('postcode')) {
-            $users->where('postcodes.postcode', $request->get('postcode'));
-        }
-        if ($request->has('day') || ($request->has('start_time') )) {//&& $request->has('end_time')
-            if ($request->get('day')) {
-                $users->where('provider_working_hours.working_days', 'LIKE', '%' . $request->get('day') . '%');
+            if($request->has('pricerange') && $request->get('pricerange')>0){
+                $users->where('provider_service_maps.amount','<=',$request->get('pricerange'));
             }
-
-            if ($request->has('start_time') && $request->has('end_time')) {
-                $users->whereTime('provider_working_hours.start_time', '<=', $request->get('start_time'));
-                   // ->whereTime('provider_working_hours.end_time', '>=', $request->get('end_time'));
+            if($request->has('cleaningrange') && $request->get('cleaningrange')>0){
+                $users->where(DB::raw('IFNULL(j.completed_jobs,0)'),'>=',$request->get('cleaningrange'));
             }
-        }
-        if ($request->has('serviceid')) {
-            $servicearr =  explode(',',$request->get('serviceid'));
-            $users->whereIn('provider_service_maps.service_id',explode(',',$request->get('serviceid')));
-            $users->groupBy('users.id')->havingRaw("count(provider_service_maps.provider_id)=".count( $servicearr));
-        }
-       
-        return response()->json(['data' => $users->get()]);
+             if($request->has('rating') && $request->get('rating')>0){
+                $users->where(DB::raw('IFNULL(p.avgrate,0)'),'>=',$request->get('rating'));
+            } 
+            if($request->has('sorting')){
+                if($request->get('sorting')=='new'){
+                    $column = 'users.created_at';
+                    $dir = 'desc';
+                }else if($request->get('sorting')=='pasc'){
+                    $column = 'provider_service_maps.amount';
+                    $dir = 'asc';
+                }else if($request->get('sorting')=='pdesc'){
+                    $column = 'provider_service_maps.amount';
+                    $dir = 'desc';
+                }else{
+                    $column = 'j.completed_jobs';
+                    $dir = 'desc';
+                }
+              //  echo $column.'--'.$dir;die;
+                $users->orderBy($column,$dir);
+            }
+           // echo $users->toSql();exit;
+            $agency = clone $users;
+            $agencyprice = clone $users;
+            $users->where('providertype','freelancer');
+            $freelancer = $users->get()->toArray();
+          //  dd($freelancer);
+            $agency = $agency->where('providertype','agency')->pluck('id')->toArray();//->toArray();
+           // dd($agency);
+           $highagencyprice = 0;
+            if(count($agency)>0){
+                
+           
+                 $arr = $agencyprice->where('providertype','agency')->orderBy('provider_service_maps.amount','desc')->limit(1)->pluck('amount')->toArray();
+                 $highagencyprice = $arr[0];
+            }
+            
+            return response()->json(['data' =>$freelancer,'agency'=>count($agency),'agencyids'=>$agency,'highagencyprice'=>$highagencyprice],200);
+    }
+      
     }
     
     /**
@@ -180,9 +331,9 @@ class CustomerusersController extends Controller
     public function change_password(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'current_password' => 'required',
+            'old_password' => 'required',
             'new_password' => 'required',
-            'repeat_password' => 'required|same:new_password'
+            'confirm_password' => 'required|same:new_password'
         ]);
         
         if($validator->fails()){
@@ -199,13 +350,13 @@ class CustomerusersController extends Controller
         $Customeruser = Customeruser::firstOrNew(['id' => $user_id]);
         // $Customeruser->uuid = $users_uuid;
         
-        $current_password = $request->get('current_password');
+        $current_password = $request->get('old_password');
         $responseCode =  Hash::check($current_password, $user_password);
         // print_r($responseCode);exit;
         if($responseCode > 0){
 
             $new_password = $request->get('new_password');
-            $repeat_password = $request->get('repeat_password');
+            $repeat_password = $request->get('confirm_password');
 
             if($new_password == $repeat_password){
                 // echo "same";exit;
@@ -236,39 +387,68 @@ class CustomerusersController extends Controller
     public function profile_update(Request $request)
     {
 
-        $validator = Validator::make($request->all(), [
+       
+         $validator = Validator::make($request->all(), [
             'first_name' => 'required',
             'last_name' => 'required',
             'email' => 'required|email',
-            'mobile_number' => 'required|min:10|max:10',
+            'mobile_number' => 'required|min:9|max:12',
         ]);
-        
+
         if($validator->fails()){
             $message = $validator->messages()->all();
             return response()->json(['message' => $message], 401);
         }
-
         $user = Auth::user();
         $user_id = $user->id;
         // print_r($user_id);exit;
 
-        $Customeruser = Customeruser::firstOrNew(['id' => $user_id]);
-        $Customeruser->first_name = $request->get('first_name');
-        $Customeruser->last_name = $request->get('last_name');
-        $Customeruser->email = $request->get('email');
-        $Customeruser->profilepic = $request->get('profilepic');
-        $Customeruser->mobile_number = $request->get('mobile_number');
-        $Customeruser->save();
-        
-        $responseCode = $request->get('id') ? 200 : 201;
-        return response()->json(['saved' => $Customeruser], $responseCode);
-    }
-public function profile_view(Request $request)
-    {
-        
-        
+        $count = Customeruser::where('email',$request->get('email'))->where('id','!=', $user_id)->count();
+       
+        $image = $request->input('file_content'); // your base64 encoded
         
 
+        if($count==0){
+
+            $Customeruser = Customeruser::firstOrNew(['id' => $user_id]);
+            $Customeruser->first_name = $request->get('first_name');
+            $Customeruser->last_name = $request->get('last_name');
+            $Customeruser->email = $request->get('email');
+           // $request->get('profilepic');
+
+           /*  if($image!=''){
+                $type = $request->file_type;
+               
+                $image = str_replace('data:'.$type.';base64,', '', $image);
+              
+                $ext = str_replace('image/','',$type);
+                $image = str_replace(' ', '+', $image);
+                
+                $imageName = time().'.'. $ext ;
+                $destinationPath = \Config::get('const.PROFILE_PATH'); //public_path().'/images/upload/profile/';
+              
+                \File::put( $destinationPath . $imageName, base64_decode($image));
+                $Customeruser->profilepic =$imageName;
+            } */
+            
+
+           
+            $Customeruser->mobile_number = $request->get('mobile_number');
+            $Customeruser->save();
+            $message ='Profile update successfully.';
+
+        }else{
+            $message ='Email already exists.';
+            $Customeruser = 'exist';
+        }
+        
+        $responseCode = $request->get('id') ? 200 : 201;
+        return response()->json(['saved' => $Customeruser,'message'=>$message], $responseCode);
+    }
+
+    public function profile_view(Request $request)
+    {
+      
         $user = Auth::user();
         $user_id = $user->id;
         // print_r($user_id);exit;

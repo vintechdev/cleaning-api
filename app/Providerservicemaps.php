@@ -1,6 +1,7 @@
 <?php
 
 namespace App;
+use App\Service;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -10,14 +11,39 @@ use Illuminate\Notifications\Notifiable;
 
 class Providerservicemaps extends Model
 {
+    const SERVICE_TYPE_HOURLY = 'billingrateperhour';
+    const SERVICE_TYPE_ONCEOFF = 'billingrateonetime';
+
     use HasApiTokens, Notifiable;
     use Uuids;
     protected $table = 'provider_service_maps';
     use SoftDeletes;
     protected $fillable = ['id'];
     // public $incrementing = false;
+    public function service()
+    {
+        return $this->belongsTo(Service::class,'service_id','id');
+    }
 
-            
+    /**
+     * @return Service
+     */
+    public function getService()
+    {
+        return $this->service;
+    }
+
+    /**
+     * @param int $hours
+     * @return int
+     */
+    public function getProviderTotal(float $hours = null)
+    {
+        return $this
+            ->getService()
+            ->getTotalCost($hours, $this->amount);
+    }
+
     public function GetTotal(){
         $priceperprovider  =[];
         $id = $request->get('serviceid');

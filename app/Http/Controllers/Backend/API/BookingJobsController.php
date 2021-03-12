@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers\Backend\API;
 
-use App\Booking;
 use App\Services\Bookings\BookingJobsManager;
+use App\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use App\Bookingstatus;
 
 /**
  * Class BookingJobsController
@@ -26,33 +27,37 @@ class BookingJobsController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                'from' => 'date_format:d-m-Y H:i:s',
-                'total_period' => 'int',
-                'type' => [
-                    Rule::in(['all', 'past', 'future'])
+                'from' => 'date_format:dmYHis',
+                'to' => 'date_format:dmYHis',
+                'status' => [
+                    Rule::in(array_values(Bookingstatus::getAllStatusNames()))
                 ]
             ]
         );
 
-        if ($validator->fails()) {
+        if ($validator->fails()){
             $message = $validator->messages()->all();
             return response()->json(['message' => $message], 400);
         }
 
-        $from = $request->has('from') ? Carbon::createFromFormat('d-m-Y H:i:s', $request->get('from')) : null;
-        $totalDays = $request->has('total_period') ? $request->get('total_period') : 30;
+        /** @var User $user */
+        $user = auth()->user();
 
-        if (!$request->has('type') || $request->get('type') == 'all') {
-            $jobs = $bookingManager->getAllBookingJobsByUser(auth()->user(), $from, $totalDays);
-            return response()->json($jobs, 200);
+        try {
+            $jobs = $bookingManager->getBookingJobsByStatus(
+                Bookingstatus::getStatusIdByName($request->get('status')),
+                $user,
+                in_array('provider', $user->getScopes()),
+                $request->get('from') ? Carbon::createFromFormat('dmYHis', $request->get('from')) : null,
+                $request->get('to') ? Carbon::createFromFormat('dmYHis', $request->get('to')) : null
+            );
+        } catch (\InvalidArgumentException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 400);
+        } catch (\Exception $exception) {
+            throw $exception;
+            return response()->json(['message' => 'Something went wrong. Please contact administrator.'], 500);
         }
 
-        if ($request->get('type') == 'past') {
-            $jobs = $bookingManager->getAllPastBookingJobsByUser(auth()->user(), $from, $totalDays);
-            return response()->json($jobs, 200);
-        }
-
-        $jobs = $bookingManager->getAllFutureBookingJobsByUser(auth()->user(), $from, $totalDays);
         return response()->json($jobs, 200);
     }
 }

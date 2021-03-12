@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Backend\API;
 
 use App\Plan;
+use App\Servicecategory;
+use App\Services\PlansService;
 use Illuminate\Http\Request;
 // use Shahnewaz\Redprint\Traits\CanUpload;
 use App\Http\Requests\Backend\PlanRequest;
@@ -16,14 +18,16 @@ class PlansController extends Controller
     /**
      * Display a listing of the resource.
      *
+     * @param Request $request
+     * @param PlansService $plansService
      * @return \Illuminate\Http\Response
      */
-    public function get_all_plan(Request $request)
+    public function get_all_plan(Request $request, PlansService $plansService)
     {
-        $plans = Plan::select()->orderby('sequence','asc')->get()->toarray();
-        //$plans = $plans->paginate(10);
+        $plans = $plansService->getAllPlansDetails($request->has('service_category_id') ? Servicecategory::find($request->get('service_category_id')) : null);
         return json_encode(['data'=>$plans]);
     }
+
     public function get(Request $request,$users_uuid,$plans_uuid)
     {
         $plans = Plan::query();

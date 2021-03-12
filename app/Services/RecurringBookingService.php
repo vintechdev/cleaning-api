@@ -77,10 +77,6 @@ class RecurringBookingService
             return $recurringBooking;
         }
 
-        if ($date->lessThan(Carbon::now())) {
-            throw new RecurringBookingCreationException('Recurring booking can not be created for past date');
-        }
-
         $childBooking = $this->bookingService->createChildBooking($booking);
 
         /** @var RecurringBooking $recurringBooking */
@@ -95,6 +91,34 @@ class RecurringBookingService
     }
 
     /**
+     * @param Booking $booking
+     * @param Carbon $date
+     * @return bool
+     */
+    public function cancelAllBookingsAfter(Booking $booking, Carbon $date): bool
+    {
+        if (!$booking->isRecurring()) {
+            throw new \InvalidArgumentException('Cancelling recurring bookings require the parent booking id to carry out the operation.');
+        }
+
+        return $this->recurringPatternService->cancelEventAfter($booking->getEvent(), $date);
+    }
+
+    /**
+     * @param Booking $booking
+     * @param Carbon $date
+     * @return bool
+     */
+    public function isValidRecurringDate(Booking $booking, Carbon $date): bool
+    {
+        if (!$booking->isRecurring()) {
+            return false;
+        }
+
+        return $this->recurringPatternService->isValidRecurringDate($booking->getEvent(), $date);
+    }
+
+    /**
      * @param Event $event
      * @param array $dates
      * @return Collection
@@ -106,10 +130,41 @@ class RecurringBookingService
 
     /**
      * @param Event $event
+     * @param Carbon $date
+     * @return RecurringBooking|null
+     */
+    public function findByEventAndDate(Event $event, Carbon $date): ?RecurringBooking
+    {
+        return $this->recurringBookingRepo->findByEventAndDate($event, $date);
+    }
+
+    /**
+     * @param Event $event
      * @return Collection
      */
     public function findByEvent(Event $event): Collection
     {
         return $this->recurringBookingRepo->findAllByEvent($event);
+    }
+
+    /**
+     * @param Event $event
+     * @return Collection
+     */
+    public function findAllRescheduledByEvent(Event $event): Collection
+    {
+        return $this->recurringBookingRepo->findAllRescheduledByEvent($event);
+    }
+
+    /**
+     * @param Booking $booking
+     * @return RecurringBooking|null
+     */
+    public function findByChildBooking(Booking $booking): ?RecurringBooking
+    {
+        if (!$booking->isChildBooking()) {
+            throw new \InvalidArgumentException('Booking is not a child booking.');
+        }
+        $this->recurringBookingRepo->findByChildBooking($booking);
     }
 }

@@ -11,7 +11,6 @@ use Illuminate\Notifications\Notifiable;
 class Servicecategory extends Model
 {
     use HasApiTokens, Notifiable;
-    use Uuids;
     protected $table = 'service_categories';
     use SoftDeletes;
     protected $fillable = ['id'];

@@ -386,4 +386,12 @@ class Booking extends Model
         $this->discounts()->saveMany($discounts);
         return $this;
     }
+
+    /**
+     * @return bool
+     */
+    public function getIsFlexible(): bool
+    {
+        return  $this->is_flexible;
+    }
 }

@@ -2,7 +2,6 @@
 
 namespace App;
 
-use Emadadly\LaravelUuid\Uuids;
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Passport\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
@@ -15,7 +14,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Bookingstatus extends Model
 {
     use HasApiTokens, Notifiable;
-    use Uuids;
     protected $table = 'booking_status';
     use SoftDeletes;
 

@@ -8,14 +8,12 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Emadadly\LaravelUuid\Uuids;
 use Laravel\Passport\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
 
 class Booking extends Model
 {
     use HasApiTokens, Notifiable;
-    use Uuids;
     protected $table = 'bookings';
     use SoftDeletes;
     protected $fillable = ['id'];

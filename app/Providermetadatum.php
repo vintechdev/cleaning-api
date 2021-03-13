@@ -4,7 +4,6 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Emadadly\LaravelUuid\Uuids;
 
 /**
  * Class Providermetadatum
@@ -12,7 +11,6 @@ use Emadadly\LaravelUuid\Uuids;
  */
 class Providermetadatum extends Model
 {
-    use uuids;
     protected $table = 'provider_metadata';
 
     protected $fillable = ['id'];

@@ -17,7 +17,7 @@ class AlterServicesAddUnitType extends Migration
             $table->string('unit_type')->nullable(true);
         });
 
-        \Illuminate\Support\Facades\DB::statement('UPDATE services set unit_type="hours" where service_type="hourly"');
+        \Illuminate\Support\Facades\DB::statement('UPDATE services set unit_type="hour" where service_type="hourly"');
     }
 
     /**

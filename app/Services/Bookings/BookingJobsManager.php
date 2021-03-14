@@ -249,6 +249,7 @@ class BookingJobsManager
             $serviceArray = $service->toArray();
             $serviceArray['name'] = $service->getService()->getName();
             $serviceArray['category'] = $service->getService()->getServicecategory();
+            $serviceArray['unit_type'] = $service->getService()->unit_type;
             $services[] = $serviceArray;
         }
 

@@ -112,7 +112,10 @@ Route::middleware(['auth:api','scope:customer,provider'])->namespace('Backend\AP
     //top notification
     Route::get('/user-notifications', 'NotificationLogsController@getNotifications')->name('api.user-notifications');
     // trying to reduce load
+    
     Route::get('/provider-notifications', 'NotificationLogsController@getNotifications')->name('api.provider-notifications');
+
+    Route::post('update-push-notification-logs', 'NotificationLogsController@updatePushNotificationLog')->name('api.push-notifcation-logs.update');
 });
 
 Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->prefix('v1/customer')->group(function () {
@@ -184,8 +187,6 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
 
     
     Route::get('getratingreview', 'UserreviewController@getratingreview')->name('api.Userreview.getratingreview')->middleware(['scope:customer']);
-
-    Route::get('getcancelbookingdata/{uuid}', 'UserreviewController@getcancelbookingdata')->name('api.Userreview.getcancelbookingdata')->middleware(['scope:customer']);
 
     Route::get('getapprovedbookingdetails', 'BookingController@getapprovedbookingdetails')->name('api.Booking.getapprovedbookingdetails')->middleware(['scope:customer']);
 
@@ -546,15 +547,6 @@ Route::middleware(['auth:api','scope:admin'])->namespace('Backend\API')->prefix(
     Route::post('/bookingquestions/{bookingquestion}/delete', 'BookingquestionsController@delete')->name('api.bookingquestion.delete');
     Route::post('/bookingquestions/{bookingquestion}/restore', 'BookingquestionsController@restore')->name('api.bookingquestion.restore');
     Route::post('/bookingquestions/{bookingquestion}/force-delete', 'BookingquestionsController@forceDelete')->name('api.bookingquestion.force-delete');
-
-
-    // Bookingchange Route
-    Route::get('bookingchanges', 'BookingchangesController@index')->name('api.bookingchange.index');
-    Route::get('/bookingchanges/{bookingchange}', 'BookingchangesController@form')->name('api.bookingchange.form');
-    Route::post('/bookingchanges/save', 'BookingchangesController@post')->name('api.bookingchange.save');
-    Route::post('/bookingchanges/{bookingchange}/delete', 'BookingchangesController@delete')->name('api.bookingchange.delete');
-    Route::post('/bookingchanges/{bookingchange}/restore', 'BookingchangesController@restore')->name('api.bookingchange.restore');
-    Route::post('/bookingchanges/{bookingchange}/force-delete', 'BookingchangesController@forceDelete')->name('api.bookingchange.force-delete');
 
 
     // Bookingaddress Route

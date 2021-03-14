@@ -298,6 +298,7 @@ class BookingJobsManager
         $job['booking_status'] = $booking->getStatus();
         $job['providers'] = $providerDetails;
         $job['booking_service'] = $services;
+        $job['is_flexible'] = $booking->getIsFlexible();
         $job['booking_review'] = $this->badgeReviewRepo->getreviewbybooking($booking->getId());
         $job['booking_status_name'] = Bookingstatus::getStatusNameById($booking->booking_status_id);
         $job['user'] = $booking->getUserDetails();

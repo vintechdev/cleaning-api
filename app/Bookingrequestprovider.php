@@ -4,7 +4,6 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Emadadly\LaravelUuid\Uuids;
 use App\Booking;
 
 /**
@@ -18,7 +17,6 @@ class Bookingrequestprovider extends Model
     const STATUS_REJECTED = 'rejected';
     const STATUS_CANCELLED = 'cancelled';
 
-	use uuids;
     use SoftDeletes;
 
 	protected $table = 'booking_request_providers';

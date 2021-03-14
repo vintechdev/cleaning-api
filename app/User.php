@@ -7,7 +7,6 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Auth;
 // for passport
 use Laravel\Passport\HasApiTokens;
-use Emadadly\LaravelUuid\Uuids;
 // for email verify
 use App\Notifications\VerifyApiEmail;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -17,7 +16,6 @@ use Laravel\Cashier\Billable;
 class User extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens, Notifiable;
-    use Uuids;
     use Billable;
 
     /**

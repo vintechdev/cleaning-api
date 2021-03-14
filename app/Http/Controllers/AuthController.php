@@ -132,7 +132,6 @@ class AuthController extends Controller
                     // $User = new Register();
                     $User = User::firstOrNew(['id' => $request->get('id')]);
                     $User->id = $request->get('id');
-                    $User->uuid = $request->get('uuid');
                     $User->first_name = $request->get('first_name');
                     $User->last_name = $request->get('last_name');
                     $User->email = $request->get('email');

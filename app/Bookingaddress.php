@@ -8,7 +8,6 @@ use Emadadly\LaravelUuid\Uuids;
 
 class Bookingaddress extends Model
 {
-  use uuids;
   protected $table = 'booking_addresses';
   use SoftDeletes;
   protected $fillable = ['id'];

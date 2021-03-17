@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Backend\API;
 
-use App\Annoucement;
+use App\Announcement;
 use App\Bookingstatus;
 use App\Booking;
 use Illuminate\Http\Request;
@@ -24,7 +24,7 @@ class AnnoucementController extends Controller
      */
     public function index(Request $request)
     {
-        $annoucements = Annoucement::query();
+        $annoucements = Announcement::query();
 
         if ($request->has('id')) {
             $annoucements = $annoucements->where('id', 'LIKE', '%'.$request->get('id'));
@@ -50,7 +50,7 @@ class AnnoucementController extends Controller
      */
     public function post(AnnoucementRequest $request, Annoucement $annoucement)
     {
-        $annoucement = Annoucement::firstOrNew(['id' => $request->get('id')]);
+        $annoucement = Announcement::firstOrNew(['id' => $request->get('id')]);
         $annoucement->id = $request->get('id');
         $annoucement->annoucement_uuid = $request->get('annoucement_uuid');
         $annoucement->type = $request->get('type');
@@ -71,7 +71,7 @@ class AnnoucementController extends Controller
         $todays_date = date("Y-m-d");
         // print_r($user_id);exit;
 
-        $data['annoucements'] = DB::table('annoucements')
+        $data['annoucements'] = DB::table('announcements')
                                     ->where('user_id', $user_id)
                                     ->where('status', 'unread')
                                     ->get();
@@ -145,7 +145,7 @@ class AnnoucementController extends Controller
      */
     public function delete(Request $request)
     {
-        $annoucement = Annoucement::find($request->get('id'));
+        $annoucement = Announcement::find($request->get('id'));
         $annoucement->delete();
         return response()->json(['no_content' => true], 200);
     }
@@ -158,7 +158,7 @@ class AnnoucementController extends Controller
      */
     public function restore(Request $request)
     {
-        $annoucement = Annoucement::withTrashed()->find($request->get('id'));
+        $annoucement = Announcement::withTrashed()->find($request->get('id'));
         $annoucement->restore();
         return response()->json(['no_content' => true], 200);
     }

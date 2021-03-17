@@ -7,10 +7,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Laravel\Passport\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
 
-class Annoucement extends Model
+class Announcement extends Model
 {
     use HasApiTokens, Notifiable;
-    protected $table = 'annoucements';
+    protected $table = 'announcements';
     use SoftDeletes;
     protected $fillable = ['id'];
 }

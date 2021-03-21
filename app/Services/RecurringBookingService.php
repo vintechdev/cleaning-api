@@ -165,6 +165,6 @@ class RecurringBookingService
         if (!$booking->isChildBooking()) {
             throw new \InvalidArgumentException('Booking is not a child booking.');
         }
-        $this->recurringBookingRepo->findByChildBooking($booking);
+        return $this->recurringBookingRepo->findByChildBooking($booking);
     }
 }

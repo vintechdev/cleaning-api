@@ -2,6 +2,7 @@
 
 namespace App;
 
+use App\Exceptions\BookingServicesInvalidNumberOfHoursException;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Laravel\Passport\HasApiTokens;
@@ -47,6 +48,7 @@ class Bookingservice extends Model
      */
     public function setFinalNumberOfHours(float $hours): Bookingservice
     {
+        $this->validateTotalHours($hours);
         $this->final_number_of_hours = $hours;
         return $this->updateFinalTotal();
     }
@@ -76,6 +78,7 @@ class Bookingservice extends Model
      */
     public function setInitialNumberOfHours(float $intitialNumberOfHours)
     {
+        $this->validateTotalHours($intitialNumberOfHours);
         $this->initial_number_of_hours = $intitialNumberOfHours;
         $this->updateInitialTotal();
         return $this;
@@ -218,5 +221,24 @@ class Bookingservice extends Model
         }
 
         return false;
+    }
+
+    /**
+     * @param float $hours
+     * @return bool
+     */
+    public function validateTotalHours(float $hours)
+    {
+        $minHours = $this->getService()->getMinHours();
+        if ($minHours && $hours < $minHours) {
+            throw new BookingServicesInvalidNumberOfHoursException('Invalid booking hours received.');
+        }
+
+        $maxHours = $this->getService()->getMaxHours();
+        if ($maxHours && $hours > $maxHours) {
+            throw new BookingServicesInvalidNumberOfHoursException('Invalid booking hours received.');
+        }
+
+        return true;
     }
 }

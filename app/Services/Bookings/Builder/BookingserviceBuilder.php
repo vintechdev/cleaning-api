@@ -2,6 +2,7 @@
 
 namespace App\Services\Bookings\Builder;
 
+use App\Exceptions\BookingServicesInvalidNumberOfHoursException;
 use App\Providerservicemaps;
 use App\Service;
 use App\Bookingservice;
@@ -57,7 +58,12 @@ class BookingserviceBuilder
         }
 
         if (isset($bookingServiceData['initial_number_of_hours'])) {
-            $bookingService->setInitialNumberOfHours($bookingServiceData['initial_number_of_hours']);
+            try {
+                $bookingService->setInitialNumberOfHours($bookingServiceData['initial_number_of_hours']);
+            } catch (BookingServicesInvalidNumberOfHoursException $exception) {
+                throw new BookingserviceBuilderException($exception->getMessage());
+            }
+
             if (isset($bookingServiceData['provider_id']) && $providerservicemaps) {
                 $bookingService
                     ->setInitialServiceCost($providerservicemaps->getProviderTotal($bookingService->getInitialNumberOfHours()));
@@ -70,7 +76,11 @@ class BookingserviceBuilder
             }
 
             if (isset($bookingServiceData['final_number_of_hours'])) {
-                $bookingService->setFinalNumberOfHours($bookingServiceData['final_number_of_hours']);
+                try {
+                    $bookingService->setFinalNumberOfHours($bookingServiceData['final_number_of_hours']);
+                } catch (BookingServicesInvalidNumberOfHoursException $exception) {
+                    throw new BookingserviceBuilderException($exception->getMessage());
+                }
             }
 
             if ($providerservicemaps) {

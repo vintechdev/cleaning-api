@@ -116,4 +116,20 @@ class Service extends Model
     {
         return (bool) $this->allow_price_override;
     }
+
+    /**
+     * @return int|null
+     */
+    public function getMaxHours(): ?int
+    {
+        return $this->max_hours;
+    }
+
+    /**
+     * @return int|null
+     */
+    public function getMinHours(): ?int
+    {
+        return $this->min_hours;
+    }
 }

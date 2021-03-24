@@ -54,7 +54,12 @@ class StripePaymentProcessor implements PaymentProcessorInterface, PaymentUserVa
             ->getTransferFeePercentage() ? : Setting::getStripeServiceFeePercentage();
 
         $this->paymentData->setTransferFeePercentage($transferFeePercent);
-        Log::info('Starting to process payment for user ' . $this->paymentData->getPayer()->getId() . ' to provider ' . $this->paymentData->getPayee()->getId());
+        Log::info(
+            'Starting to process payment for user ' .
+            $this->paymentData->getPayer()->getId() .
+            ' to provider ' .
+            $this->paymentData->getPayee()->getId()
+        );
         if ($this->stripeService->transferAmount($this->paymentData)) {
             Log::info('Payment successful');
             return true;

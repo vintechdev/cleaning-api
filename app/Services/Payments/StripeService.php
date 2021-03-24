@@ -66,7 +66,7 @@ class StripeService
      */
     public function transferAmount(PaymentDto $payment): bool
     {
-        Log::info('Attempting to transfer payment to stripe for user: ' . $payment->getPayer()->getId() . ' and provider ' . $payment->getPayee()->getId());
+        Log::info('Attempting to transfer payment on stripe for user: ' . $payment->getPayer()->getId() . ' and provider ' . $payment->getPayee()->getId());
         $this->validatePaymentIntentData($payment);
         $metadata = $this->metadataRepo->findByUserId($payment->getPayee()->getId());
         if (!$metadata || !$metadata->stripe_connect_account_verified) {

@@ -14,6 +14,7 @@ use App\Services\Payments\Exceptions\StripeMetadataUpdateException;
 use App\StripeUserMetadata;
 use App\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 use Stripe\Account;
 use Stripe\AccountLink;
 use Stripe\Balance;
@@ -65,9 +66,11 @@ class StripeService
      */
     public function transferAmount(PaymentDto $payment): bool
     {
+        Log::info('Attempting to transfer payment on stripe for user: ' . $payment->getPayer()->getId() . ' and provider ' . $payment->getPayee()->getId());
         $this->validatePaymentIntentData($payment);
         $metadata = $this->metadataRepo->findByUserId($payment->getPayee()->getId());
         if (!$metadata || !$metadata->stripe_connect_account_verified) {
+            Log::error('Payment could not be processed as stripe connect is not verified for provider ' . $payment->getPayee()->getId());
             throw new PaymentAccountNotSetUpException('Stripe connect account does not exist or is not verified for the provider');
         }
 
@@ -75,6 +78,7 @@ class StripeService
 
         $stripeAccountId = $metadata->stripe_connect_account_id;
         if (!$stripeAccountId) {
+            Log::error('Payment cancelled as stripe connect account does not exist for the user ' . $payment->getPayee()->getId());
             throw new InvalidUserException('Stripe connect account does not exist for this user');
         }
 
@@ -102,6 +106,7 @@ class StripeService
                 $paymentIntent['error']['message'] :
                 'An error occured when initiating a transfer with stripe';
 
+            Log::error('An error occured when initiating a payment with stripe');
             throw new PaymentInitialiserException($error);
         }
 
@@ -164,6 +169,7 @@ class StripeService
     {
         $paymentMethod = $this->retrieveStoredPaymentMethod($user->getId());
         if (!$paymentMethod) {
+            Log::error('Credit card not set up for user ' . $user->getId());
             throw new CreditCardNotSetUpException('Customer does not have a credit card added');
         }
 
@@ -184,6 +190,7 @@ class StripeService
         )
             ->lessThan(Carbon::now())
         ) {
+            Log::error('Credit card has expired for user ' . $user->getId());
             throw new CreditCardNotSetUpException('Customer\'s credit card has expired.');
         }
 

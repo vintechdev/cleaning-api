@@ -12,6 +12,7 @@ use App\Services\Payments\Interfaces\PaymentProcessorInterface;
 use App\Services\Payments\Interfaces\PaymentUserValidatorInterface;
 use App\Setting;
 use App\User;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Class StripePaymentProcessor
@@ -53,7 +54,19 @@ class StripePaymentProcessor implements PaymentProcessorInterface, PaymentUserVa
             ->getTransferFeePercentage() ? : Setting::getStripeServiceFeePercentage();
 
         $this->paymentData->setTransferFeePercentage($transferFeePercent);
-        return $this->stripeService->transferAmount($this->paymentData);
+        Log::info(
+            'Starting to process payment for user ' .
+            $this->paymentData->getPayer()->getId() .
+            ' to provider ' .
+            $this->paymentData->getPayee()->getId()
+        );
+        if ($this->stripeService->transferAmount($this->paymentData)) {
+            Log::info('Payment successful');
+            return true;
+        }
+
+        Log::error('Payment failed');
+        return false;
     }
 
     /**

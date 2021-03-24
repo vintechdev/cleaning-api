@@ -11,6 +11,7 @@ use App\Exceptions\Booking\UnauthorizedAccessException;
 use App\Services\Bookings\Interfaces\BookingStatusChangeStrategyInterface;
 use App\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Class BookingStatusChangeContext
@@ -45,10 +46,9 @@ class BookingStatusChangeContext
         $oldStatus = $booking->getStatus();
         $booking = $this->bookingStatusChangeStrategy->changeStatus($booking, $user, $recurredDate);
         if ($booking) {
-          
             event(new BookingStatusChanged($booking, $user, $oldStatus, $booking->getStatus()));
         }
-
+        Log::info('Booking status changed.');
         return $booking;
     }
 }

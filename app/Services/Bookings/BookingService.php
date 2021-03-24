@@ -24,6 +24,7 @@ use App\Useraddress;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Class BookingService
@@ -102,6 +103,7 @@ class BookingService
         $discounts = [];
         if(count($bookings)>0){
             if (!$parent) {
+                Log::info('New booking creation in progress for user ' . $user->id);
                 $serviceIds = [];
                 $serviceTimes = [];
                 $providerIds = [];
@@ -121,6 +123,7 @@ class BookingService
                 }
 
                 if (!$this->planService->isPlanValidForServiceCategory($bookings['plan_type'], $serviceCategory)) {
+                    Log::info('Booking creation aborted as invalid plain received.');
                     throw new \InvalidArgumentException('Invalid plan received');
                 }
 
@@ -143,6 +146,9 @@ class BookingService
 
                 $bookingServices = $highestTotalPriceDetails['booking_services'];
                 $discounts = $highestTotalPriceDetails['all_discounts'];
+                Log::info('Determined highest total price and discounts for the new booking.');
+            } else {
+                Log::info('Child booking creation in progress for booking id ' . $parent->id . ' and user id ' . $user->id);
             }
 
             DB::beginTransaction();
@@ -154,6 +160,7 @@ class BookingService
                     $bookingStatus = ($parent && isset($bookings['booking_status_id'])) ? $bookings['booking_status_id'] : Bookingstatus::BOOKING_STATUS_PENDING;
                     $booking->setStatus($bookingStatus);
                 } catch (\Exception $e) {
+                    Log::error('Booking creation aborted as invalid status id received');
                     DB::rollBack();
                     throw new \InvalidArgumentException('Invalid booking status');
                 }
@@ -180,7 +187,7 @@ class BookingService
 
                 if ($booking->save()) {
                     $last_insert_id = DB::getPdo()->lastInsertId();
-
+                    Log::info('New booking created with id ' . $last_insert_id);
                     $address = [];
                     if ($parent) {
                         /** @var Bookingaddress $bookingAddress */
@@ -244,12 +251,12 @@ class BookingService
                     try {
                         if (!$parent) {
                             if (!$service) {
-                                // TODO: log error saying that invalid services type received.
+                                Log::error('No services or invalid services received when creating booking.');
                                 throw new BookingCreationException('Booking could not be saved without services');
                             }
                         } else {
                             if (!($service instanceof Collection) || !$service->count()) {
-                                // TODO: log error saying that invalid services type received.
+                                Log::error('No services or invalid services received when creating child booking for booking id ' . $parent->id);
                                 throw new BookingCreationException('Booking service could not be saved');
                             }
                             $bookingServices = [];
@@ -267,6 +274,7 @@ class BookingService
                         throw new BookingCreationException($exception->getMessage());
                     } catch (\Exception $exception) {
                         DB::rollBack();
+                        Log::error('Rolled back booking creation as booking service could not be saved.');
                         throw new BookingCreationException('Booking service could not be saved');
                     }
 
@@ -317,9 +325,11 @@ class BookingService
                         event(new BookingCreated($booking, $user));
                     }
 
+                    Log::info('Booking creation successful');
                     return $booking;
                 }
             } catch (\Exception $exception) {
+                Log::error('Booking creation rolled back as error occurred. Error message: ' . $exception->getMessage());
                 DB::rollBack();
                 throw $exception;
             }

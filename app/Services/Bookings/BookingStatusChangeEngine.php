@@ -14,6 +14,7 @@ use App\Services\Bookings\Builder\BookingStatusChangeContextBuilder;
 use App\Services\RecurringBookingService;
 use App\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Class BookingStatusChangeEngine
@@ -118,6 +119,11 @@ class BookingStatusChangeEngine
     public function changeStatus(string $status)
     {
         $context = $this->statusChangeContextBuilder->buildContext($status, $this->statusChangeParameters);
+        Log::info(
+            'Attempting to change status of booking to ' .
+            $status .
+            sprintf('. [user: %s, booking: %s, recurreddate: %s]', $this->user->getId(), $this->booking->getId(), ($this->recurredDate ?: ''))
+        );
         return $context->changeStatus($this->booking, $this->user, $this->recurredDate);
     }
 }

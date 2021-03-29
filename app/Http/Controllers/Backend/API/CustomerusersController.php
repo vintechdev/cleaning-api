@@ -171,9 +171,22 @@ class CustomerusersController extends Controller
         if ($request->has('abn')) {
             $Customerusers = $Customerusers->where('abn', 'LIKE', '%'.$request->get('abn').'%');
         }
+        
         if ($request->has('description')) {
             $Customerusers = $Customerusers->where('description', 'LIKE', '%'.$request->get('description').'%');
         }
+
+        if ($request->has('role')) {
+            $Customerusers = $Customerusers->whereExists(
+                function($query) use ($request) {  
+                 $query->from('role_user')
+                       ->join('roles', 'role_user.role_id', '=', 'roles.id')
+                       ->where('roles.name', 'like', \DB::raw("'". $request->get('role') ."'"))
+                       ->where('role_user.user_id', '=', \DB::raw('users.id'));
+                });
+        }
+
+
         $Customerusers = $Customerusers->paginate(20);
         return (new CustomeruserCollection($Customerusers));
     }

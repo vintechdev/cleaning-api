@@ -322,6 +322,8 @@ Route::middleware(['auth:api','scope:admin'])->namespace('Backend\API')->prefix(
     //ROUTES
 
     Route::get('getallusers', 'CustomerusersController@index')->name('api.Customeruser.index');
+     // Bookings
+    Route::get('/bookings', 'BookingJobsController@getAllBookings'); 
     // OnceBookingAlternateDate Route
     Route::get('onceBookingAlternateDates', 'OnceBookingAlternateDatesController@index')->name('api.onceBookingAlternateDate.index');
     Route::get('/onceBookingAlternateDates/{onceBookingAlternateDate}', 'OnceBookingAlternateDatesController@form')->name('api.onceBookingAlternateDate.form');

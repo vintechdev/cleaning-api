@@ -319,10 +319,9 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
  });
 
  // ADMIN API
+Route::middleware(['auth:api','scope:admin', 'role:admin'])->namespace('Backend\API')->prefix('v1/backend')->group(function () {
+    //ROUTES
 
-Route::middleware(['auth:api','scope:admin', 'role:admin'])
-->namespace('Backend\API')->prefix('v1/admin')->group(function () {
-     // Bookings
     Route::get('/bookings', 'BookingJobsController@getAllBookings'); 
     // user
     Route::get('users', 'CustomerusersController@index')->name('api.Customeruser.index');
@@ -331,10 +330,6 @@ Route::middleware(['auth:api','scope:admin', 'role:admin'])
     Route::get('profile', 'CustomerusersController@profile_view')->name('api.users.profile');
     Route::patch('profile', 'CustomerusersController@profile_update')->name('api.users.profile-update');
     Route::patch('change-password', 'CustomerusersController@change_password')->name('api.users.change-password');
-});    
-
-Route::middleware(['auth:api','scope:admin', 'role:admin'])->namespace('Backend\API')->prefix('v1/backend')->group(function () {
-    //ROUTES
 
     // OnceBookingAlternateDate Route
     Route::get('onceBookingAlternateDates', 'OnceBookingAlternateDatesController@index')->name('api.onceBookingAlternateDate.index');

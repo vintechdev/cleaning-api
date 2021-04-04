@@ -92,7 +92,7 @@ Route::post('getdashboard', 'HomeController@dashboard')->name('api.home.getdashb
 
 
 Route::middleware(['auth:api','scope:customer,provider'])->namespace('Backend\API')->prefix('v1')->group(function () {
-    
+
     Route::patch('bookings/{booking}', 'BookingController@updateBooking')->name('update_booking')->middleware(['can:update,booking']);
     Route::patch('bookings/{booking}/dates/{recurring_date}', 'BookingController@updateRecurredBooking')->name('update_recurred_booking')->middleware(['can:update,booking']);
     Route::get('/bookings/{booking}', 'BookingController@getbookingdetails')->name('getbookingdetails');
@@ -266,7 +266,7 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
      Route::patch('profile_update', 'CustomerusersController@profile_update')->name('api.Customeruser.profile_update')->middleware(['scope:provider']);
 
 
-     
+
      Route::patch('editworking_hours/{uuid}', 'Working_hoursController@editworking_hours')->name('api.Working_hours.editworking_hours')->middleware(['scope:provider']);
 
 
@@ -321,15 +321,21 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
  // ADMIN API
 Route::middleware(['auth:api','scope:admin', 'role:admin'])->namespace('Backend\API')->prefix('v1/backend')->group(function () {
     //ROUTES
+    // Bookings
+    Route::get('/bookings', 'BookingJobsController@getAllBookings')->name('api.admin:bookings.index');;
+    Route::get('/bookings/{booking}', 'BookingController@getbookingdetails')->name('api.admin.bookings.details');
+    Route::get('bookings/{booking}/dates/{recurring_date}', 'BookingController@getbookingdetails')->name('api.admin.bookings.recurring-details');
+   // TODO: need to discuss
+    // Route::patch('bookings/{booking}', 'BookingController@updateBooking')->name('api.admin.bookings.update');
+   // Route::patch('bookings/{booking}/dates/{recurring_date}', 'BookingController@updateRecurredBooking')->name('api.admin.bookings.update-recurring');
 
-    Route::get('/bookings', 'BookingJobsController@getAllBookings'); 
     // user
-    Route::get('users', 'CustomerusersController@index')->name('api.Customeruser.index');
-   
+    Route::get('users', 'CustomerusersController@index')->name('api.admin.users.index');
+
     // user profile
-    Route::get('profile', 'CustomerusersController@profile_view')->name('api.users.profile');
-    Route::patch('profile', 'CustomerusersController@profile_update')->name('api.users.profile-update');
-    Route::patch('change-password', 'CustomerusersController@change_password')->name('api.users.change-password');
+    Route::get('profile', 'CustomerusersController@profile_view')->name('api.admin.users.profile');
+    Route::patch('profile', 'CustomerusersController@profile_update')->name('api.admin.users.profile-update');
+    Route::patch('change-password', 'CustomerusersController@change_password')->name('api.admin.users.change-password');
 
     // OnceBookingAlternateDate Route
     Route::get('onceBookingAlternateDates', 'OnceBookingAlternateDatesController@index')->name('api.onceBookingAlternateDate.index');
@@ -395,6 +401,9 @@ Route::middleware(['auth:api','scope:admin', 'role:admin'])->namespace('Backend\
     // Route::post('/providermetadata/{providermetadatum}/restore', 'ProvidermetadataController@restore')->name('api.providermetadatum.restore');
     // Route::post('/providermetadata/{providermetadatum}/force-delete', 'ProvidermetadataController@forceDelete')->name('api.providermetadatum.force-delete');
 
+   // provider working hours
+    Route::get('provider/working-hours', 'Working_hoursController@getworking_hours')->name('api.admin.provider.working-hours.index');
+    Route::post('provider/working-hours/add', 'Working_hoursController@addworking_hours')->name('api.admin.provider.working-hours.create');
 
 
 

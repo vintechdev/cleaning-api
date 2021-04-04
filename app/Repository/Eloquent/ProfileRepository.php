@@ -6,10 +6,8 @@ use App\Working_hours;
 use App\Providerpostcodemap;
 use App\Providerservicemaps;
 use App\StripeUserMetadata;
-use App\Http\Resources\Chat;
 use Illuminate\Http\Request;
-use Auth;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 
 class ProfileRepository extends AbstractBaseRepository
@@ -81,9 +79,10 @@ class ProfileRepository extends AbstractBaseRepository
             return false;
         }
     }
-    public function createworkinghours($data)
+
+    public function createworkinghours($data, $userId = null)
     {
-        $user_id = Auth::user()->id;
+        $user_id = $userId ? $userId : Auth::user()->id;
         $days = array('monday','tuesday','wednesday','thursday','friday','saturnday','sunday');
         if(count($data)>0){
            $postday = array_column($data,'working_days') ;

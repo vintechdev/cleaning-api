@@ -225,7 +225,7 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
      Route::get('getbadges', 'CustomerusersController@getBadges')->name('getbadges')->middleware(['scope:provider']);
 
     
-    Route::get('getservicebyprovider/{pid}', 'BookingController@GetServiceByProvider')->middleware(['scope:provider']);
+     Route::get('getservicebyprovider/{pid}', 'BookingController@GetServiceByProvider')->middleware(['scope:provider']);
      Route::get('getservicebyprovider/{userId}/categories/{categoryId}', 'BookingController@getProviderServicesByCategory')->middleware(['scope:provider']);
 
     Route::get('getappointment/{uuid}', 'BookingController@provider_getappointment')->name('api.Booking.provider_getappointment')->middleware(['scope:provider']);
@@ -402,12 +402,23 @@ Route::middleware(['auth:api','scope:admin', 'role:admin'])->namespace('Backend\
     // Route::post('/providermetadata/{providermetadatum}/force-delete', 'ProvidermetadataController@forceDelete')->name('api.providermetadatum.force-delete');
 
    // provider working hours
-    Route::get('provider/working-hours', 'Working_hoursController@getworking_hours')->name('api.admin.provider.working-hours.index');
-    Route::post('provider/working-hours/add', 'Working_hoursController@addworking_hours')->name('api.admin.provider.working-hours.create');
 
+    Route::prefix('/provider')->group(function () {
+        Route::post('/working-hours/add', 'Working_hoursController@addworking_hours')
+            ->name('api.admin.provider.working-hours.create');
+        Route::get('/working-hours', 'Working_hoursController@getworking_hours')
+            ->name('api.admin.provider.working-hours.index');
 
+        Route::get('/services/{pid}', 'BookingController@GetServiceByProvider')
+            ->name('api.admin.provider.services.index');
+        Route::get('/services/{userId}/categories/{categoryId}', 'BookingController@getProviderServicesByCategory')
+            ->name('api.admin.provider.category-services');;
 
-    // Providerservicemap Route
+        Route::post('/services', 'ServiceController@save_provider_servicemap')
+            ->name('api.admin.provider.services.save');
+    });
+
+    // Providerservicemap Route : TODO : Need to discuss
     Route::get('providerservicemaps', 'ProviderservicemapsController@index')->name('api.providerservicemap.index');
     Route::get('/providerservicemaps/{providerservicemap}', 'ProviderservicemapsController@form')->name('api.providerservicemap.form');
     Route::post('/providerservicemaps/save', 'ProviderservicemapsController@post')->name('api.providerservicemap.save');

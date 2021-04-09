@@ -105,7 +105,12 @@ public function deleteproviderpostcode(Request $request)
     $postcode = Postcode::query();
       if ($request->has('postcode')) {
 
-            $postcode = postcode::select('id as value',DB::raw("CONCAT(postcode,', ',suburb,', ',state) AS text"),'postcode')->where('postcode', 'LIKE', '%'.$request->get('postcode').'%')->orwhere('suburb', 'LIKE', '%'.$request->get('postcode').'%');
+            $postcode = postcode::select('id as value',DB::raw("CONCAT(postcode,', ',suburb,', ',state) AS text"),'postcode')->where('hide', 0)
+                ->where(function ($query) use ($request) {
+                    $query
+                        ->where('postcode', 'LIKE', '%'.$request->get('postcode').'%')
+                        ->orwhere('suburb', 'LIKE', '%'.$request->get('postcode').'%');
+                });
         }
 
         $postcode = $postcode->get();

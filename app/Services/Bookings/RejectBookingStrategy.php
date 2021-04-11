@@ -76,10 +76,6 @@ class RejectBookingStrategy extends AbstractBookingStatusChangeStrategy
             return false;
         }
 
-        if ($this->isUserTheBookingCustomer($user, $booking)) {
-            return false;
-        }
-
         if (
             $this->isUserAChosenBookingProvider($user, $booking) &&
             $booking->getStatus() == Bookingstatus::BOOKING_STATUS_PENDING

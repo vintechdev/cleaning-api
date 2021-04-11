@@ -62,12 +62,13 @@ class ProfileRepository extends AbstractBaseRepository
 
     public function addproviderpostcode($postcode, $userId = null) {
         $user_id = $userId ? $userId : Auth::user()->id;
-        $Providerpostcodemap = Providerpostcodemap::firstOrNew(['provider_id' =>$user_id,'postcode_id'=>$postcode]);
+        $Providerpostcodemap = Providerpostcodemap::query()->firstOrNew(['provider_id' =>$user_id,'postcode_id'=>$postcode]);
         $Providerpostcodemap->provider_id = $user_id;
         $Providerpostcodemap->postcode_id = $postcode;
      
         if($Providerpostcodemap->save()){
-            return Providerpostcodemap::with('postcode')->where('id',$Providerpostcodemap->id)->get()->toArray();
+            return Providerpostcodemap::query()->with('postcode')
+                ->where('id',$Providerpostcodemap->id)->get()->toArray();
         }else{
             return false;
         }
@@ -75,7 +76,9 @@ class ProfileRepository extends AbstractBaseRepository
     public function deleteproviderpostcode($postcode)
     {
         # code...
-        $arr = Providerpostcodemap::where('id',$postcode)->delete();
+        $query = Providerpostcodemap::query();
+        $arr = $query->where('id', $postcode)->delete();
+
         if($arr){
             return true;
         }else{

@@ -46,19 +46,22 @@ class ProfileRepository extends AbstractBaseRepository
 
     public function getproviderpostcode(Request $request)
     {
-        $search = $request->search;
-        $user_id = Auth::user()->id;
-        $query =  Providerpostcodemap::with([ 'postcode' => function($query) use ($search) {
-            if($search!=''){
-                $query->Where('postcode', 'like', '%' . $search . '%');
+        $search = $request->input('search');
+        $user_id = $request->get('user_id') ? $request->get('user_id') : Auth::user()->id;
+
+        $query = Providerpostcodemap::query()->with(['postcode' => function($query) use ($search) {
+            if ($search!='' ) {
+                $query->where('postcode', 'like', '%' . $search . '%');
             }
-          }]);
-      
-        $res = $query->where('provider_id',$user_id)->get()->toArray();
-       return $res;
+        }]);
+
+        $res = $query->where('provider_id', $user_id)->get()->toArray();
+
+        return $res;
     }
-    public function addproviderpostcode($postcode){
-        $user_id = Auth::user()->id;
+
+    public function addproviderpostcode($postcode, $userId = null) {
+        $user_id = $userId ? $userId : Auth::user()->id;
         $Providerpostcodemap = Providerpostcodemap::firstOrNew(['provider_id' =>$user_id,'postcode_id'=>$postcode]);
         $Providerpostcodemap->provider_id = $user_id;
         $Providerpostcodemap->postcode_id = $postcode;

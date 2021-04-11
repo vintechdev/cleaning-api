@@ -423,6 +423,14 @@ Route::middleware(['auth:api','scope:admin', 'role:admin'])->namespace('Backend\
             ->name('api.admin.provider.postcodes.delete');
         Route::post('/postcodes', 'PostcodesController@addproviderpostcode')
             ->name('api.admin.provider.postcodes.create');
+
+
+        Route::get('/badges', 'UserBadgesController@index')
+            ->name('api.admin.provider.badges.index');
+        Route::post('/badges/delete', 'UserBadgesController@deleteBadge')
+            ->name('api.admin.provider.badges.delete');
+        Route::post('/badges', 'UserBadgesController@saveBadge')
+            ->name('api.admin.provider.badges.save');
     });
 
     // Providerservicemap Route : TODO : Need to discuss

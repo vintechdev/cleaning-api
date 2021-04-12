@@ -543,6 +543,20 @@ Route::middleware(['auth:api','scope:admin', 'role:admin'])->namespace('Backend\
     Route::post('users/{user_uuid}/badges/{badges_uuid}', 'BadgesController@edit_badge')->name('api.badge.save');
     Route::delete('users/{users_uuid}/badges/{badges_uuid}', 'BadgesController@delete_badge')->name('api.badge.delete_badge') ;
 
+    // Admin Badges crud Routes
+    Route::get('/badges', 'BadgesController@index')
+        ->name('api.admin.badges.index');
+    Route::post('/badges', 'BadgesController@store')
+        ->name('api.admin.badges.create');
+
+    Route::get('/badges/{id}', 'BadgesController@show')
+        ->name('api.admin.badges.edit');
+
+    Route::put('/badges/{id}', 'BadgesController@update')
+        ->name('api.admin.badges.update');
+
+    Route::post('/badges/{id}/delete', 'BadgesController@delete')
+        ->name('api.admin.badges.delete');
 
     Route::post('/badges/{badge}/restore', 'BadgesController@restore')->name('api.badge.restore');
     Route::post('/badges/{badge}/force-delete', 'BadgesController@forceDelete')->name('api.badge.force-delete');

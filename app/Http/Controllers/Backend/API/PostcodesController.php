@@ -29,7 +29,7 @@ public function addproviderpostcode(Request $request)
     }
 
     $postcode = $request->postcode;
-    $res = app(ProfileRepository::class)->addproviderpostcode($postcode);
+    $res = app(ProfileRepository::class)->addproviderpostcode($postcode, $request->input('user_id', null));
     
     if($res){
         return response()->json(['data' => $res], 200);
@@ -54,6 +54,7 @@ public function deleteproviderpostcode(Request $request)
         $message = $validator->messages()->all();
         return response()->json(['message' => $message], 401);
     }
+
     $postcode = $request->postcode;
     $res = app(ProfileRepository::class)->deleteproviderpostcode($postcode);
     

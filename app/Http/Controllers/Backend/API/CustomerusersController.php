@@ -354,30 +354,23 @@ class CustomerusersController extends Controller
             return response()->json(['message' => $message], 401);
         }
 
-        // echo "change_password";exit;
-        $user = Auth::user();
-        $user_id = $user->id;
+        //$user = Auth::user();
+        //$user_id = $user->id;
+        $user_id = $this->getUserIdByLoggedUserIdOrRequest($request);
         $user_password = $user->password;
-        // $user = auth('api')->user()->id;
-        // print_r($user_id);exit;
+       
         $Customeruser = Customeruser::firstOrNew(['id' => $user_id]);
-        // $Customeruser->uuid = $users_uuid;
         
         $current_password = $request->get('old_password');
         $responseCode =  Hash::check($current_password, $user_password);
         // print_r($responseCode);exit;
         if($responseCode > 0){
-
             $new_password = $request->get('new_password');
             $repeat_password = $request->get('confirm_password');
 
             if($new_password == $repeat_password){
-                // echo "same";exit;
-                // $Customerusers = Customeruser::query();
-                // $Customerusers = $Customerusers->where('uuid', 'LIKE', '%'.$users_uuid);
                 $Customeruser->password = bcrypt($new_password);
                 $Customeruser->save();
-
                 $responseCode = $request->get('id') ? 200 : 201;
                 return response()->json(['saved' => true], $responseCode);
             } else{
@@ -390,62 +383,35 @@ class CustomerusersController extends Controller
             $responseCode = $request->get('id') ? 200 : 201;
             return response()->json(['error' => "Please enter correct Current Password or Invalid Authorization"], $responseCode);
         }
-        
-
-        // $responseCode = $request->get('id') ? 200 : 201;
-        // return response()->json(['saved' => true], $responseCode);
     }
 
     //for profile update
     public function profile_update(Request $request)
     {
-
-       
-         $validator = Validator::make($request->all(), [
+        
+        $validator = Validator::make($request->all(), [
             'first_name' => 'required',
             'last_name' => 'required',
             'email' => 'required|email',
             'mobile_number' => 'required|min:9|max:12',
+            'user_id' => 'nullable|integer|exists:users,id'
         ]);
 
         if($validator->fails()){
             $message = $validator->messages()->all();
             return response()->json(['message' => $message], 401);
         }
-        $user = Auth::user();
-        $user_id = $user->id;
-        // print_r($user_id);exit;
 
+        $user_id = $this->getUserIdByLoggedUserIdOrRequest($request);   
         $count = Customeruser::where('email',$request->get('email'))->where('id','!=', $user_id)->count();
-       
         $image = $request->input('file_content'); // your base64 encoded
-        
 
         if($count==0){
-
             $Customeruser = Customeruser::firstOrNew(['id' => $user_id]);
             $Customeruser->first_name = $request->get('first_name');
             $Customeruser->last_name = $request->get('last_name');
             $Customeruser->email = $request->get('email');
-           // $request->get('profilepic');
-
-           /*  if($image!=''){
-                $type = $request->file_type;
-               
-                $image = str_replace('data:'.$type.';base64,', '', $image);
-              
-                $ext = str_replace('image/','',$type);
-                $image = str_replace(' ', '+', $image);
-                
-                $imageName = time().'.'. $ext ;
-                $destinationPath = \Config::get('const.PROFILE_PATH'); //public_path().'/images/upload/profile/';
-              
-                \File::put( $destinationPath . $imageName, base64_decode($image));
-                $Customeruser->profilepic =$imageName;
-            } */
-            
-
-           
+          
             $Customeruser->mobile_number = $request->get('mobile_number');
             $Customeruser->save();
             $message ='Profile update successfully.';
@@ -461,25 +427,28 @@ class CustomerusersController extends Controller
 
     public function profile_view(Request $request)
     {
-      
-        $user = Auth::user();
-        $user_id = $user->id;
-        // print_r($user_id);exit;
-
-        $Customeruser = Customeruser::firstOrNew(['id' => $user_id]);
-        
+        $userId = $this->getUserIdByLoggedUserIdOrRequest($request);       
+        $Customeruser = Customeruser::firstOrNew(['id' => $userId]);
         
         return $Customeruser;
     }
+
+
+    private function getUserIdByLoggedUserIdOrRequest($request)
+    {
+        
+        if (!$userId = $request->get('user_id')) {
+            $user = Auth::user();
+            $userId = $user->id;
+        }
+
+        return $userId;
+    }
+
     public function address_view(Request $request)
     {
-
-        $user = Auth::user();
-        $user_id = $user->id;
-        // print_r($user_id);exit;
-
-        $Customeraddress = Useraddress::firstOrNew(['user_id' => $user_id]);
-        
+        $userId = $this->getUserIdByLoggedUserIdOrRequest($request);       
+        $Customeraddress = Useraddress::firstOrNew(['user_id' => $userId]);
         
         return $Customeraddress;
     }

@@ -92,7 +92,7 @@ Route::post('getdashboard', 'HomeController@dashboard')->name('api.home.getdashb
 
 
 Route::middleware(['auth:api','scope:customer,provider'])->namespace('Backend\API')->prefix('v1')->group(function () {
-    
+
     Route::patch('bookings/{booking}', 'BookingController@updateBooking')->name('update_booking')->middleware(['can:update,booking']);
     Route::patch('bookings/{booking}/dates/{recurring_date}', 'BookingController@updateRecurredBooking')->name('update_recurred_booking')->middleware(['can:update,booking']);
     Route::get('/bookings/{booking}', 'BookingController@getbookingdetails')->name('getbookingdetails');
@@ -225,7 +225,7 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
      Route::get('getbadges', 'CustomerusersController@getBadges')->name('getbadges')->middleware(['scope:provider']);
 
     
-    Route::get('getservicebyprovider/{pid}', 'BookingController@GetServiceByProvider')->middleware(['scope:provider']);
+     Route::get('getservicebyprovider/{pid}', 'BookingController@GetServiceByProvider')->middleware(['scope:provider']);
      Route::get('getservicebyprovider/{userId}/categories/{categoryId}', 'BookingController@getProviderServicesByCategory')->middleware(['scope:provider']);
 
     Route::get('getappointment/{uuid}', 'BookingController@provider_getappointment')->name('api.Booking.provider_getappointment')->middleware(['scope:provider']);
@@ -266,7 +266,7 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
      Route::patch('profile_update', 'CustomerusersController@profile_update')->name('api.Customeruser.profile_update')->middleware(['scope:provider']);
 
 
-     
+
      Route::patch('editworking_hours/{uuid}', 'Working_hoursController@editworking_hours')->name('api.Working_hours.editworking_hours')->middleware(['scope:provider']);
 
 
@@ -318,12 +318,25 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
 
  });
 
-Route::middleware(['auth:api','scope:admin'])->namespace('Backend\API')->prefix('v1/backend')->group(function () {
+ // ADMIN API
+Route::middleware(['auth:api','scope:admin', 'role:admin'])->namespace('Backend\API')->prefix('v1/backend')->group(function () {
     //ROUTES
+    // Bookings
+    Route::get('/bookings', 'BookingJobsController@getAllBookings')->name('api.admin:bookings.index');;
+    Route::get('/bookings/{booking}', 'BookingController@getbookingdetails')->name('api.admin.bookings.details');
+    Route::get('bookings/{booking}/dates/{recurring_date}', 'BookingController@getbookingdetails')->name('api.admin.bookings.recurring-details');
+   // TODO: need to discuss
+    // Route::patch('bookings/{booking}', 'BookingController@updateBooking')->name('api.admin.bookings.update');
+   // Route::patch('bookings/{booking}/dates/{recurring_date}', 'BookingController@updateRecurredBooking')->name('api.admin.bookings.update-recurring');
 
-    Route::get('getallusers', 'CustomerusersController@index')->name('api.Customeruser.index');
-     // Bookings
-    Route::get('/bookings', 'BookingJobsController@getAllBookings'); 
+    // user
+    Route::get('users', 'CustomerusersController@index')->name('api.admin.users.index');
+
+    // user profile
+    Route::get('profile', 'CustomerusersController@profile_view')->name('api.admin.users.profile');
+    Route::patch('profile', 'CustomerusersController@profile_update')->name('api.admin.users.profile-update');
+    Route::patch('change-password', 'CustomerusersController@change_password')->name('api.admin.users.change-password');
+
     // OnceBookingAlternateDate Route
     Route::get('onceBookingAlternateDates', 'OnceBookingAlternateDatesController@index')->name('api.onceBookingAlternateDate.index');
     Route::get('/onceBookingAlternateDates/{onceBookingAlternateDate}', 'OnceBookingAlternateDatesController@form')->name('api.onceBookingAlternateDate.form');
@@ -388,10 +401,39 @@ Route::middleware(['auth:api','scope:admin'])->namespace('Backend\API')->prefix(
     // Route::post('/providermetadata/{providermetadatum}/restore', 'ProvidermetadataController@restore')->name('api.providermetadatum.restore');
     // Route::post('/providermetadata/{providermetadatum}/force-delete', 'ProvidermetadataController@forceDelete')->name('api.providermetadatum.force-delete');
 
+   // provider working hours
+
+    Route::prefix('/provider')->group(function () {
+        Route::post('/working-hours/add', 'Working_hoursController@addworking_hours')
+            ->name('api.admin.provider.working-hours.create');
+        Route::get('/working-hours', 'Working_hoursController@getworking_hours')
+            ->name('api.admin.provider.working-hours.index');
+
+        Route::get('/services/{pid}', 'BookingController@GetServiceByProvider')
+            ->name('api.admin.provider.services.index');
+        Route::get('/services/{userId}/categories/{categoryId}', 'BookingController@getProviderServicesByCategory')
+            ->name('api.admin.provider.category-services');;
+
+        Route::post('/services', 'ServiceController@save_provider_servicemap')
+            ->name('api.admin.provider.services.save');
+
+        Route::get('/postcodes', 'PostcodesController@getproviderpostcode')
+            ->name('api.admin.provider.postcodes.index');
+        Route::post('/postcodes/delete', 'PostcodesController@deleteproviderpostcode')
+            ->name('api.admin.provider.postcodes.delete');
+        Route::post('/postcodes', 'PostcodesController@addproviderpostcode')
+            ->name('api.admin.provider.postcodes.create');
 
 
+        Route::get('/badges', 'UserBadgesController@index')
+            ->name('api.admin.provider.badges.index');
+        Route::post('/badges/delete', 'UserBadgesController@deleteBadge')
+            ->name('api.admin.provider.badges.delete');
+        Route::post('/badges', 'UserBadgesController@saveBadge')
+            ->name('api.admin.provider.badges.save');
+    });
 
-    // Providerservicemap Route
+    // Providerservicemap Route : TODO : Need to discuss
     Route::get('providerservicemaps', 'ProviderservicemapsController@index')->name('api.providerservicemap.index');
     Route::get('/providerservicemaps/{providerservicemap}', 'ProviderservicemapsController@form')->name('api.providerservicemap.form');
     Route::post('/providerservicemaps/save', 'ProviderservicemapsController@post')->name('api.providerservicemap.save');

@@ -89,9 +89,7 @@ class BookingJobsController extends Controller
 
         /** @var User $user */
         $user = User::query()->find($request->get('user_id'));
-
-        $isProvider = $request->get('is_provider', false) ? true: false;
-
+        $isProvider = $request->get('is_provider');
         try {
             $jobs = $bookingManager->getBookingJobsByStatus(
                 Bookingstatus::getStatusIdByName($request->get('status')),

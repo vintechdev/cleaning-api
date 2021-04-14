@@ -561,7 +561,20 @@ Route::middleware(['auth:api','scope:admin', 'role:admin'])->namespace('Backend\
     Route::post('/badges/{badge}/restore', 'BadgesController@restore')->name('api.badge.restore');
     Route::post('/badges/{badge}/force-delete', 'BadgesController@forceDelete')->name('api.badge.force-delete');
 
-    
+    Route::get('/discounts', 'DiscountsController@index')
+        ->name('api.admin.discounts.index');
+    Route::post('/discounts', 'DiscountsController@store')
+        ->name('api.admin.discounts.create');
+
+    Route::get('/discounts/{id}', 'DiscountsController@show')
+        ->name('api.admin.discounts.edit');
+
+    Route::put('/discounts/{id}', 'DiscountsController@update')
+        ->name('api.admin.discounts.update');
+
+    Route::post('/discounts/{id}/delete', 'DiscountsController@delete')
+        ->name('api.admin.discounts.delete');
+
     // Userbadge Route
     Route::get('userbadges', 'UserbadgesController@index')->name('api.userbadge.index');
     Route::get('/userbadges/{userbadge}', 'UserbadgesController@form')->name('api.userbadge.form');

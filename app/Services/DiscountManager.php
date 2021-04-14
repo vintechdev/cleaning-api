@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Discounts;
 use App\Repository\Eloquent\DiscountRepository;
+use Illuminate\Support\Collection;
 
 /**
  * Class DiscountManager
@@ -92,5 +93,31 @@ class DiscountManager
 
         $finalPrice = $price - $discountAmount;
         return ($finalPrice >= 0) ? $finalPrice : 0;
+    }
+
+    public function getAll(array $filters = []) : Collection
+    {
+        return $this->discountRepo->getAll($filters);
+    }
+
+    public function update(int $id, array $data): Discounts
+    {
+        return $this->discountRepo->update($id, $data);
+    }
+
+    public function create(array $data): Discounts
+    {
+        /** @var Discounts $discount */
+        $discount = $this->discountRepo->create($data);
+        return  $discount;
+    }
+
+    /**
+     * @param $id
+     * @return bool
+     */
+    public function delete($id): bool
+    {
+        return $this->discountRepo->delete($id);
     }
 }

@@ -53,7 +53,11 @@ class BadgesService
     {
         $badge->badge_label = Arr::get($data, 'badge_label');
         $badge->badge_description = Arr::get($data, 'badge_description');
-        $badge->badge_icon = Arr::get($data, 'badge_icon');
+
+        if (Arr::has($data, 'badge_icon')) {
+            $badge->badge_icon = Arr::get($data, 'badge_icon');
+        }
+
         $badge->save();
 
         return $badge;

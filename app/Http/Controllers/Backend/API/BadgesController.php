@@ -38,7 +38,7 @@ class BadgesController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function store(Request $request,$users_uuid)
+    public function store(Request $request)
     {
         $request->validate([
            'badge_label' => 'required|string|min:3',

@@ -49,7 +49,7 @@ class BadgesController extends Controller
         $badge = $this->badgesService->create($request->all());
 
         return response()
-            ->json(['saved' => true, 'success' => true, 'data', $badge],
+            ->json(['saved' => true, 'success' => true, 'data' => $badge],
                 200);
     }
 

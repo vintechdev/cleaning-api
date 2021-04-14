@@ -23,6 +23,10 @@ class BadgesService
             $query->where('badge_description', 'like', '%'. Arr::get($filters,'description') . '%');
         }
 
+        if (!Arr::get($filters, 'trashed')) {
+            $query->whereNull('deleted_at');
+        }
+
         return $query->orderBy('badge_label')->get();
     }
 

@@ -8,6 +8,9 @@ use App\User;
 use App\Customeruser;
 use App\UserNotification;
 use App\Bookingrequestprovider;
+use Carbon\Carbon;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 
 class UserRepository
 {
@@ -71,5 +74,22 @@ class UserRepository
 
 
         return ['total_amount' => $cost, 'completedbooking' => $totalcompletedbooking, 'totalcustomer' => $totalcustomer];
+    }
+
+    public function getNewUsers($filters = [])
+    {
+        $fromDate = Arr::get($filters, 'from') ?
+            Carbon::parse(Arr::get($filters, 'from'))->format('Y-m-d 00:00:00'):
+            Carbon::now()->firstOfMonth()->format('Y-m-d 00:00:00');
+
+        return User::query()->newQuery()
+            ->whereExists(function ($query) use ($filters) {
+               $query->select("role_user.user_id")
+                   ->from("role_user")
+                   ->join("roles", "roles.id", "=", "role_user.role_id")
+                   ->where("roles.name", "=", DB::raw("'" . $filters['role']."'"))
+                   ->whereRaw("role_user.user_id = users.id");
+            })
+            ->where('created_at', '>=', $fromDate)->get();
     }
 }

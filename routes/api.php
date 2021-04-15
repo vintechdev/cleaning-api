@@ -424,14 +424,27 @@ Route::middleware(['auth:api','scope:admin', 'role:admin'])->namespace('Backend\
         Route::post('/postcodes', 'PostcodesController@addproviderpostcode')
             ->name('api.admin.provider.postcodes.create');
 
-
         Route::get('/badges', 'UserBadgesController@index')
             ->name('api.admin.provider.badges.index');
         Route::post('/badges/delete', 'UserBadgesController@deleteBadge')
             ->name('api.admin.provider.badges.delete');
         Route::post('/badges', 'UserBadgesController@saveBadge')
             ->name('api.admin.provider.badges.save');
+
+
     });
+
+    Route::prefix('/summary')->group(function () {
+        Route::get('/new-providers', 'AdminSummaryController@getNewProviders')
+            ->name('api.admin.new-providers');
+
+        Route::get('/new-users', 'AdminSummaryController@getNewUsers')
+            ->name('api.admin.new-users');
+
+        Route::get('/new-bookings', 'AdminSummaryController@getNewBookings')
+            ->name('api.admin.new-bookings');
+    });
+
 
     // Providerservicemap Route : TODO : Need to discuss
     Route::get('providerservicemaps', 'ProviderservicemapsController@index')->name('api.providerservicemap.index');
@@ -513,7 +526,6 @@ Route::middleware(['auth:api','scope:admin', 'role:admin'])->namespace('Backend\
     Route::post('/useractivitylogs/{useractivitylog}/delete', 'UseractivitylogsController@delete')->name('api.useractivitylog.delete');
     Route::post('/useractivitylogs/{useractivitylog}/restore', 'UseractivitylogsController@restore')->name('api.useractivitylog.restore');
     Route::post('/useractivitylogs/{useractivitylog}/force-delete', 'UseractivitylogsController@forceDelete')->name('api.useractivitylog.force-delete');
-
 
     // Apilog Route
     Route::get('apilogs', 'ApilogsController@index')->name('api.apilog.index');

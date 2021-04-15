@@ -318,7 +318,12 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
 
  });
 
- // ADMIN API
+# save fcm token forcefully on mobile login
+Route::middleware(['auth:api'])->prefix('v1/auth')->group(function () {
+    Route::post('/device-token', 'AuthController@saveDeviceToken')->name('api.auth.device-token');
+});
+
+// ADMIN API
 Route::middleware(['auth:api','scope:admin', 'role:admin'])->namespace('Backend\API')->prefix('v1/backend')->group(function () {
     //ROUTES
     // Bookings

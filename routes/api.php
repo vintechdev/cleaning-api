@@ -607,12 +607,12 @@ Route::middleware(['auth:api','scope:admin', 'role:admin'])->namespace('Backend\
 
 
     // Bookingactivitylog Route
-    Route::get('bookingactivitylogs', 'BookingactivitylogsController@index')->name('api.bookingactivitylog.index');
-    Route::get('/bookingactivitylogs/{bookingactivitylog}', 'BookingactivitylogsController@form')->name('api.bookingactivitylog.form');
-    Route::post('/bookingactivitylogs/save', 'BookingactivitylogsController@post')->name('api.bookingactivitylog.save');
-    Route::post('/bookingactivitylogs/{bookingactivitylog}/delete', 'BookingactivitylogsController@delete')->name('api.bookingactivitylog.delete');
-    Route::post('/bookingactivitylogs/{bookingactivitylog}/restore', 'BookingactivitylogsController@restore')->name('api.bookingactivitylog.restore');
-    Route::post('/bookingactivitylogs/{bookingactivitylog}/force-delete', 'BookingactivitylogsController@forceDelete')->name('api.bookingactivitylog.force-delete');
+    Route::get('booking-activity-logs', 'BookingActivityLogsController@index')->name('api.booking.activity-logs');
+   // Route::get('/bookingactivitylogs/{bookingactivitylog}', 'BookingActivityLogsController@form')->name('api.bookingactivitylog.form');
+   // Route::post('/bookingactivitylogs/save', 'BookingActivityLogsController@post')->name('api.bookingactivitylog.save');
+   // Route::post('/bookingactivitylogs/{bookingactivitylog}/delete', 'BookingActivityLogsController@delete')->name('api.bookingactivitylog.delete');
+   // Route::post('/bookingactivitylogs/{bookingactivitylog}/restore', 'BookingActivityLogsController@restore')->name('api.bookingactivitylog.restore');
+   // Route::post('/bookingactivitylogs/{bookingactivitylog}/force-delete', 'BookingActivityLogsController@forceDelete')->name('api.bookingactivitylog.force-delete');
 
 
     // Userreview Route

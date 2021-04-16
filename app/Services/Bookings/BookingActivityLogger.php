@@ -6,6 +6,7 @@ use App\Booking;
 use App\Http\Resources\Bookingactivitylog;
 use App\Repository\Eloquent\BookingActivityLogRepository;
 use App\User;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 /**
  * Class BookingActivityLogger
@@ -46,5 +47,14 @@ class BookingActivityLogger
             'booking_date' => $booking->getStartDate(),
             'booking_postcode' => $booking->getPostCode()
         ]);
+    }
+
+    /**
+     * @param array $filters
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     */
+    public function getAll(array $filters = []): \Illuminate\Contracts\Pagination\LengthAwarePaginator
+    {
+        return $this->activityLogRepository->getAll($filters);
     }
 }

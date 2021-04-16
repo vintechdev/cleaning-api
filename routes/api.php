@@ -318,7 +318,12 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
 
  });
 
- // ADMIN API
+# save fcm token forcefully on mobile login
+Route::middleware(['auth:api'])->prefix('v1/auth')->group(function () {
+    Route::post('/device-token', 'AuthController@saveDeviceToken')->name('api.auth.device-token');
+});
+
+// ADMIN API
 Route::middleware(['auth:api','scope:admin', 'role:admin'])->namespace('Backend\API')->prefix('v1/backend')->group(function () {
     //ROUTES
     // Bookings
@@ -424,14 +429,27 @@ Route::middleware(['auth:api','scope:admin', 'role:admin'])->namespace('Backend\
         Route::post('/postcodes', 'PostcodesController@addproviderpostcode')
             ->name('api.admin.provider.postcodes.create');
 
-
         Route::get('/badges', 'UserBadgesController@index')
             ->name('api.admin.provider.badges.index');
         Route::post('/badges/delete', 'UserBadgesController@deleteBadge')
             ->name('api.admin.provider.badges.delete');
         Route::post('/badges', 'UserBadgesController@saveBadge')
             ->name('api.admin.provider.badges.save');
+
+
     });
+
+    Route::prefix('/summary')->group(function () {
+        Route::get('/new-providers', 'AdminSummaryController@getNewProviders')
+            ->name('api.admin.new-providers');
+
+        Route::get('/new-users', 'AdminSummaryController@getNewUsers')
+            ->name('api.admin.new-users');
+
+        Route::get('/new-bookings', 'AdminSummaryController@getNewBookings')
+            ->name('api.admin.new-bookings');
+    });
+
 
     // Providerservicemap Route : TODO : Need to discuss
     Route::get('providerservicemaps', 'ProviderservicemapsController@index')->name('api.providerservicemap.index');
@@ -514,7 +532,6 @@ Route::middleware(['auth:api','scope:admin', 'role:admin'])->namespace('Backend\
     Route::post('/useractivitylogs/{useractivitylog}/restore', 'UseractivitylogsController@restore')->name('api.useractivitylog.restore');
     Route::post('/useractivitylogs/{useractivitylog}/force-delete', 'UseractivitylogsController@forceDelete')->name('api.useractivitylog.force-delete');
 
-
     // Apilog Route
     Route::get('apilogs', 'ApilogsController@index')->name('api.apilog.index');
     Route::get('/apilogs/{apilog}', 'ApilogsController@form')->name('api.apilog.form');
@@ -543,11 +560,38 @@ Route::middleware(['auth:api','scope:admin', 'role:admin'])->namespace('Backend\
     Route::post('users/{user_uuid}/badges/{badges_uuid}', 'BadgesController@edit_badge')->name('api.badge.save');
     Route::delete('users/{users_uuid}/badges/{badges_uuid}', 'BadgesController@delete_badge')->name('api.badge.delete_badge') ;
 
+    // Admin Badges crud Routes
+    Route::get('/badges', 'BadgesController@index')
+        ->name('api.admin.badges.index');
+    Route::post('/badges', 'BadgesController@store')
+        ->name('api.admin.badges.create');
+
+    Route::get('/badges/{id}', 'BadgesController@show')
+        ->name('api.admin.badges.edit');
+
+    Route::put('/badges/{id}', 'BadgesController@update')
+        ->name('api.admin.badges.update');
+
+    Route::post('/badges/{id}/delete', 'BadgesController@delete')
+        ->name('api.admin.badges.delete');
 
     Route::post('/badges/{badge}/restore', 'BadgesController@restore')->name('api.badge.restore');
     Route::post('/badges/{badge}/force-delete', 'BadgesController@forceDelete')->name('api.badge.force-delete');
 
-    
+    Route::get('/discounts', 'DiscountsController@index')
+        ->name('api.admin.discounts.index');
+    Route::post('/discounts', 'DiscountsController@store')
+        ->name('api.admin.discounts.create');
+
+    Route::get('/discounts/{id}', 'DiscountsController@show')
+        ->name('api.admin.discounts.edit');
+
+    Route::put('/discounts/{id}', 'DiscountsController@update')
+        ->name('api.admin.discounts.update');
+
+    Route::post('/discounts/{id}/delete', 'DiscountsController@delete')
+        ->name('api.admin.discounts.delete');
+
     // Userbadge Route
     Route::get('userbadges', 'UserbadgesController@index')->name('api.userbadge.index');
     Route::get('/userbadges/{userbadge}', 'UserbadgesController@form')->name('api.userbadge.form');
@@ -568,12 +612,12 @@ Route::middleware(['auth:api','scope:admin', 'role:admin'])->namespace('Backend\
 
 
     // Bookingactivitylog Route
-    Route::get('bookingactivitylogs', 'BookingactivitylogsController@index')->name('api.bookingactivitylog.index');
-    Route::get('/bookingactivitylogs/{bookingactivitylog}', 'BookingactivitylogsController@form')->name('api.bookingactivitylog.form');
-    Route::post('/bookingactivitylogs/save', 'BookingactivitylogsController@post')->name('api.bookingactivitylog.save');
-    Route::post('/bookingactivitylogs/{bookingactivitylog}/delete', 'BookingactivitylogsController@delete')->name('api.bookingactivitylog.delete');
-    Route::post('/bookingactivitylogs/{bookingactivitylog}/restore', 'BookingactivitylogsController@restore')->name('api.bookingactivitylog.restore');
-    Route::post('/bookingactivitylogs/{bookingactivitylog}/force-delete', 'BookingactivitylogsController@forceDelete')->name('api.bookingactivitylog.force-delete');
+    Route::get('booking-activity-logs', 'BookingActivityLogsController@index')->name('api.booking.activity-logs');
+   // Route::get('/bookingactivitylogs/{bookingactivitylog}', 'BookingActivityLogsController@form')->name('api.bookingactivitylog.form');
+   // Route::post('/bookingactivitylogs/save', 'BookingActivityLogsController@post')->name('api.bookingactivitylog.save');
+   // Route::post('/bookingactivitylogs/{bookingactivitylog}/delete', 'BookingActivityLogsController@delete')->name('api.bookingactivitylog.delete');
+   // Route::post('/bookingactivitylogs/{bookingactivitylog}/restore', 'BookingActivityLogsController@restore')->name('api.bookingactivitylog.restore');
+   // Route::post('/bookingactivitylogs/{bookingactivitylog}/force-delete', 'BookingActivityLogsController@forceDelete')->name('api.bookingactivitylog.force-delete');
 
 
     // Userreview Route

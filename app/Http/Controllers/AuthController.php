@@ -94,41 +94,29 @@ class AuthController extends Controller
             'mobile_number' => 'required|numeric'
         ]);
 
-
         if ($validator->fails()) {
             $message = $validator->messages()->all();
             return response()->json(['message' => $message], 400);
         }
+
+        if ($request->has('role') && !in_array($request->role, [Role::ROLE_PROVIDER, Role::ROLE_CUSTOMER])) {
+            return response()->json(['error' => 'Role received is forbidden.'], 403);
+        }
+
         $role = $request->role;
         $usercount = User::where(['email' => $request->get('email')])->get()->toarray();
 
         if (count($usercount) > 0) {
             $res = User::whereHas(
                 'roles', function ($q) use ($role) {
-                $q->where('name', $role);
-            }
+                    $q->where('name', $role);
+                }
             )->where(['email' => $request->get('email')])->get()->toArray();
 
             if (count($res) > 0) {
                 return response()->json(['error' => 'Email already Exists. Please try again with another Email.'], 401);
             } else {
-                $user_id = $usercount[0]['id'];
-                //add another role for same email
-                $RoleUser = new RoleUser();
-                $RoleUser->user_id = $user_id;
-                $rl = new Role();
-                $rls = $rl->where('name', $role)->first();
-                $RoleUser->role_id = $rls->id;
-                $RoleUser->save();
-
-                if ($role == 'provider') {
-                    $User = User::firstOrNew(['id' => $user_id]);
-                    $User->providertype = $request->get('provider_type');
-                    $User->save();
-                }
-                $success['message'] = 'Please confirm yourself by clicking on verify user button sent to you on your email';
-                return response()->json(['success' => $success], 200);
-
+                return response()->json(['error' => 'User already exists'], 409);
             }
 
         } else {

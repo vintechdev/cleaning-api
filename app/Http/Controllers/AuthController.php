@@ -285,7 +285,7 @@ class AuthController extends Controller
             if (!$user) {
                 $this->incrementLoginAttempts($request);
                 // return an error response
-                return response()->json(['message' => 'Email not found.'], 401);
+                return response()->json(['message' => 'Email or Password is incorrect!!'], 401);
             }
 
             if (!$user->hasRole($request->scope)) {

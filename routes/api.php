@@ -116,6 +116,8 @@ Route::middleware(['auth:api','scope:customer,provider'])->namespace('Backend\AP
     Route::get('/provider-notifications', 'NotificationLogsController@getNotifications')->name('api.provider-notifications');
 
     Route::post('update-push-notification-logs', 'NotificationLogsController@updatePushNotificationLog')->name('api.push-notifcation-logs.update');
+
+    Route::put('users', 'UserController@updateUser')->name('api.update-user');
 });
 
 Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->prefix('v1/customer')->group(function () {

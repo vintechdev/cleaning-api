@@ -29,7 +29,7 @@ class BadgesController extends Controller
     public function index(Request $request)
     {
         $badges =  $this->badgesService->getAll($request->all());
-        return response()->json(['data', $badges], 200);
+        return response()->json(['data' => $badges], 200);
     }
 
     /**

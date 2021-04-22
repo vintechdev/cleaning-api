@@ -34,7 +34,11 @@ class DiscountRepository extends AbstractBaseRepository
      */
     public function getAll($filters = []): Collection
     {
-        $query = $this->getModel()::query();
+        $query = $this->getModel()::query()->select(["discounts.*", 
+           \DB::raw("IF(discounts.plan_id IS NOT NULL, (SELECT plan_name from plans WHERE plans.id = discounts.plan_id),'') as plan_name"),
+            \DB::raw("IF(discounts.category_id IS NOT NULL, (SELECT name from service_categories WHERE service_categories.id = discounts.category_id),'') as category_name") 
+        ]);
+
 
         if (Arr::get($filters,'category_id')) {
             $query->where('category_id', '=',  Arr::get($filters,'category_id'));

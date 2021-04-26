@@ -40,11 +40,15 @@ class AcceptedBookingList extends AbstractBookingList
                     })
                     ->orWhere(function($query) {
                         $query
-                            ->where('booking_date', '<=', $this->getTo()->format('Y-m-d'))
+                            ->where('events.start_date', '<=', $this->getTo()->format('Y-m-d'))
                             ->where(function($query) {
                                 $query
                                     ->where('events.end_date', null)
-                                    ->orWhere('events.end_date', '>=', $this->getFrom()->format('Y-m-d 00:00:00'));
+                                    ->orwhere(function ($query) {
+                                        $query
+                                            ->whereRaw('events.start_date <> events.end_date')
+                                            ->where('events.end_date', '>=', $this->getFrom()->format('Y-m-d 00:00:00'));
+                                    });
                             });
                     });
             });

@@ -51,7 +51,7 @@ class CustomerusersController extends Controller
         }else{
 
             $image = $request->input('file_content'); 
-             $user_id = Auth::user()->id;
+            $user_id = $request->get('user_id') ? $request->get('user_id')  :Auth::user()->id;
             
 
             $Customeruser = Customeruser::firstOrNew(['id' => $user_id]);
@@ -354,9 +354,9 @@ class CustomerusersController extends Controller
             return response()->json(['message' => $message], 401);
         }
 
-        //$user = Auth::user();
         //$user_id = $user->id;
         $user_id = $this->getUserIdByLoggedUserIdOrRequest($request);
+        $user = Customeruser::query()->find($user_id);
         $user_password = $user->password;
        
         $Customeruser = Customeruser::firstOrNew(['id' => $user_id]);
@@ -403,7 +403,9 @@ class CustomerusersController extends Controller
         }
 
         $user_id = $this->getUserIdByLoggedUserIdOrRequest($request);   
-        $count = Customeruser::where('email',$request->get('email'))->where('id','!=', $user_id)->count();
+        $count = Customeruser::where('email', $request->get('email'))
+        ->where('id','!=', $user_id)->count();
+        
         $image = $request->input('file_content'); // your base64 encoded
 
         if($count==0){

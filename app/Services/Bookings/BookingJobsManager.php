@@ -308,6 +308,10 @@ class BookingJobsManager
             $job['address'] = $this->bookingService->getBookingAddress($booking->getId());
             $job['question'] = $this->bookingService->getBookingQuestions($booking->getId());
         }
+
+        $job['booking_postcode'] = $booking->booking_postcode;
+        $job['created_at'] = $booking->created_at;
+
         return $job;
     }
 

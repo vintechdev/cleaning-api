@@ -133,6 +133,7 @@ class BookingJobsManager
             return $bookingJobs;
         }
 
+        // This will have recurring bookings with logical entries to DB as separate booking entity.
         return $this->buildAcceptedBookingJobs($bookings, $bookingList->getFrom(), $bookingList->getTo());
     }
 
@@ -322,6 +323,9 @@ class BookingJobsManager
         foreach ($bookings as $booking) {
             $providerDetails = $this->getProviderDetails($booking, true);
             $services = $this->buildBookingServices($booking);
+            // These dates will ignore recurring bookings that belongs to the parent which has separate logical db
+            // entry which would have been created as a result of rescheduling. This is because the list of bookings
+            // that we received will have those recurring bookings as separate bookings.
             $dates = $this
                 ->bookingEventService
                 ->listBookingDatesBetween($booking, $from, $to);

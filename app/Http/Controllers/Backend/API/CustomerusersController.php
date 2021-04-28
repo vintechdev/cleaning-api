@@ -480,4 +480,22 @@ class CustomerusersController extends Controller
         $Customeruser->restore();
         return response()->json(['no_content' => true], 200);
     }
+
+    /**
+     * Restore the specified resource to storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function getReviews(Request $request)
+    {
+        $reviews = [];
+        if ($request->get('role') == 'provider') {
+            $reviews = $this->userbage->getReviewDetails($request->get('user_id'));
+        } else {
+            $reviews = $this->userbage->getReviewsByUser($request->get('user_id'));
+        }
+
+        return response()->json(['data' => $reviews], 200);
+    }
 }

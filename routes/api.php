@@ -348,6 +348,8 @@ Route::middleware(['auth:api','scope:admin', 'role:admin'])->namespace('Backend\
     Route::patch('profile', 'CustomerusersController@profile_update')->name('api.admin.users.profile-update');
     Route::patch('change-password', 'CustomerusersController@change_password')->name('api.admin.users.change-password');
 
+     Route::get('user-reviews', 'CustomerusersController@getReviews')->name('api.admin.users.reviews');
+
     // OnceBookingAlternateDate Route
     Route::get('onceBookingAlternateDates', 'OnceBookingAlternateDatesController@index')->name('api.onceBookingAlternateDate.index');
     Route::get('/onceBookingAlternateDates/{onceBookingAlternateDate}', 'OnceBookingAlternateDatesController@form')->name('api.onceBookingAlternateDate.form');

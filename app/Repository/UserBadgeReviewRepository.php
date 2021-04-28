@@ -25,6 +25,13 @@ class UserBadgeReviewRepository{
                 })->where('user_reviews.user_review_for',$providerid)->get()->toArray();
                     return $review;
     }
+
+    public function getReviewsByUser($userId){
+      return Userreview::query()->leftJoin('users', function($join){
+          $join->on('user_reviews.user_review_for', '=', 'users.id');
+      })->where('user_reviews.user_review_by',$userId)->get()->toArray();
+    }
+
     public function getAvgRating($providerid)
     {
        # code...

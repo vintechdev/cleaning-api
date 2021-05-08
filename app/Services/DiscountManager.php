@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Discounts;
 use App\Repository\Eloquent\DiscountRepository;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Validator;
 
 /**
  * Class DiscountManager
@@ -107,8 +108,31 @@ class DiscountManager
 
     public function create(array $data): Discounts
     {
+        $validator = Validator::make($data, [
+            'discount_category' => 'required|in:plan,promo',
+            'discount_type' => 'required|in:' . implode(',', $this->getDiscountTypes()) . '|',
+            'category_id' => 'exclude_if:discount_category,plan|required|integer',
+            'plan_id' => 'exclude_if:discount_category,promo|required|integer',
+            'discount' => 'required|numeric' . ($data['discount_type'] === 'percentage' ? '|lte:100' : ''),
+            'promocode' => 'exclude_if:discount_category,plan|required|string'
+        ]);
+
+        if ($validator->fails()) {
+            throw new \InvalidArgumentException($validator->messages());
+        }
+
+        if ($data['discount_category'] === 'plan') {
+            unset($data['promocode']);
+            unset($data['category_id']);
+        } else {
+            unset($data['plan_id']);
+        }
+
+        unset($data['discount_category']);
+
         /** @var Discounts $discount */
-        $discount = $this->discountRepo->create($data);
+        $discount = $this->discountRepo->create($data, true);
+
         return  $discount;
     }
 
@@ -119,5 +143,13 @@ class DiscountManager
     public function delete($id): bool
     {
         return $this->discountRepo->delete($id);
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getDiscountTypes(): array
+    {
+        return Discounts::getTypes();
     }
 }

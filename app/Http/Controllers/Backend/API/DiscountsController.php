@@ -41,23 +41,18 @@ class DiscountsController extends Controller
      */
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'plan_id' => 'nullable|integer|exists:plans,id',
-            'category_id' => 'nullable|integer|exists:service_categories,id',
-            'discount_type' => 'required|string',
-            'discount' => 'required|numeric' . ($request->input('discount_type') === 'percentage' ? '|lte:100' : ''),
-            'promocode' => 'required|string',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json($validator->messages(), 422);
+        try {
+            $discount = $this->discountManager->create($request->all());
+        } catch (\InvalidArgumentException $exception) {
+            return response()->json($exception->getMessage(), 422);
+        } catch (\Exception $exception) {
+            logger()->error($exception->getMessage());
+            return response()->json('Something went wrong. Please contact administrator.', 500);
         }
-
-        $discount = $this->discountManager->create($request->all());
 
         return response()
             ->json(['saved' => true, 'success' => true, 'data' => $discount],
-                200);
+                201);
     }
 
     /**
@@ -108,5 +103,13 @@ class DiscountsController extends Controller
         }
 
         return  response()->json(['message' => "Error while Deletion", 'success'=> false]);
+    }
+
+    /**
+     * @return array
+     */
+    public function getDiscountTypes(): array
+    {
+        return $this->discountManager->getDiscountTypes();
     }
 }

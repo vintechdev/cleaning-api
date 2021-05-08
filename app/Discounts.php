@@ -15,7 +15,7 @@ class Discounts extends Model
 	use HasApiTokens, Notifiable;
     protected $table = 'discounts';
     use SoftDeletes;
-    protected $fillable = ['id'];
+    protected $guarded = ['id'];
     public $incrementing = false;
 
     public function getDiscount(): float
@@ -36,5 +36,16 @@ class Discounts extends Model
     public function isPromoDiscount(): bool
     {
         return !is_null($this->promocode);
+    }
+
+    /**
+     * @return string[]
+     */
+    public static function getTypes(): array
+    {
+        return [
+            self::DISCOUNT_TYPE_PERCENTAGE,
+            self::DISCOUNT_TYPE_FLAT
+        ];
     }
 }

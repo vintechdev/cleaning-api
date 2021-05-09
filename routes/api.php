@@ -590,6 +590,10 @@ Route::middleware(['auth:api','scope:admin', 'role:admin'])->namespace('Backend\
 
     Route::get('/discounts', 'DiscountsController@index')
         ->name('api.admin.discounts.index');
+
+    Route::get('/discounts/types', 'DiscountsController@getDiscountTypes')
+        ->name('api.admin.discounts.types');
+
     Route::post('/discounts', 'DiscountsController@store')
         ->name('api.admin.discounts.create');
 
@@ -599,7 +603,7 @@ Route::middleware(['auth:api','scope:admin', 'role:admin'])->namespace('Backend\
     Route::put('/discounts/{id}', 'DiscountsController@update')
         ->name('api.admin.discounts.update');
 
-    Route::post('/discounts/{id}/delete', 'DiscountsController@delete')
+    Route::delete('/discounts/{id}', 'DiscountsController@delete')
         ->name('api.admin.discounts.delete');
 
     // Userbadge Route

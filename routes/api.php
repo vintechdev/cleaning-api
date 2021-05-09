@@ -330,14 +330,16 @@ Route::middleware(['auth:api','scope:admin', 'role:admin'])->namespace('Backend\
     //ROUTES
     // Bookings
     Route::get('/bookings', 'BookingJobsController@getAllBookings')->name('api.admin:bookings.index');;
-    Route::get('/bookings/{booking}', 'BookingController@getbookingdetails')->name('api.admin.bookings.details');
-    Route::get('bookings/{booking}/dates/{recurring_date}', 'BookingController@getbookingdetails')->name('api.admin.bookings.recurring-details');
-
-    Route::get('/allstatus', 'BookingController@listAllStatus');
-   // TODO: need to discuss
+    
+    Route::get('/bookings/{booking}', 'BookingController@getbookingdetails')->name('getbookingdetails');
+	Route::get('bookings/{booking}/dates/{recurring_date}', 'BookingController@getbookingdetails')->name('getrecurredbookingdetails');
+	// TODO: need to discuss
     // Route::patch('bookings/{booking}', 'BookingController@updateBooking')->name('api.admin.bookings.update');
    // Route::patch('bookings/{booking}/dates/{recurring_date}', 'BookingController@updateRecurredBooking')->name('api.admin.bookings.update-recurring');
 
+    Route::get('/allstatus', 'BookingController@listAllStatus');
+	Route::post('chat-details/{bookingid}', 'ChatsController@getchat')->name('chat-details');
+      
     // user
     Route::get('users', 'CustomerusersController@index')->name('api.admin.users.index');
     Route::post('profilepicture', 'CustomerusersController@profilepicture')
@@ -692,6 +694,4 @@ Route::namespace('Backend\API')->prefix('v1/provider')->middleware(['auth:api,sc
     Route::get('postcodes', 'PostcodesController@get_all_postcodes')->name('api.postcodes.get_all_postcodes')->middleware(['scope:admin']);
      Route::get('postcodes/{postcodes_uuid}', 'PostcodesController@get')->name('api.postcodes.get')->middleware(['scope:admin']);
      Route::delete('postcodes/{postcodes_uuid}', 'PostcodesController@delete_postcodes')->name('api.postcodes.delete')->middleware(['scope:admin']); */
-
-
 });

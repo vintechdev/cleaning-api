@@ -31,14 +31,17 @@ class ChatsRepository extends AbstractBaseRepository
         }
     }
 
-    public function chat($bookingid,$history)
+    public function chat($bookingid,$history, $userId = null)
     {
+        
+        $user_id = $userId && request()->has('isAdmin') ? $userId : Auth::user()->id;
+
         if($history){
             $arr = Chats::where('booking_id',$bookingid)->orderBy('created_at','asc')->get()->toArray();
         }else{
 
-            $arr = Chats::where('booking_id',$bookingid)->where('receiver_id',Auth::user()->id)->where('isread',0)->orderBy('created_at','asc')->get()->toArray();//
-            Chats::where('booking_id',$bookingid)->where('sender_id','!=',Auth::user()->id)->where('isread',0)->update(['isread'=>1]);
+            $arr = Chats::where('booking_id',$bookingid)->where('receiver_id', $user_id)->where('isread',0)->orderBy('created_at','asc')->get()->toArray();//
+            Chats::where('booking_id',$bookingid)->where('sender_id','!=', $user_id)->where('isread',0)->update(['isread'=>1]);
         }
         return $arr;
     }

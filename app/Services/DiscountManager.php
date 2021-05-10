@@ -103,10 +103,21 @@ class DiscountManager
 
     public function update(int $id, array $data): Discounts
     {
+        $data = $this->validate($data);
         return $this->discountRepo->update($id, $data);
     }
 
     public function create(array $data): Discounts
+    {
+        $data = $this->validate($data);
+
+        /** @var Discounts $discount */
+        $discount = $this->discountRepo->create($data, true);
+
+        return  $discount;
+    }
+
+    private function validate(array $data)
     {
         $validator = Validator::make($data, [
             'discount_category' => 'required|in:plan,promo',
@@ -130,10 +141,7 @@ class DiscountManager
 
         unset($data['discount_category']);
 
-        /** @var Discounts $discount */
-        $discount = $this->discountRepo->create($data, true);
-
-        return  $discount;
+        return $data;
     }
 
     /**

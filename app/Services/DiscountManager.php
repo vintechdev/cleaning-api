@@ -109,7 +109,23 @@ class DiscountManager
 
     public function create(array $data): Discounts
     {
+        $discountCategory = isset($data['discount_category']) ? $data['discount_category'] : null;
         $data = $this->validate($data);
+
+        $discount = null;
+        if ($discountCategory === 'plan') {
+            $discount = Discounts::where('plan_id', $data['plan_id']);
+        } else {
+            $discount = Discounts::where('promocode', $data['promocode'])
+                ->where('category_id', $data['category_id']);
+        }
+
+        if ($discount) {
+            $discount = $discount->where('deleted_at', null)->first();
+            if ($discount) {
+                throw new \InvalidArgumentException('This discount already exists. Please update or add one by deleting the existing discount.');
+            }
+        }
 
         /** @var Discounts $discount */
         $discount = $this->discountRepo->create($data, true);

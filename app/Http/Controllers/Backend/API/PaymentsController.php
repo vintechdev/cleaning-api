@@ -104,7 +104,7 @@ class PaymentsController extends Controller
 
     private function getUser()
     {
-        if (request()->input('user_id')) {
+        if (request()->has('isAdmin') && request()->input('user_id')) {
             return User::query()->findOrFail(request()->input('user_id'));
         }
 
@@ -114,7 +114,7 @@ class PaymentsController extends Controller
 
     private function getUserId()
     {
-        if (request()->input('user_id')) {
+        if (request()->has('isAdmin') && request()->input('user_id')) {
             return request()->input('user_id');
         }
 

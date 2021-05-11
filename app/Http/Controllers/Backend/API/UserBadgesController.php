@@ -24,7 +24,8 @@ class UserBadgesController  extends Controller
 
     public function index(Request $request)
     {
-        $userId = $request->input('user_id') ? $request->input('user_id'): Auth::id();
+        $userId = $request->input('user_id') && $request->has('isAdmin') ? 
+        $request->input('user_id'): Auth::id();
         $badges = $this->badgeRepository->getBadgeDetails($userId);
 
         return response()->json(['data'=> $badges],200);

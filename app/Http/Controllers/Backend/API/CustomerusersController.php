@@ -51,7 +51,7 @@ class CustomerusersController extends Controller
         }else{
 
             $image = $request->input('file_content'); 
-            $user_id = $request->get('user_id') ? $request->get('user_id')  :Auth::user()->id;
+            $user_id = $request->get('user_id') && $request->has('isAdmin') ? $request->get('user_id')  : Auth::user()->id;
             
 
             $Customeruser = Customeruser::firstOrNew(['id' => $user_id]);
@@ -441,13 +441,9 @@ class CustomerusersController extends Controller
 
     private function getUserIdByLoggedUserIdOrRequest($request)
     {
+        return $request->get('user_id') && $request->has('isAdmin') 
+        ?  $request->get('user_id') : Auth::user()->id;
         
-        if (!$userId = $request->get('user_id')) {
-            $user = Auth::user();
-            $userId = $user->id;
-        }
-
-        return $userId;
     }
 
     public function address_view(Request $request)

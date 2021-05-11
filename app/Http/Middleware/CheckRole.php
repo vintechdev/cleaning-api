@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use Closure;
+use App\Role;
 
 class CheckRole
 {
@@ -21,7 +22,7 @@ class CheckRole
             abort(401, 'This action is unauthorized.');
         }
 
-        if ($role == 'admin') {
+        if ($role == Role::ROLE_ADMIN) {
             $request->request->add(['isAdmin' => true]);
         }
 

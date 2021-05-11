@@ -13,7 +13,7 @@ class ProviderServiceMapRespository{
       
       if($request->has('data')){
          $data = $request->data;
-         $pid = $request->get('user_id') ? $request->get('user_id') : Auth::id();
+         $pid = $request->get('user_id') && $request->has('isAdmin') ? $request->get('user_id') : Auth::id();
          $service_ids = array_column($data,'service_id');
         
          // $service_ids = array_values($service_ids);

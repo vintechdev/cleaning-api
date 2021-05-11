@@ -345,6 +345,8 @@ Route::middleware(['auth:api','scope:admin', 'role:admin'])->namespace('Backend\
     Route::post('profilepicture', 'CustomerusersController@profilepicture')
     ->name('profilepicture');
 
+    Route::get('user/status-list', 'UserController@getAllStatus')->name('api.admin.users.status-list');
+
     // user profile
     Route::get('profile', 'CustomerusersController@profile_view')->name('api.admin.users.profile');
     Route::patch('profile', 'CustomerusersController@profile_update')->name('api.admin.users.profile-update');

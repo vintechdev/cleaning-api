@@ -90,7 +90,7 @@ class UserBadgeReviewRepository{
 
     public function saveUserBadge(Request $request)
     {
-       $userId =  $request->input('user_id') && $request->has('isAdmin') ?  $request->input('user_id') : Auth::id();
+       $userId =  $request->input('user_id') && session()->has('isAdmin') ?  $request->input('user_id') : Auth::id();
        $badgeId = $request->input('badgeId');
        $userBadge = UserBadge::query()
            ->firstOrNew(['badge_id' => $badgeId, 'user_id' =>  $userId ]);

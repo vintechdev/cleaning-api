@@ -117,7 +117,7 @@ class Working_hoursController extends Controller
     }
 
     private function getUserId(Request $request): int {
-        if ($request->has('isAdmin') && $userId = $request->get('user_id')) {
+        if (session()->has('isAdmin') && $userId = $request->get('user_id')) {
             return $userId;
         }
 

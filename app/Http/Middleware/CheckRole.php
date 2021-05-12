@@ -23,7 +23,7 @@ class CheckRole
         }
 
         if ($role == Role::ROLE_ADMIN) {
-            $request->request->add(['isAdmin' => true]);
+            session()->put(['isAdmin' => true]);
         }
 
         return $next($request);

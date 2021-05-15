@@ -22,10 +22,6 @@ class CheckRole
             abort(401, 'This action is unauthorized.');
         }
 
-        if ($role == Role::ROLE_ADMIN) {
-            session()->put(['isAdmin' => true]);
-        }
-
         return $next($request);
     }
 }

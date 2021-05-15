@@ -88,7 +88,7 @@ class BookingJobsController extends Controller
         }
 
         /** @var User $user */
-        $userId = $request->get('user_id') && session()->has('isAdmin') ? 
+        $userId = $request->get('user_id') && $request->user()->isAdminScope() ? 
         $request->get('user_id') : null;
         
         $user =  $userId ? User::query()->find($request->get('user_id')): auth()->user();

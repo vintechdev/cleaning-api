@@ -331,8 +331,8 @@ Route::middleware(['auth:api','scope:admin', 'role:admin'])->namespace('Backend\
     // Bookings
     Route::get('/bookings', 'BookingJobsController@getAllBookings')->name('api.admin:bookings.index');;
     
-    Route::get('/bookings/{booking}', 'BookingController@getbookingdetails')->name('getbookingdetails');
-	Route::get('bookings/{booking}/dates/{recurring_date}', 'BookingController@getbookingdetails')->name('getrecurredbookingdetails');
+    Route::get('/bookings/{booking}', 'BookingController@getbookingdetails')->name('admin.getbookingdetails');
+	Route::get('bookings/{booking}/dates/{recurring_date}', 'BookingController@getbookingdetails')->name('admin.getrecurredbookingdetails');
 	// TODO: need to discuss
     // Route::patch('bookings/{booking}', 'BookingController@updateBooking')->name('api.admin.bookings.update');
    // Route::patch('bookings/{booking}/dates/{recurring_date}', 'BookingController@updateRecurredBooking')->name('api.admin.bookings.update-recurring');

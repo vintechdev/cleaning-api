@@ -259,6 +259,14 @@ class BookingJobsManager
         return $services;
     }
 
+    public function getPrefixRouteName() {
+        if (request()->user()->isAdminScope()) {
+            return 'admin.';
+        }
+
+        return '';
+    }
+
     /**
      * @param Booking $booking
      * @param array $providerDetails
@@ -279,11 +287,13 @@ class BookingJobsManager
     {
         $job = [];
 
+        $prefixRouteName = $this->getPrefixRouteName();
+
         if ($addDetailsUrl) {
             if ($booking->isRecurring() && isset($date['to']) && !is_null($date['to'])) {
-                $job['details_url'] = route('getrecurredbookingdetails', [$booking->getId(), $date['from']->format('dmYHis')]);
+                $job['details_url'] = route($prefixRouteName . 'getrecurredbookingdetails', [$booking->getId(), $date['from']->format('dmYHis')]);
             } else {
-                $job['details_url' ] = route('getbookingdetails', [$booking->getId()]);
+                $job['details_url' ] = route($prefixRouteName .'getbookingdetails', [$booking->getId()]);
             }
         }
 

@@ -131,4 +131,8 @@ class User extends Authenticatable implements MustVerifyEmail {
 			self::STATUS_MANUAL_VERIFICATION,
 		];
 	}
+        
+	public function isAdminScope() {
+		return in_array(Role::ROLE_ADMIN, $this->getScopes());
+	}
 }

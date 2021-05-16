@@ -1,4 +1,4 @@
-<?php
+    <?php
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -334,8 +334,8 @@ Route::middleware(['auth:api','scope:admin', 'role:admin'])->namespace('Backend\
     Route::get('/bookings/{booking}', 'BookingController@getbookingdetails')->name('admin.getbookingdetails');
 	Route::get('bookings/{booking}/dates/{recurring_date}', 'BookingController@getbookingdetails')->name('admin.getrecurredbookingdetails');
 	// TODO: need to discuss
-    // Route::patch('bookings/{booking}', 'BookingController@updateBooking')->name('api.admin.bookings.update');
-   // Route::patch('bookings/{booking}/dates/{recurring_date}', 'BookingController@updateRecurredBooking')->name('api.admin.bookings.update-recurring');
+    Route::patch('bookings/{booking}', 'BookingController@updateBooking')->name('api.admin.bookings.update');
+   Route::patch('bookings/{booking}/dates/{recurring_date}', 'BookingController@updateRecurredBooking')->name('api.admin.bookings.update-recurring');
 
     Route::get('/allstatus', 'BookingController@listAllStatus');
 	Route::post('chat-details/{bookingid}', 'ChatsController@getchat')->name('chat-details');

@@ -40,7 +40,7 @@ class BookingStatusChanged implements BookingEvent
      * @param Booking $booking
      * @param User $user
      */
-    public function __construct(Booking $booking, User $user, int $oldStatus, int $newStatus)
+    public function __construct(Booking $booking, User $user, int $oldStatus, string $newStatus)
     {
        
         $this->booking = $booking;
@@ -76,7 +76,7 @@ class BookingStatusChanged implements BookingEvent
     /**
      * @return int
      */
-    public function getNewStatus(): int
+    public function getNewStatus(): string
     {
         return $this->newStatus;
     }

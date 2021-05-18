@@ -445,8 +445,10 @@ Route::middleware(['auth:api','scope:admin', 'role:admin'])->namespace('Backend\
 
         Route::get('/badges', 'UserBadgesController@index')
             ->name('api.admin.provider.badges.index');
-        Route::post('/badges/delete', 'UserBadgesController@deleteBadge')
+        
+        Route::post('/badges/{id}/delete', 'UserBadgesController@deleteBadge')
             ->name('api.admin.provider.badges.delete');
+
         Route::post('/badges', 'UserBadgesController@saveBadge')
             ->name('api.admin.provider.badges.save');
 

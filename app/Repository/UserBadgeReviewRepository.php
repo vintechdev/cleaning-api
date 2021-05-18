@@ -10,6 +10,7 @@ class UserBadgeReviewRepository{
 
     public function getBadgeDetails($providerid){
         $badges = UserBadge::query()
+        ->select(["*", "user_badges.id as user_badge_id"])
         ->leftJoin('badges', function($join){
             $join->on('user_badges.badge_id', '=', 'badges.id');
         })

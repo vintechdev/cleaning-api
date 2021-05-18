@@ -4,6 +4,7 @@ namespace App\Services\Bookings;
 
 use App\Booking;
 use App\Bookingstatus;
+use App\Events\BookingStatusChanged;
 use App\Exceptions\Booking\InvalidBookingStatusActionException;
 use App\Exceptions\Booking\InvalidBookingStatusException;
 use App\Exceptions\Booking\RecurringBookingStatusChangeException;
@@ -124,6 +125,11 @@ class BookingStatusChangeEngine
             $status .
             sprintf('. [user: %s, booking: %s, recurreddate: %s]', $this->user->getId(), $this->booking->getId(), ($this->recurredDate ?: ''))
         );
-        return $context->changeStatus($this->booking, $this->user, $this->recurredDate);
+        $oldStatus = $this->booking->getStatus();
+        $booking =  $context->changeStatus($this->booking, $this->user, $this->recurredDate);
+        if ($booking) {
+            event(new BookingStatusChanged($booking, $this->user, $oldStatus, $status));
+        }
+        return $booking;
     }
 }

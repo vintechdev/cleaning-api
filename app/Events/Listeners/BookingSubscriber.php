@@ -100,13 +100,22 @@ class BookingSubscriber
         if($event instanceof BookingStatusChanged) {
             $action = Bookingactivitylog::ACTION_STATUS_CHANGED;
             $oldStatus = Bookingstatus::getStatusNameById($event->getOldStatus());
-            $newStatus = Bookingstatus::getStatusNameById($event->getNewStatus());
+            $newStatus = $event->getNewStatus();
+            if (
+                (auth('api')->user()->getId() !== $event->getUser()->getId()) &&
+                auth('api')->user()->isAdmin()
+            ) {
+                // Admin acting on behalf of someone
+                $detail = 'Status changed from ' . $oldStatus . ' to ' . $newStatus . ' on behalf of user: ' . $event->getUser()->getId();
+                return $this->bookingActivityLogger->addLog($event->getBooking(), auth('api')->user(), $action, $detail);
+            }
             $detail = 'Status changed from ' . $oldStatus . ' to ' . $newStatus;
-        }else{
-            $action = Bookingactivitylog::ACTION_BOOKING_CREATED;
-            $detail = 'New booking created';
+            return $this->bookingActivityLogger->addLog($event->getBooking(), $event->getUser(), $action, $detail);
         }
 
-        $this->bookingActivityLogger->addLog($event->getBooking(), $event->getUser(), $action, $detail);
+        $action = Bookingactivitylog::ACTION_BOOKING_CREATED;
+        $detail = 'New booking created';
+
+        return $this->bookingActivityLogger->addLog($event->getBooking(), $event->getUser(), $action, $detail);
     }
 }

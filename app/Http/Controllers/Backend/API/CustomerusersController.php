@@ -37,6 +37,7 @@ class CustomerusersController extends Controller
         $arr = $this->userbage->getBadgeDetails(Auth::user()->id);
         return response()->json(['data'=>$arr],200);
     }
+    
     public function profilepicture(Request $request){
          $rules = array(
            'file_content'=>'required|string'

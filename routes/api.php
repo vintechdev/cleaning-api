@@ -593,6 +593,7 @@ Route::middleware(['auth:api','scope:admin', 'role:admin'])->namespace('Backend\
 
     Route::post('/badges/{badge}/restore', 'BadgesController@restore')->name('api.badge.restore');
     Route::post('/badges/{badge}/force-delete', 'BadgesController@forceDelete')->name('api.badge.force-delete');
+    Route::post('/upload-badge-picture', 'BadgesController@uploadBadgePicture')->name('api.badge.upload');
 
     Route::get('/discounts', 'DiscountsController@index')
         ->name('api.admin.discounts.index');

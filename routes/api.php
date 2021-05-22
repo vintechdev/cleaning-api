@@ -357,7 +357,7 @@ Route::middleware(['auth:api','scope:admin', 'role:admin'])->namespace('Backend\
      Route::get('user-reviews', 'CustomerusersController@getReviews')->name('api.admin.users.reviews');
 
     // OnceBookingAlternateDate Route
-    Route::get('onceBookingAlternateDates', 'OnceBookingAlternateDatesController@index')->name('api.onceBookingAlternateDate.index');
+   /* Route::get('onceBookingAlternateDates', 'OnceBookingAlternateDatesController@index')->name('api.onceBookingAlternateDate.index');
     Route::get('/onceBookingAlternateDates/{onceBookingAlternateDate}', 'OnceBookingAlternateDatesController@form')->name('api.onceBookingAlternateDate.form');
     Route::post('/onceBookingAlternateDates/save', 'OnceBookingAlternateDatesController@post')->name('api.onceBookingAlternateDate.save');
     Route::post('/onceBookingAlternateDates/{onceBookingAlternateDate}/delete', 'OnceBookingAlternateDatesController@delete')->name('api.onceBookingAlternateDate.delete');
@@ -410,7 +410,7 @@ Route::middleware(['auth:api','scope:admin', 'role:admin'])->namespace('Backend\
     Route::post('/postcodes/{postcode}/delete', 'PostcodesController@delete')->name('api.postcode.delete');
     Route::post('/postcodes/{postcode}/restore', 'PostcodesController@restore')->name('api.postcode.restore');
     Route::post('/postcodes/{postcode}/force-delete', 'PostcodesController@forceDelete')->name('api.postcode.force-delete');
-
+*/
 
     // Providermetadatum Route
     // Route::get('providermetadata', 'ProvidermetadataController@index')->name('api.providermetadatum.index');
@@ -468,7 +468,7 @@ Route::middleware(['auth:api','scope:admin', 'role:admin'])->namespace('Backend\
 
 
     // Providerservicemap Route : TODO : Need to discuss
-    Route::get('providerservicemaps', 'ProviderservicemapsController@index')->name('api.providerservicemap.index');
+    /*Route::get('providerservicemaps', 'ProviderservicemapsController@index')->name('api.providerservicemap.index');
     Route::get('/providerservicemaps/{providerservicemap}', 'ProviderservicemapsController@form')->name('api.providerservicemap.form');
     Route::post('/providerservicemaps/save', 'ProviderservicemapsController@post')->name('api.providerservicemap.save');
     Route::post('/providerservicemaps/{providerservicemap}/delete', 'ProviderservicemapsController@delete')->name('api.providerservicemap.delete');
@@ -575,7 +575,7 @@ Route::middleware(['auth:api','scope:admin', 'role:admin'])->namespace('Backend\
     Route::post('users/{users_uuid}/badges', 'BadgesController@add_badge')->name('api.badge.save');
     Route::post('users/{user_uuid}/badges/{badges_uuid}', 'BadgesController@edit_badge')->name('api.badge.save');
     Route::delete('users/{users_uuid}/badges/{badges_uuid}', 'BadgesController@delete_badge')->name('api.badge.delete_badge') ;
-
+*/
     // Admin Badges crud Routes
     Route::get('/badges', 'BadgesController@index')
         ->name('api.admin.badges.index');
@@ -614,7 +614,7 @@ Route::middleware(['auth:api','scope:admin', 'role:admin'])->namespace('Backend\
         ->name('api.admin.discounts.delete');
 
     // Userbadge Route
-    Route::get('userbadges', 'UserbadgesController@index')->name('api.userbadge.index');
+    /*Route::get('userbadges', 'UserbadgesController@index')->name('api.userbadge.index');
     Route::get('/userbadges/{userbadge}', 'UserbadgesController@form')->name('api.userbadge.form');
     Route::post('/userbadges/save', 'UserbadgesController@post')->name('api.userbadge.save');
     Route::post('/userbadges/{userbadge}/delete', 'UserbadgesController@delete')->name('api.userbadge.delete');
@@ -630,7 +630,7 @@ Route::middleware(['auth:api','scope:admin', 'role:admin'])->namespace('Backend\
     Route::post('/usernotifications/{usernotification}/delete', 'UsernotificationsController@delete')->name('api.usernotification.delete');
     Route::post('/usernotifications/{usernotification}/restore', 'UsernotificationsController@restore')->name('api.usernotification.restore');
     Route::post('/usernotifications/{usernotification}/force-delete', 'UsernotificationsController@forceDelete')->name('api.usernotification.force-delete');
-
+*/
 
     // Bookingactivitylog Route
     Route::get('booking-activity-logs', 'BookingActivityLogsController@index')->name('api.booking.activity-logs');
@@ -642,7 +642,7 @@ Route::middleware(['auth:api','scope:admin', 'role:admin'])->namespace('Backend\
 
 
     // Userreview Route
-    Route::get('userreviews', 'UserreviewsController@index')->name('api.userreview.index');
+   /* Route::get('userreviews', 'UserreviewsController@index')->name('api.userreview.index');
     Route::get('/userreviews/{userreview}', 'UserreviewsController@form')->name('api.userreview.form');
     Route::post('/userreviews/save', 'UserreviewsController@post')->name('api.userreview.save');
     Route::post('/userreviews/{userreview}/delete', 'UserreviewsController@delete')->name('api.userreview.delete');
@@ -665,7 +665,7 @@ Route::middleware(['auth:api','scope:admin', 'role:admin'])->namespace('Backend\
     Route::post('/bookingaddresses/save', 'BookingaddressesController@post')->name('api.bookingaddress.save');
     Route::post('/bookingaddresses/{bookingaddress}/delete', 'BookingaddressesController@delete')->name('api.bookingaddress.delete');
     Route::post('/bookingaddresses/{bookingaddress}/restore', 'BookingaddressesController@restore')->name('api.bookingaddress.restore');
-    Route::post('/bookingaddresses/{bookingaddress}/force-delete', 'BookingaddressesController@forceDelete')->name('api.bookingaddress.force-delete');
+    Route::post('/bookingaddresses/{bookingaddress}/force-delete', 'BookingaddressesController@forceDelete')->name('api.bookingaddress.force-delete');*/
 
 });
 

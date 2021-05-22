@@ -53,6 +53,10 @@ class BookingActivityLogRepository extends AbstractBaseRepository
             $query->where('created_at', '>=', Carbon::parse(Arr::get($filters, 'from'))->format('Y-m-d 00:00:00'));
         }
 
+        if (Arr::get($filters, 'to')) {
+            $query->where('created_at', '<=', Carbon::parse(Arr::get($filters, 'to'))->format('Y-m-d 00:00:00'));
+        }
+
         if (Arr::get($filters, 'postcode')) {
             $query->where('booking_postcode', Arr::get($filters, 'postcode'));
         }

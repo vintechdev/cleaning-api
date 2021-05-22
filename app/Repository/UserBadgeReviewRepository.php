@@ -10,6 +10,7 @@ class UserBadgeReviewRepository{
 
     public function getBadgeDetails($providerid){
         $badges = UserBadge::query()
+        ->select(["*", "user_badges.id as user_badge_id"])
         ->leftJoin('badges', function($join){
             $join->on('user_badges.badge_id', '=', 'badges.id');
         })
@@ -25,6 +26,13 @@ class UserBadgeReviewRepository{
                 })->where('user_reviews.user_review_for',$providerid)->get()->toArray();
                     return $review;
     }
+
+    public function getReviewsByUser($userId){
+      return Userreview::query()->leftJoin('users', function($join){
+          $join->on('user_reviews.user_review_for', '=', 'users.id');
+      })->where('user_reviews.user_review_by',$userId)->get()->toArray();
+    }
+
     public function getAvgRating($providerid)
     {
        # code...
@@ -83,7 +91,7 @@ class UserBadgeReviewRepository{
 
     public function saveUserBadge(Request $request)
     {
-       $userId =  $request->input('user_id') ?  $request->input('user_id') : Auth::id();
+       $userId =  $request->input('user_id') && $request->user()->isAdminScope() ?  $request->input('user_id') : Auth::id();
        $badgeId = $request->input('badgeId');
        $userBadge = UserBadge::query()
            ->firstOrNew(['badge_id' => $badgeId, 'user_id' =>  $userId ]);

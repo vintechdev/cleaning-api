@@ -1,4 +1,4 @@
-<?php
+    <?php
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -89,12 +89,12 @@ Route::middleware(['auth:api', 'role:admin'])->namespace('Backend\API')->prefix(
 });
 Route::post('getdashboard', 'HomeController@dashboard')->name('api.home.getdashboard')->middleware(['auth:api'])->middleware(['scope:customer']);
 
-
-
-Route::middleware(['auth:api','scope:customer,provider'])->namespace('Backend\API')->prefix('v1')->group(function () {
-
+Route::middleware(['auth:api','scope:admin,customer,provider'])->namespace('Backend\API')->prefix('v1')->group(function () {
     Route::patch('bookings/{booking}', 'BookingController@updateBooking')->name('update_booking')->middleware(['can:update,booking']);
     Route::patch('bookings/{booking}/dates/{recurring_date}', 'BookingController@updateRecurredBooking')->name('update_recurred_booking')->middleware(['can:update,booking']);
+});
+
+Route::middleware(['auth:api','scope:customer,provider'])->namespace('Backend\API')->prefix('v1')->group(function () {
     Route::get('/bookings/{booking}', 'BookingController@getbookingdetails')->name('getbookingdetails');
     Route::get('bookings/{booking}/dates/{recurring_date}', 'BookingController@getbookingdetails')->name('getrecurredbookingdetails');
     Route::get('/bookings', 'BookingJobsController@listAllJobs');
@@ -330,19 +330,31 @@ Route::middleware(['auth:api','scope:admin', 'role:admin'])->namespace('Backend\
     //ROUTES
     // Bookings
     Route::get('/bookings', 'BookingJobsController@getAllBookings')->name('api.admin:bookings.index');;
-    Route::get('/bookings/{booking}', 'BookingController@getbookingdetails')->name('api.admin.bookings.details');
-    Route::get('bookings/{booking}/dates/{recurring_date}', 'BookingController@getbookingdetails')->name('api.admin.bookings.recurring-details');
-   // TODO: need to discuss
-    // Route::patch('bookings/{booking}', 'BookingController@updateBooking')->name('api.admin.bookings.update');
-   // Route::patch('bookings/{booking}/dates/{recurring_date}', 'BookingController@updateRecurredBooking')->name('api.admin.bookings.update-recurring');
+    
+    Route::get('/bookings/{booking}', 'BookingController@getbookingdetails')->name('admin.getbookingdetails');
+	Route::get('bookings/{booking}/dates/{recurring_date}', 'BookingController@getbookingdetails')->name('admin.getrecurredbookingdetails');
+	// TODO: need to discuss
+    Route::patch('bookings/{booking}', 'BookingController@updateBooking')->name('api.admin.bookings.update');
+   Route::patch('bookings/{booking}/dates/{recurring_date}', 'BookingController@updateRecurredBooking')->name('api.admin.bookings.update-recurring');
 
+    Route::get('/allstatus', 'BookingController@listAllStatus');
+	Route::post('chat-details/{bookingid}', 'ChatsController@getchat')->name('chat-details');
+      
     // user
     Route::get('users', 'CustomerusersController@index')->name('api.admin.users.index');
+    Route::post('profilepicture', 'CustomerusersController@profilepicture')
+    ->name('profilepicture');
+
+    Route::post('users/{id}/update-status', 'UserController@updateSatus')
+        ->name('api.admin.user.update-status');
+    Route::get('user/status-list', 'UserController@getAllStatus')->name('api.admin.users.status-list');
 
     // user profile
     Route::get('profile', 'CustomerusersController@profile_view')->name('api.admin.users.profile');
     Route::patch('profile', 'CustomerusersController@profile_update')->name('api.admin.users.profile-update');
     Route::patch('change-password', 'CustomerusersController@change_password')->name('api.admin.users.change-password');
+
+     Route::get('user-reviews', 'CustomerusersController@getReviews')->name('api.admin.users.reviews');
 
     // OnceBookingAlternateDate Route
     Route::get('onceBookingAlternateDates', 'OnceBookingAlternateDatesController@index')->name('api.onceBookingAlternateDate.index');
@@ -433,8 +445,10 @@ Route::middleware(['auth:api','scope:admin', 'role:admin'])->namespace('Backend\
 
         Route::get('/badges', 'UserBadgesController@index')
             ->name('api.admin.provider.badges.index');
-        Route::post('/badges/delete', 'UserBadgesController@deleteBadge')
+        
+        Route::post('/badges/{id}/delete', 'UserBadgesController@deleteBadge')
             ->name('api.admin.provider.badges.delete');
+
         Route::post('/badges', 'UserBadgesController@saveBadge')
             ->name('api.admin.provider.badges.save');
 
@@ -579,9 +593,14 @@ Route::middleware(['auth:api','scope:admin', 'role:admin'])->namespace('Backend\
 
     Route::post('/badges/{badge}/restore', 'BadgesController@restore')->name('api.badge.restore');
     Route::post('/badges/{badge}/force-delete', 'BadgesController@forceDelete')->name('api.badge.force-delete');
+    Route::post('/upload-badge-picture', 'BadgesController@uploadBadgePicture')->name('api.badge.upload');
 
     Route::get('/discounts', 'DiscountsController@index')
         ->name('api.admin.discounts.index');
+
+    Route::get('/discounts/types', 'DiscountsController@getDiscountTypes')
+        ->name('api.admin.discounts.types');
+
     Route::post('/discounts', 'DiscountsController@store')
         ->name('api.admin.discounts.create');
 
@@ -591,7 +610,7 @@ Route::middleware(['auth:api','scope:admin', 'role:admin'])->namespace('Backend\
     Route::put('/discounts/{id}', 'DiscountsController@update')
         ->name('api.admin.discounts.update');
 
-    Route::post('/discounts/{id}/delete', 'DiscountsController@delete')
+    Route::delete('/discounts/{id}', 'DiscountsController@delete')
         ->name('api.admin.discounts.delete');
 
     // Userbadge Route
@@ -686,6 +705,4 @@ Route::namespace('Backend\API')->prefix('v1/provider')->middleware(['auth:api,sc
     Route::get('postcodes', 'PostcodesController@get_all_postcodes')->name('api.postcodes.get_all_postcodes')->middleware(['scope:admin']);
      Route::get('postcodes/{postcodes_uuid}', 'PostcodesController@get')->name('api.postcodes.get')->middleware(['scope:admin']);
      Route::delete('postcodes/{postcodes_uuid}', 'PostcodesController@delete_postcodes')->name('api.postcodes.delete')->middleware(['scope:admin']); */
-
-
 });

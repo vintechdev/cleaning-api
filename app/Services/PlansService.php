@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Plan;
 use App\Servicecategory;
+use Illuminate\Support\Facades\DB;
 
 class PlansService
 {
@@ -15,6 +16,7 @@ class PlansService
     {
         $plans = Plan::leftJoin('discounts', function($join) {
             $join->on('discounts.plan_id', '=', 'plans.id');
+            $join->whereNull('discounts.deleted_at');
         });
 
         if ($servicecategory) {

@@ -93,4 +93,5 @@ class AdminSummaryController extends Controller
 
         return response()->json(['data'=> $data, 'count' => $count], 200);
     }
+    
 }

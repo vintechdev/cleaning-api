@@ -37,6 +37,7 @@ class CustomerusersController extends Controller
         $arr = $this->userbage->getBadgeDetails(Auth::user()->id);
         return response()->json(['data'=>$arr],200);
     }
+    
     public function profilepicture(Request $request){
          $rules = array(
            'file_content'=>'required|string'
@@ -51,7 +52,7 @@ class CustomerusersController extends Controller
         }else{
 
             $image = $request->input('file_content'); 
-             $user_id = Auth::user()->id;
+            $user_id = $request->get('user_id') && $request->user()->isAdminScope() ? $request->get('user_id')  : Auth::user()->id;
             
 
             $Customeruser = Customeruser::firstOrNew(['id' => $user_id]);
@@ -241,6 +242,9 @@ class CustomerusersController extends Controller
                 $join->on('user_reviews.user_review_for', 'users.id');
             });  */
             $users->select(['users.*','p.avgrate','j.completed_jobs',DB::raw('case when services.allow_price_override=1 AND provider_service_maps.amount is not null THEN provider_service_maps.amount ELSE services.service_cost END as amount'),'services.unit_type', 'provider_service_maps.type', 'services.is_default_service', 'provider_service_maps.provider_id'])->where('role_id', 2);
+
+            $users->where('users.status', 'active');
+            
             if ($request->has('providertype')){
                     $users->where('users.providertype',$request->has('providertype'));
             }
@@ -354,9 +358,9 @@ class CustomerusersController extends Controller
             return response()->json(['message' => $message], 401);
         }
 
-        //$user = Auth::user();
         //$user_id = $user->id;
         $user_id = $this->getUserIdByLoggedUserIdOrRequest($request);
+        $user = Customeruser::query()->find($user_id);
         $user_password = $user->password;
        
         $Customeruser = Customeruser::firstOrNew(['id' => $user_id]);
@@ -403,7 +407,9 @@ class CustomerusersController extends Controller
         }
 
         $user_id = $this->getUserIdByLoggedUserIdOrRequest($request);   
-        $count = Customeruser::where('email',$request->get('email'))->where('id','!=', $user_id)->count();
+        $count = Customeruser::where('email', $request->get('email'))
+        ->where('id','!=', $user_id)->count();
+        
         $image = $request->input('file_content'); // your base64 encoded
 
         if($count==0){
@@ -436,13 +442,9 @@ class CustomerusersController extends Controller
 
     private function getUserIdByLoggedUserIdOrRequest($request)
     {
+        return $request->get('user_id') && $request->user()->isAdminScope()
+        ?  $request->get('user_id') : Auth::user()->id;
         
-        if (!$userId = $request->get('user_id')) {
-            $user = Auth::user();
-            $userId = $user->id;
-        }
-
-        return $userId;
     }
 
     public function address_view(Request $request)
@@ -477,5 +479,23 @@ class CustomerusersController extends Controller
         $Customeruser = Customeruser::withTrashed()->find($request->get('id'));
         $Customeruser->restore();
         return response()->json(['no_content' => true], 200);
+    }
+
+    /**
+     * Restore the specified resource to storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function getReviews(Request $request)
+    {
+        $reviews = [];
+        if ($request->get('role') == 'provider') {
+            $reviews = $this->userbage->getReviewDetails($request->get('user_id'));
+        } else {
+            $reviews = $this->userbage->getReviewsByUser($request->get('user_id'));
+        }
+
+        return response()->json(['data' => $reviews], 200);
     }
 }

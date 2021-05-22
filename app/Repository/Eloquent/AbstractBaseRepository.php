@@ -28,16 +28,20 @@ abstract class AbstractBaseRepository implements EloquentRepositoryInterface
 
     /**
      * @param array $attributes
+     * @param bool  $isSafe Respects the guarded attributes
      * @return Model
      */
-    public function create(array $attributes): Model
+    public function create(array $attributes, bool $isSafe = false): Model
     {
         $model = $this->getModel();
-        if (
+        if (!$isSafe) {
             $model
-            ->setRawAttributes($attributes)
-            ->save()
-        ) {
+                ->setRawAttributes($attributes);
+        } else {
+            $model->fill($attributes)->save();
+        }
+
+        if ($model->save()) {
             return $model;
         }
 

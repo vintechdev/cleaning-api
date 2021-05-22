@@ -47,7 +47,7 @@ class ProfileRepository extends AbstractBaseRepository
     public function getproviderpostcode(Request $request)
     {
         $search = $request->input('search');
-        $user_id = $request->get('user_id') ? $request->get('user_id') : Auth::user()->id;
+        $user_id = $request->get('user_id') && $request->hast('isAdmin') ? $request->get('user_id') : Auth::user()->id;
 
         $query = Providerpostcodemap::query()->with(['postcode' => function($query) use ($search) {
             if ($search!='' ) {

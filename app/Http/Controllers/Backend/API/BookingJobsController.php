@@ -88,7 +88,11 @@ class BookingJobsController extends Controller
         }
 
         /** @var User $user */
-        $user = User::query()->find($request->get('user_id'));
+        $userId = $request->get('user_id') && $request->user()->isAdminScope() ? 
+        $request->get('user_id') : null;
+        
+        $user =  $userId ? User::query()->find($request->get('user_id')): auth()->user();
+
         $isProvider = $request->get('is_provider');
         try {
             $jobs = $bookingManager->getBookingJobsByStatus(

@@ -117,11 +117,11 @@ class Working_hoursController extends Controller
     }
 
     private function getUserId(Request $request): int {
-         if ($userId = $request->get('user_id')) {
-             return $userId;
-         }
+        if ($request->user()->isAdminScope() && $userId = $request->get('user_id')) {
+            return $userId;
+        }
 
-         return Auth::id();
+        return Auth::id();
     }
 
     //for get address

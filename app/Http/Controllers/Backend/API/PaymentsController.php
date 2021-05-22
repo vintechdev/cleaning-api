@@ -102,6 +102,25 @@ class PaymentsController extends Controller
         ], 200);
     }
 
+    private function getUser()
+    {
+        if (request()->has('isAdmin') && request()->input('user_id')) {
+            return User::query()->findOrFail(request()->input('user_id'));
+        }
+
+        return auth()->user();
+
+    }
+
+    private function getUserId()
+    {
+        if (request()->has('isAdmin') && request()->input('user_id')) {
+            return request()->input('user_id');
+        }
+
+        return auth()->user()->id;
+    }
+
     /**
      * @param StripeService $stripeService
      * @return \Illuminate\Http\JsonResponse
@@ -109,7 +128,9 @@ class PaymentsController extends Controller
      */
     public function retrieveStripeCard(StripeService $stripeService)
     {
-        $data = $stripeService->retrieveStoredPaymentMethod(auth()->user()->id);
+
+
+        $data = $stripeService->retrieveStoredPaymentMethod($this->getUserId());
 
         if (!$data) {
             return response()->json([], 404);
@@ -138,7 +159,7 @@ class PaymentsController extends Controller
         }
 
         try {
-            $associated = $stripeService->associatePaymentMethod($request->get('payment_method_id'), auth()->user());
+            $associated = $stripeService->associatePaymentMethod($request->get('payment_method_id'), $this->getUser());
         } catch (\Exception $exception) {
             return response()->json(['message' => 'Something went wrong while adding card. Please contact administrator'], 500);
         }

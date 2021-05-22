@@ -398,7 +398,8 @@ class CustomerusersController extends Controller
             'last_name' => 'required',
             'email' => 'required|email',
             'mobile_number' => 'required|min:9|max:12',
-            'user_id' => 'nullable|integer|exists:users,id'
+            'user_id' => 'nullable|integer|exists:users,id',
+            'status' => 'nullable|string|'
         ]);
 
         if($validator->fails()){
@@ -419,6 +420,11 @@ class CustomerusersController extends Controller
             $Customeruser->email = $request->get('email');
           
             $Customeruser->mobile_number = $request->get('mobile_number');
+
+            if ($request->user()->isAdminScope() && $request->get('status')) {
+                $Customeruser->status = $request->get('status');   
+            }    
+
             $Customeruser->save();
             $message ='Profile update successfully.';
 

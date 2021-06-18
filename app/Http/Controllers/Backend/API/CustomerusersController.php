@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\Backend\API;
+use App\Service;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 use App\Customeruser;
@@ -263,7 +264,18 @@ class CustomerusersController extends Controller
             }
         
             if($request->has('serviceid')){
-                $servicearr =  explode(',',$request->get('serviceid'));
+                $originalservicearr =  explode(',',$request->get('serviceid'));
+
+                // Ignore non-default service here as we want to increase the list
+                // of providers at this point
+                $servicearr = [];
+                foreach ($originalservicearr as $serviceId) {
+                    /** @var Service $service */
+                    $service = Service::find($serviceId);
+                    if ($service->isDefaultService()) {
+                        $servicearr[] = $serviceId;
+                    }
+                }
              
                 $users->whereIn('provider_service_maps.service_id', $servicearr);
                 $users->groupBy('users.id','p.avgrate','provider_service_maps.amount','provider_service_maps.type','services.is_default_service')->havingRaw("count(provider_service_maps.provider_id)=".count( $servicearr));

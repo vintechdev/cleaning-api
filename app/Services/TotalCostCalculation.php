@@ -49,7 +49,8 @@ class TotalCostCalculation{
             $result['service_details'][$bookingService->getService()->getId()] = [
                 'service_base_cost' => $bookingService->getBaseInitialServiceCost(),
                 'total_hours' => $bookingService->getInitialNumberOfHours(),
-                'service_cost' => $bookingService->getInitialServiceCost()
+                'service_cost' => $bookingService->getInitialServiceCost(),
+                'unit_type' => $bookingService->getService()->unit_type
             ];
         }
 

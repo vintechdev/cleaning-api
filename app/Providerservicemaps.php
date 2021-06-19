@@ -5,7 +5,6 @@ use App\Service;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Emadadly\LaravelUuid\Uuids;
 use Laravel\Passport\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
 
@@ -15,7 +14,6 @@ class Providerservicemaps extends Model
     const SERVICE_TYPE_ONCEOFF = 'billingrateonetime';
 
     use HasApiTokens, Notifiable;
-    use Uuids;
     protected $table = 'provider_service_maps';
     use SoftDeletes;
     protected $fillable = ['id'];

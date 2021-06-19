@@ -25,7 +25,7 @@ class HomeController extends Controller
         $user_id = Auth::user()->id;
         $todays_date = date("Y-m-d");
 
-        $data['annoucements'] = DB::table('annoucements')
+        $data['annoucements'] = DB::table('announcements')
         ->where('user_id', $user_id)
         ->where('status', 'unread')
         ->get();

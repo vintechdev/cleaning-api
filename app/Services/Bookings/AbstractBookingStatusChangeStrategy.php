@@ -16,6 +16,7 @@ use App\Services\RecurringBookingService;
 use App\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Class AbstractBookingStatusChangeStrategy
@@ -105,6 +106,7 @@ abstract class AbstractBookingStatusChangeStrategy implements BookingStatusChang
 
             $this->saveBookingNote($booking, $user);
         } catch (\Exception $exception) {
+            Log::error('Failed changing status. Error: ' . $exception->getMessage());
             DB::rollBack();
             throw $exception;
         }

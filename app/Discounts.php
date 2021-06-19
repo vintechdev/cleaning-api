@@ -4,7 +4,6 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Emadadly\LaravelUuid\Uuids;
 use Laravel\Passport\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
 
@@ -13,11 +12,10 @@ class Discounts extends Model
     const DISCOUNT_TYPE_PERCENTAGE = 'percentage';
     const DISCOUNT_TYPE_FLAT = 'flat';
 
-    use uuids;
 	use HasApiTokens, Notifiable;
     protected $table = 'discounts';
     use SoftDeletes;
-    protected $fillable = ['id'];
+    protected $guarded = ['id'];
     public $incrementing = false;
 
     public function getDiscount(): float
@@ -38,5 +36,16 @@ class Discounts extends Model
     public function isPromoDiscount(): bool
     {
         return !is_null($this->promocode);
+    }
+
+    /**
+     * @return string[]
+     */
+    public static function getTypes(): array
+    {
+        return [
+            self::DISCOUNT_TYPE_PERCENTAGE,
+            self::DISCOUNT_TYPE_FLAT
+        ];
     }
 }

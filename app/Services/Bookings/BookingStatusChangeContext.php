@@ -3,14 +3,12 @@
 namespace App\Services\Bookings;
 
 use App\Booking;
-use App\Events\BookingStatusChanged;
-use App\Exceptions\Booking\BookingStatusChangeException;
-use App\Exceptions\Booking\InvalidBookingStatusActionException;
 use App\Exceptions\Booking\RecurringBookingStatusChangeException;
 use App\Exceptions\Booking\UnauthorizedAccessException;
 use App\Services\Bookings\Interfaces\BookingStatusChangeStrategyInterface;
 use App\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Class BookingStatusChangeContext
@@ -42,13 +40,8 @@ class BookingStatusChangeContext
      */
     public function changeStatus(Booking $booking, User $user, Carbon $recurredDate = null): ?Booking
     {
-        $oldStatus = $booking->getStatus();
         $booking = $this->bookingStatusChangeStrategy->changeStatus($booking, $user, $recurredDate);
-        if ($booking) {
-          
-            event(new BookingStatusChanged($booking, $user, $oldStatus, $booking->getStatus()));
-        }
-
+        Log::info('Booking status changed.');
         return $booking;
     }
 }

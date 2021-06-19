@@ -1,4 +1,4 @@
-<?php
+    <?php
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -89,12 +89,12 @@ Route::middleware(['auth:api', 'role:admin'])->namespace('Backend\API')->prefix(
 });
 Route::post('getdashboard', 'HomeController@dashboard')->name('api.home.getdashboard')->middleware(['auth:api'])->middleware(['scope:customer']);
 
-
-
-Route::middleware(['auth:api','scope:customer,provider'])->namespace('Backend\API')->prefix('v1')->group(function () {
-    
+Route::middleware(['auth:api','scope:admin,customer,provider'])->namespace('Backend\API')->prefix('v1')->group(function () {
     Route::patch('bookings/{booking}', 'BookingController@updateBooking')->name('update_booking')->middleware(['can:update,booking']);
     Route::patch('bookings/{booking}/dates/{recurring_date}', 'BookingController@updateRecurredBooking')->name('update_recurred_booking')->middleware(['can:update,booking']);
+});
+
+Route::middleware(['auth:api','scope:customer,provider'])->namespace('Backend\API')->prefix('v1')->group(function () {
     Route::get('/bookings/{booking}', 'BookingController@getbookingdetails')->name('getbookingdetails');
     Route::get('bookings/{booking}/dates/{recurring_date}', 'BookingController@getbookingdetails')->name('getrecurredbookingdetails');
     Route::get('/bookings', 'BookingJobsController@listAllJobs');
@@ -116,6 +116,8 @@ Route::middleware(['auth:api','scope:customer,provider'])->namespace('Backend\AP
     Route::get('/provider-notifications', 'NotificationLogsController@getNotifications')->name('api.provider-notifications');
 
     Route::post('update-push-notification-logs', 'NotificationLogsController@updatePushNotificationLog')->name('api.push-notifcation-logs.update');
+
+    Route::put('users', 'UserController@updateUser')->name('api.update-user');
 });
 
 Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->prefix('v1/customer')->group(function () {
@@ -188,8 +190,6 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
     
     Route::get('getratingreview', 'UserreviewController@getratingreview')->name('api.Userreview.getratingreview')->middleware(['scope:customer']);
 
-    Route::get('getcancelbookingdata/{uuid}', 'UserreviewController@getcancelbookingdata')->name('api.Userreview.getcancelbookingdata')->middleware(['scope:customer']);
-
     Route::get('getapprovedbookingdetails', 'BookingController@getapprovedbookingdetails')->name('api.Booking.getapprovedbookingdetails')->middleware(['scope:customer']);
 
     Route::get('getcancelledbookingdetails', 'BookingController@getcancelledbookingdetails')->name('api.Booking.getcancelledbookingdetails')->middleware(['scope:customer']);
@@ -227,7 +227,7 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
      Route::get('getbadges', 'CustomerusersController@getBadges')->name('getbadges')->middleware(['scope:provider']);
 
     
-    Route::get('getservicebyprovider/{pid}', 'BookingController@GetServiceByProvider')->middleware(['scope:provider']);
+     Route::get('getservicebyprovider/{pid}', 'BookingController@GetServiceByProvider')->middleware(['scope:provider']);
      Route::get('getservicebyprovider/{userId}/categories/{categoryId}', 'BookingController@getProviderServicesByCategory')->middleware(['scope:provider']);
 
     Route::get('getappointment/{uuid}', 'BookingController@provider_getappointment')->name('api.Booking.provider_getappointment')->middleware(['scope:provider']);
@@ -268,7 +268,7 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
      Route::patch('profile_update', 'CustomerusersController@profile_update')->name('api.Customeruser.profile_update')->middleware(['scope:provider']);
 
 
-     
+
      Route::patch('editworking_hours/{uuid}', 'Working_hoursController@editworking_hours')->name('api.Working_hours.editworking_hours')->middleware(['scope:provider']);
 
 
@@ -320,11 +320,44 @@ Route::middleware(['auth:api', 'role:customer'])->namespace('Backend\API')->pref
 
  });
 
-Route::middleware(['auth:api','scope:admin'])->namespace('Backend\API')->prefix('v1/backend')->group(function () {
+# save fcm token forcefully on mobile login
+Route::middleware(['auth:api'])->prefix('v1/auth')->group(function () {
+    Route::post('/device-token', 'AuthController@saveDeviceToken')->name('api.auth.device-token');
+});
+
+// ADMIN API
+Route::middleware(['auth:api','scope:admin', 'role:admin'])->namespace('Backend\API')->prefix('v1/backend')->group(function () {
     //ROUTES
+    // Bookings
+    Route::get('/bookings', 'BookingJobsController@getAllBookings')->name('api.admin:bookings.index');;
+    
+    Route::get('/bookings/{booking}', 'BookingController@getbookingdetails')->name('admin.getbookingdetails');
+	Route::get('bookings/{booking}/dates/{recurring_date}', 'BookingController@getbookingdetails')->name('admin.getrecurredbookingdetails');
+	// TODO: need to discuss
+    Route::patch('bookings/{booking}', 'BookingController@updateBooking')->name('api.admin.bookings.update');
+   Route::patch('bookings/{booking}/dates/{recurring_date}', 'BookingController@updateRecurredBooking')->name('api.admin.bookings.update-recurring');
+
+    Route::get('/allstatus', 'BookingController@listAllStatus');
+	Route::post('chat-details/{bookingid}', 'ChatsController@getchat')->name('chat-details');
+      
+    // user
+    Route::get('users', 'CustomerusersController@index')->name('api.admin.users.index');
+    Route::post('profilepicture', 'CustomerusersController@profilepicture')
+    ->name('profilepicture');
+
+    Route::post('users/{id}/update-status', 'UserController@updateSatus')
+        ->name('api.admin.user.update-status');
+    Route::get('user/status-list', 'UserController@getAllStatus')->name('api.admin.users.status-list');
+
+    // user profile
+    Route::get('profile', 'CustomerusersController@profile_view')->name('api.admin.users.profile');
+    Route::patch('profile', 'CustomerusersController@profile_update')->name('api.admin.users.profile-update');
+    Route::patch('change-password', 'CustomerusersController@change_password')->name('api.admin.users.change-password');
+
+     Route::get('user-reviews', 'CustomerusersController@getReviews')->name('api.admin.users.reviews');
 
     // OnceBookingAlternateDate Route
-    Route::get('onceBookingAlternateDates', 'OnceBookingAlternateDatesController@index')->name('api.onceBookingAlternateDate.index');
+   /* Route::get('onceBookingAlternateDates', 'OnceBookingAlternateDatesController@index')->name('api.onceBookingAlternateDate.index');
     Route::get('/onceBookingAlternateDates/{onceBookingAlternateDate}', 'OnceBookingAlternateDatesController@form')->name('api.onceBookingAlternateDate.form');
     Route::post('/onceBookingAlternateDates/save', 'OnceBookingAlternateDatesController@post')->name('api.onceBookingAlternateDate.save');
     Route::post('/onceBookingAlternateDates/{onceBookingAlternateDate}/delete', 'OnceBookingAlternateDatesController@delete')->name('api.onceBookingAlternateDate.delete');
@@ -377,7 +410,7 @@ Route::middleware(['auth:api','scope:admin'])->namespace('Backend\API')->prefix(
     Route::post('/postcodes/{postcode}/delete', 'PostcodesController@delete')->name('api.postcode.delete');
     Route::post('/postcodes/{postcode}/restore', 'PostcodesController@restore')->name('api.postcode.restore');
     Route::post('/postcodes/{postcode}/force-delete', 'PostcodesController@forceDelete')->name('api.postcode.force-delete');
-
+*/
 
     // Providermetadatum Route
     // Route::get('providermetadata', 'ProvidermetadataController@index')->name('api.providermetadatum.index');
@@ -387,11 +420,55 @@ Route::middleware(['auth:api','scope:admin'])->namespace('Backend\API')->prefix(
     // Route::post('/providermetadata/{providermetadatum}/restore', 'ProvidermetadataController@restore')->name('api.providermetadatum.restore');
     // Route::post('/providermetadata/{providermetadatum}/force-delete', 'ProvidermetadataController@forceDelete')->name('api.providermetadatum.force-delete');
 
+   // provider working hours
+
+    Route::prefix('/provider')->group(function () {
+        Route::post('/working-hours/add', 'Working_hoursController@addworking_hours')
+            ->name('api.admin.provider.working-hours.create');
+        Route::get('/working-hours', 'Working_hoursController@getworking_hours')
+            ->name('api.admin.provider.working-hours.index');
+
+        Route::get('/services/{pid}', 'BookingController@GetServiceByProvider')
+            ->name('api.admin.provider.services.index');
+        Route::get('/services/{userId}/categories/{categoryId}', 'BookingController@getProviderServicesByCategory')
+            ->name('api.admin.provider.category-services');;
+
+        Route::post('/services', 'ServiceController@save_provider_servicemap')
+            ->name('api.admin.provider.services.save');
+
+        Route::get('/postcodes', 'PostcodesController@getproviderpostcode')
+            ->name('api.admin.provider.postcodes.index');
+        Route::post('/postcodes/delete', 'PostcodesController@deleteproviderpostcode')
+            ->name('api.admin.provider.postcodes.delete');
+        Route::post('/postcodes', 'PostcodesController@addproviderpostcode')
+            ->name('api.admin.provider.postcodes.create');
+
+        Route::get('/badges', 'UserBadgesController@index')
+            ->name('api.admin.provider.badges.index');
+        
+        Route::post('/badges/{id}/delete', 'UserBadgesController@deleteBadge')
+            ->name('api.admin.provider.badges.delete');
+
+        Route::post('/badges', 'UserBadgesController@saveBadge')
+            ->name('api.admin.provider.badges.save');
 
 
+    });
 
-    // Providerservicemap Route
-    Route::get('providerservicemaps', 'ProviderservicemapsController@index')->name('api.providerservicemap.index');
+    Route::prefix('/summary')->group(function () {
+        Route::get('/new-providers', 'AdminSummaryController@getNewProviders')
+            ->name('api.admin.new-providers');
+
+        Route::get('/new-users', 'AdminSummaryController@getNewUsers')
+            ->name('api.admin.new-users');
+
+        Route::get('/new-bookings', 'AdminSummaryController@getNewBookings')
+            ->name('api.admin.new-bookings');
+    });
+
+
+    // Providerservicemap Route : TODO : Need to discuss
+    /*Route::get('providerservicemaps', 'ProviderservicemapsController@index')->name('api.providerservicemap.index');
     Route::get('/providerservicemaps/{providerservicemap}', 'ProviderservicemapsController@form')->name('api.providerservicemap.form');
     Route::post('/providerservicemaps/save', 'ProviderservicemapsController@post')->name('api.providerservicemap.save');
     Route::post('/providerservicemaps/{providerservicemap}/delete', 'ProviderservicemapsController@delete')->name('api.providerservicemap.delete');
@@ -471,7 +548,6 @@ Route::middleware(['auth:api','scope:admin'])->namespace('Backend\API')->prefix(
     Route::post('/useractivitylogs/{useractivitylog}/restore', 'UseractivitylogsController@restore')->name('api.useractivitylog.restore');
     Route::post('/useractivitylogs/{useractivitylog}/force-delete', 'UseractivitylogsController@forceDelete')->name('api.useractivitylog.force-delete');
 
-
     // Apilog Route
     Route::get('apilogs', 'ApilogsController@index')->name('api.apilog.index');
     Route::get('/apilogs/{apilog}', 'ApilogsController@form')->name('api.apilog.form');
@@ -499,14 +575,46 @@ Route::middleware(['auth:api','scope:admin'])->namespace('Backend\API')->prefix(
     Route::post('users/{users_uuid}/badges', 'BadgesController@add_badge')->name('api.badge.save');
     Route::post('users/{user_uuid}/badges/{badges_uuid}', 'BadgesController@edit_badge')->name('api.badge.save');
     Route::delete('users/{users_uuid}/badges/{badges_uuid}', 'BadgesController@delete_badge')->name('api.badge.delete_badge') ;
+*/
+    // Admin Badges crud Routes
+    Route::get('/badges', 'BadgesController@index')
+        ->name('api.admin.badges.index');
+    Route::post('/badges', 'BadgesController@store')
+        ->name('api.admin.badges.create');
 
+    Route::get('/badges/{id}', 'BadgesController@show')
+        ->name('api.admin.badges.edit');
+
+    Route::put('/badges/{id}', 'BadgesController@update')
+        ->name('api.admin.badges.update');
+
+    Route::post('/badges/{id}/delete', 'BadgesController@delete')
+        ->name('api.admin.badges.delete');
 
     Route::post('/badges/{badge}/restore', 'BadgesController@restore')->name('api.badge.restore');
     Route::post('/badges/{badge}/force-delete', 'BadgesController@forceDelete')->name('api.badge.force-delete');
+    Route::post('/upload-badge-picture', 'BadgesController@uploadBadgePicture')->name('api.badge.upload');
 
-    
+    Route::get('/discounts', 'DiscountsController@index')
+        ->name('api.admin.discounts.index');
+
+    Route::get('/discounts/types', 'DiscountsController@getDiscountTypes')
+        ->name('api.admin.discounts.types');
+
+    Route::post('/discounts', 'DiscountsController@store')
+        ->name('api.admin.discounts.create');
+
+    Route::get('/discounts/{id}', 'DiscountsController@show')
+        ->name('api.admin.discounts.edit');
+
+    Route::put('/discounts/{id}', 'DiscountsController@update')
+        ->name('api.admin.discounts.update');
+
+    Route::delete('/discounts/{id}', 'DiscountsController@delete')
+        ->name('api.admin.discounts.delete');
+
     // Userbadge Route
-    Route::get('userbadges', 'UserbadgesController@index')->name('api.userbadge.index');
+    /*Route::get('userbadges', 'UserbadgesController@index')->name('api.userbadge.index');
     Route::get('/userbadges/{userbadge}', 'UserbadgesController@form')->name('api.userbadge.form');
     Route::post('/userbadges/save', 'UserbadgesController@post')->name('api.userbadge.save');
     Route::post('/userbadges/{userbadge}/delete', 'UserbadgesController@delete')->name('api.userbadge.delete');
@@ -522,19 +630,19 @@ Route::middleware(['auth:api','scope:admin'])->namespace('Backend\API')->prefix(
     Route::post('/usernotifications/{usernotification}/delete', 'UsernotificationsController@delete')->name('api.usernotification.delete');
     Route::post('/usernotifications/{usernotification}/restore', 'UsernotificationsController@restore')->name('api.usernotification.restore');
     Route::post('/usernotifications/{usernotification}/force-delete', 'UsernotificationsController@forceDelete')->name('api.usernotification.force-delete');
-
+*/
 
     // Bookingactivitylog Route
-    Route::get('bookingactivitylogs', 'BookingactivitylogsController@index')->name('api.bookingactivitylog.index');
-    Route::get('/bookingactivitylogs/{bookingactivitylog}', 'BookingactivitylogsController@form')->name('api.bookingactivitylog.form');
-    Route::post('/bookingactivitylogs/save', 'BookingactivitylogsController@post')->name('api.bookingactivitylog.save');
-    Route::post('/bookingactivitylogs/{bookingactivitylog}/delete', 'BookingactivitylogsController@delete')->name('api.bookingactivitylog.delete');
-    Route::post('/bookingactivitylogs/{bookingactivitylog}/restore', 'BookingactivitylogsController@restore')->name('api.bookingactivitylog.restore');
-    Route::post('/bookingactivitylogs/{bookingactivitylog}/force-delete', 'BookingactivitylogsController@forceDelete')->name('api.bookingactivitylog.force-delete');
+    Route::get('booking-activity-logs', 'BookingActivityLogsController@index')->name('api.booking.activity-logs');
+   // Route::get('/bookingactivitylogs/{bookingactivitylog}', 'BookingActivityLogsController@form')->name('api.bookingactivitylog.form');
+   // Route::post('/bookingactivitylogs/save', 'BookingActivityLogsController@post')->name('api.bookingactivitylog.save');
+   // Route::post('/bookingactivitylogs/{bookingactivitylog}/delete', 'BookingActivityLogsController@delete')->name('api.bookingactivitylog.delete');
+   // Route::post('/bookingactivitylogs/{bookingactivitylog}/restore', 'BookingActivityLogsController@restore')->name('api.bookingactivitylog.restore');
+   // Route::post('/bookingactivitylogs/{bookingactivitylog}/force-delete', 'BookingActivityLogsController@forceDelete')->name('api.bookingactivitylog.force-delete');
 
 
     // Userreview Route
-    Route::get('userreviews', 'UserreviewsController@index')->name('api.userreview.index');
+   /* Route::get('userreviews', 'UserreviewsController@index')->name('api.userreview.index');
     Route::get('/userreviews/{userreview}', 'UserreviewsController@form')->name('api.userreview.form');
     Route::post('/userreviews/save', 'UserreviewsController@post')->name('api.userreview.save');
     Route::post('/userreviews/{userreview}/delete', 'UserreviewsController@delete')->name('api.userreview.delete');
@@ -551,22 +659,13 @@ Route::middleware(['auth:api','scope:admin'])->namespace('Backend\API')->prefix(
     Route::post('/bookingquestions/{bookingquestion}/force-delete', 'BookingquestionsController@forceDelete')->name('api.bookingquestion.force-delete');
 
 
-    // Bookingchange Route
-    Route::get('bookingchanges', 'BookingchangesController@index')->name('api.bookingchange.index');
-    Route::get('/bookingchanges/{bookingchange}', 'BookingchangesController@form')->name('api.bookingchange.form');
-    Route::post('/bookingchanges/save', 'BookingchangesController@post')->name('api.bookingchange.save');
-    Route::post('/bookingchanges/{bookingchange}/delete', 'BookingchangesController@delete')->name('api.bookingchange.delete');
-    Route::post('/bookingchanges/{bookingchange}/restore', 'BookingchangesController@restore')->name('api.bookingchange.restore');
-    Route::post('/bookingchanges/{bookingchange}/force-delete', 'BookingchangesController@forceDelete')->name('api.bookingchange.force-delete');
-
-
     // Bookingaddress Route
     Route::get('bookingaddresses', 'BookingaddressesController@index')->name('api.bookingaddress.index');
     Route::get('/bookingaddresses/{bookingaddress}', 'BookingaddressesController@form')->name('api.bookingaddress.form');
     Route::post('/bookingaddresses/save', 'BookingaddressesController@post')->name('api.bookingaddress.save');
     Route::post('/bookingaddresses/{bookingaddress}/delete', 'BookingaddressesController@delete')->name('api.bookingaddress.delete');
     Route::post('/bookingaddresses/{bookingaddress}/restore', 'BookingaddressesController@restore')->name('api.bookingaddress.restore');
-    Route::post('/bookingaddresses/{bookingaddress}/force-delete', 'BookingaddressesController@forceDelete')->name('api.bookingaddress.force-delete');
+    Route::post('/bookingaddresses/{bookingaddress}/force-delete', 'BookingaddressesController@forceDelete')->name('api.bookingaddress.force-delete');*/
 
 });
 
@@ -606,6 +705,4 @@ Route::namespace('Backend\API')->prefix('v1/provider')->middleware(['auth:api,sc
     Route::get('postcodes', 'PostcodesController@get_all_postcodes')->name('api.postcodes.get_all_postcodes')->middleware(['scope:admin']);
      Route::get('postcodes/{postcodes_uuid}', 'PostcodesController@get')->name('api.postcodes.get')->middleware(['scope:admin']);
      Route::delete('postcodes/{postcodes_uuid}', 'PostcodesController@delete_postcodes')->name('api.postcodes.delete')->middleware(['scope:admin']); */
-
-
 });

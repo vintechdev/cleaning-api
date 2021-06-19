@@ -4,6 +4,7 @@ namespace App\Services\Bookings;
 
 use App\Booking;
 use App\Bookingstatus;
+use App\Events\BookingStatusChanged;
 use App\Exceptions\Booking\InvalidBookingStatusActionException;
 use App\Exceptions\Booking\InvalidBookingStatusException;
 use App\Exceptions\Booking\RecurringBookingStatusChangeException;
@@ -14,6 +15,7 @@ use App\Services\Bookings\Builder\BookingStatusChangeContextBuilder;
 use App\Services\RecurringBookingService;
 use App\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Class BookingStatusChangeEngine
@@ -118,6 +120,16 @@ class BookingStatusChangeEngine
     public function changeStatus(string $status)
     {
         $context = $this->statusChangeContextBuilder->buildContext($status, $this->statusChangeParameters);
-        return $context->changeStatus($this->booking, $this->user, $this->recurredDate);
+        Log::info(
+            'Attempting to change status of booking to ' .
+            $status .
+            sprintf('. [user: %s, booking: %s, recurreddate: %s]', $this->user->getId(), $this->booking->getId(), ($this->recurredDate ?: ''))
+        );
+        $oldStatus = $this->booking->getStatus();
+        $booking =  $context->changeStatus($this->booking, $this->user, $this->recurredDate);
+        if ($booking) {
+            event(new BookingStatusChanged($booking, $this->user, $oldStatus, $status));
+        }
+        return $booking;
     }
 }

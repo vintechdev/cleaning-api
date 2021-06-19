@@ -6,12 +6,10 @@ use App\Working_hours;
 use Illuminate\Http\Request;
 use App\Http\Requests\Backend\Working_hoursRequest;
 use App\Http\Resources\Working_hoursCollection;
-use App\Http\Resources\Working_hours as Working_hoursResource;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
-use Auth;
-use Hash;
-use DB;
+
 use App\Repository\Eloquent\ProfileRepository;
 
 class Working_hoursController extends Controller
@@ -82,7 +80,7 @@ class Working_hoursController extends Controller
 
         $data = $request->data;
 
-        $res = app(ProfileRepository::class)->createworkinghours($data);
+        $res = app(ProfileRepository::class)->createworkinghours($data, $request->input('user_id', null));
         
         if($res){
             return response()->json(['success' => true], 200);
@@ -96,8 +94,6 @@ class Working_hoursController extends Controller
     public function editworking_hours(Request $request, $uuid)
     {
         $validator = Validator::make($request->all(), [
-            // 'type' => 'required',
-            
             'working_days' => 'required',
             'start_time' => 'required',
             'end_time' => 'required'
@@ -108,31 +104,32 @@ class Working_hoursController extends Controller
             return response()->json(['message' => $message], 401);
         }
 
-    
+        $userId = $this->getUserId($request);
 
-        $user = Auth::user();
-        $user_id = $user->id;
-       
-            $Working_hours = Working_hours::firstOrNew(['uuid' => $uuid]);
-            // $Useraddress->type = $request->get('type');
-            $Working_hours->working_days = $request->get('working_days');
-            $Working_hours->start_time = $request->get('start_time');
-            $Working_hours->end_time = $request->get('end_time');
-            $Working_hours->save();
-            
-            $responseCode = $request->get('id') ? 200 : 201;
-            return response()->json(['saved' => $Working_hours], $responseCode);
-        
+        $Working_hours = Working_hours::firstOrNew(['uuid' => $uuid]);
+        $Working_hours->working_days = $request->get('working_days');
+        $Working_hours->start_time = $request->get('start_time');
+        $Working_hours->end_time = $request->get('end_time');
+        $Working_hours->save();
+        $responseCode = $request->get('id') ? 200 : 201;
+
+        return response()->json(['saved' => $Working_hours], $responseCode);
+    }
+
+    private function getUserId(Request $request): int {
+        if ($request->user()->isAdminScope() && $userId = $request->get('user_id')) {
+            return $userId;
+        }
+
+        return Auth::id();
     }
 
     //for get address
     public function getworking_hours(Request $request)
     {
-        $user = Auth::user();
-        $user_id = $user->id;
-        $working_hours = Working_hours::where('provider_id',$user_id)->get()->toArray();
+        $userId = $this->getUserId($request);
+        $working_hours = Working_hours::query()->where('provider_id', $userId)->get()->toArray();
         return response()->json(['data' => $working_hours], 200);
-       
     }
 
     /**

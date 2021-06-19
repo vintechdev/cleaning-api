@@ -1,21 +1,23 @@
 <?php 
 namespace App\Repository;
-use App\Providerservicemaps;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use App\Userreview;
 use App\UserBadge;
-use App\Badges;
 use Illuminate\Http\Request;
 use config;
+
 class UserBadgeReviewRepository{
 
     public function getBadgeDetails($providerid){
-        $badges = UserBadge::leftJoin('badges', function($join){
-                    $join->on('user_badges.badge_id', '=', 'badges.id');
-                })->where('user_badges.user_id',$providerid)
-                ->get()->toArray();
-                return $badges;
+        $badges = UserBadge::query()
+        ->select(["*", "user_badges.id as user_badge_id"])
+        ->leftJoin('badges', function($join){
+            $join->on('user_badges.badge_id', '=', 'badges.id');
+        })
+        ->where('user_badges.user_id', $providerid)
+        ->get()->toArray();
+
+        return $badges;
     }
 
     public function getReviewDetails($providerid){
@@ -24,6 +26,13 @@ class UserBadgeReviewRepository{
                 })->where('user_reviews.user_review_for',$providerid)->get()->toArray();
                     return $review;
     }
+
+    public function getReviewsByUser($userId){
+      return Userreview::query()->leftJoin('users', function($join){
+          $join->on('user_reviews.user_review_for', '=', 'users.id');
+      })->where('user_reviews.user_review_by',$userId)->get()->toArray();
+    }
+
     public function getAvgRating($providerid)
     {
        # code...
@@ -79,9 +88,33 @@ class UserBadgeReviewRepository{
        return $rev;
 
     }
-    
 
+    public function saveUserBadge(Request $request)
+    {
+       $userId =  $request->input('user_id') && $request->user()->isAdminScope() ?  $request->input('user_id') : Auth::id();
+       $badgeId = $request->input('badgeId');
+       $userBadge = UserBadge::query()
+           ->firstOrNew(['badge_id' => $badgeId, 'user_id' =>  $userId ]);
+
+       $userBadge->user_id = $userId;
+       $userBadge->badge_id = $badgeId;
+       $userBadge->save();
+       $userBadge->load(['badge']);
+
+       return $userBadge;
+    }
+
+    public function deleteBadge(Request $request) {
+        $userBadge = UserBadge::query()->where('id', $request->get('userBadgeId'))
+        ->whereNull('deleted_at')->first();
+
+        if (!$userBadge) {
+            throw new \Exception('Badge does not exist!');
+        }
+
+        try {
+            return $userBadge->delete() ? true :false;
+        } catch (\Exception $exception) {}
+        return false;
+    }
 }
-
-
-?>

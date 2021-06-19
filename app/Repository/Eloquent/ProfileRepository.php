@@ -6,10 +6,8 @@ use App\Working_hours;
 use App\Providerpostcodemap;
 use App\Providerservicemaps;
 use App\StripeUserMetadata;
-use App\Http\Resources\Chat;
 use Illuminate\Http\Request;
-use Auth;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 
 class ProfileRepository extends AbstractBaseRepository
@@ -29,7 +27,7 @@ class ProfileRepository extends AbstractBaseRepository
         $wh  = Working_hours::where('provider_id',$user_id)->get()->count();
         
         //service mapping
-        $ps  = 1;//Providerservicemaps::where('provider_id',$user_id)->get()->count();
+        $ps  = Providerservicemaps::where('provider_id',$user_id)->get()->count();
 
         //post code mapping
         $pc  = Providerpostcodemap::where('provider_id',$user_id)->get()->count();
@@ -48,25 +46,29 @@ class ProfileRepository extends AbstractBaseRepository
 
     public function getproviderpostcode(Request $request)
     {
-        $search = $request->search;
-        $user_id = Auth::user()->id;
-        $query =  Providerpostcodemap::with([ 'postcode' => function($query) use ($search) {
-            if($search!=''){
-                $query->Where('postcode', 'like', '%' . $search . '%');
+        $search = $request->input('search');
+        $user_id = $request->get('user_id') && $request->hast('isAdmin') ? $request->get('user_id') : Auth::user()->id;
+
+        $query = Providerpostcodemap::query()->with(['postcode' => function($query) use ($search) {
+            if ($search!='' ) {
+                $query->where('postcode', 'like', '%' . $search . '%');
             }
-          }]);
-      
-        $res = $query->where('provider_id',$user_id)->get()->toArray();
-       return $res;
+        }]);
+
+        $res = $query->where('provider_id', $user_id)->get()->toArray();
+
+        return $res;
     }
-    public function addproviderpostcode($postcode){
-        $user_id = Auth::user()->id;
-        $Providerpostcodemap = Providerpostcodemap::firstOrNew(['provider_id' =>$user_id,'postcode_id'=>$postcode]);
+
+    public function addproviderpostcode($postcode, $userId = null) {
+        $user_id = $userId ? $userId : Auth::user()->id;
+        $Providerpostcodemap = Providerpostcodemap::query()->firstOrNew(['provider_id' =>$user_id,'postcode_id'=>$postcode]);
         $Providerpostcodemap->provider_id = $user_id;
         $Providerpostcodemap->postcode_id = $postcode;
      
         if($Providerpostcodemap->save()){
-            return Providerpostcodemap::with('postcode')->where('id',$Providerpostcodemap->id)->get()->toArray();
+            return Providerpostcodemap::query()->with('postcode')
+                ->where('id',$Providerpostcodemap->id)->get()->toArray();
         }else{
             return false;
         }
@@ -74,16 +76,19 @@ class ProfileRepository extends AbstractBaseRepository
     public function deleteproviderpostcode($postcode)
     {
         # code...
-        $arr = Providerpostcodemap::where('id',$postcode)->delete();
+        $query = Providerpostcodemap::query();
+        $arr = $query->where('id', $postcode)->delete();
+
         if($arr){
             return true;
         }else{
             return false;
         }
     }
-    public function createworkinghours($data)
+
+    public function createworkinghours($data, $userId = null)
     {
-        $user_id = Auth::user()->id;
+        $user_id = $userId ? $userId : Auth::user()->id;
         $days = array('monday','tuesday','wednesday','thursday','friday','saturnday','sunday');
         if(count($data)>0){
            $postday = array_column($data,'working_days') ;

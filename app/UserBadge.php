@@ -11,4 +11,8 @@ class UserBadge extends Model
     use SoftDeletes;
     protected $fillable = ['id'];
 
+    public function badge()
+    {
+        return $this->belongsTo(Badges::class);
+    }
 }

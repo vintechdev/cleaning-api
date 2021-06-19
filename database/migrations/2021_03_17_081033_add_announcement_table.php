@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateOnceBookingAlternateDatesTable extends Migration
+class AddAnnouncementTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,12 +13,13 @@ class CreateOnceBookingAlternateDatesTable extends Migration
      */
     public function up()
     {
-        Schema::create('once_booking_alternate_dates', function (Blueprint $table) {
+        Schema::create('announcements', function (Blueprint $table) {
             $table->increments('id')->unsigned();
-            $table->uuid('uuid')->unique()->nullable();
-            $table->integer('booking_id')->unsigned()->nullable();
-            $table->date('booking_date')->nullable();
-            $table->integer('number_of_hours')->nullable();
+            $table->integer('user_id')->unsigned()->nullable();
+            $table->char('type', 191)->nullable();
+            $table->text('message')->nullable();
+            $table->char('location', 191)->nullable();
+            $table->enum('status', ['read', 'unread']);
             $table->timestamps();
             $table->softDeletes();
         });
@@ -31,6 +32,6 @@ class CreateOnceBookingAlternateDatesTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('once_booking_alternate_dates');
+        Schema::dropIfExists('announcements');
     }
 }

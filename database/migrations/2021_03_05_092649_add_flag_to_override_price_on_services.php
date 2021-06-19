@@ -26,7 +26,7 @@ class AddFlagToOverridePriceOnServices extends Migration
      */
     public function down()
     {
-        Schema::table('override_price_on_services', function (Blueprint $table) {
+        Schema::table('services', function (Blueprint $table) {
             $table->removeColumn('allow_price_override');
         });
         \Illuminate\Support\Facades\DB::statement('ALTER TABLE provider_service_maps MODIFY COLUMN amount double(8,2) NOT NULL');

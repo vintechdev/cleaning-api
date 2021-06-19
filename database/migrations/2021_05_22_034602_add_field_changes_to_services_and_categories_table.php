@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class AlterEventsStartDate extends Migration
+class AddFieldChangesToServicesAndCategoriesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,9 +13,10 @@ class AlterEventsStartDate extends Migration
      */
     public function up()
     {
-        \Illuminate\Support\Facades\DB::statement('ALTER TABLE events change `start_date` `start_date` timestamp DEFAULT NULL');
-    }
-
+       DB::statement("ALTER TABLE service_categories CHANGE description description text ;");
+       DB::statement("ALTER TABLE services CHANGE description description text;");
+    }   
+    
     /**
      * Reverse the migrations.
      *
@@ -23,6 +24,6 @@ class AlterEventsStartDate extends Migration
      */
     public function down()
     {
-        //
+       
     }
 }

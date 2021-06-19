@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\Backend\API;
+use App\Service;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 use App\Customeruser;
@@ -37,6 +38,7 @@ class CustomerusersController extends Controller
         $arr = $this->userbage->getBadgeDetails(Auth::user()->id);
         return response()->json(['data'=>$arr],200);
     }
+    
     public function profilepicture(Request $request){
          $rules = array(
            'file_content'=>'required|string'
@@ -51,7 +53,7 @@ class CustomerusersController extends Controller
         }else{
 
             $image = $request->input('file_content'); 
-             $user_id = Auth::user()->id;
+            $user_id = $request->get('user_id') && $request->user()->isAdminScope() ? $request->get('user_id')  : Auth::user()->id;
             
 
             $Customeruser = Customeruser::firstOrNew(['id' => $user_id]);
@@ -171,9 +173,22 @@ class CustomerusersController extends Controller
         if ($request->has('abn')) {
             $Customerusers = $Customerusers->where('abn', 'LIKE', '%'.$request->get('abn').'%');
         }
+        
         if ($request->has('description')) {
             $Customerusers = $Customerusers->where('description', 'LIKE', '%'.$request->get('description').'%');
         }
+
+        if ($request->has('role')) {
+            $Customerusers = $Customerusers->whereExists(
+                function($query) use ($request) {  
+                 $query->from('role_user')
+                       ->join('roles', 'role_user.role_id', '=', 'roles.id')
+                       ->where('roles.name', 'like', \DB::raw("'". $request->get('role') ."'"))
+                       ->where('role_user.user_id', '=', \DB::raw('users.id'));
+                });
+        }
+
+
         $Customerusers = $Customerusers->paginate(20);
         return (new CustomeruserCollection($Customerusers));
     }
@@ -227,7 +242,10 @@ class CustomerusersController extends Controller
            /*  $users->leftJoin('user_reviews', function( $join){
                 $join->on('user_reviews.user_review_for', 'users.id');
             });  */
-            $users->select(['users.*','p.avgrate','j.completed_jobs','provider_service_maps.amount','provider_service_maps.type', 'services.is_default_service', 'provider_service_maps.provider_id'])->where('role_id', 2);
+            $users->select(['users.*','p.avgrate','j.completed_jobs',DB::raw('case when services.allow_price_override=1 AND provider_service_maps.amount is not null THEN provider_service_maps.amount ELSE services.service_cost END as amount'),'services.unit_type', 'provider_service_maps.type', 'services.is_default_service', 'provider_service_maps.provider_id'])->where('role_id', 2);
+
+            $users->where('users.status', 'active');
+            
             if ($request->has('providertype')){
                     $users->where('users.providertype',$request->has('providertype'));
             }
@@ -246,7 +264,18 @@ class CustomerusersController extends Controller
             }
         
             if($request->has('serviceid')){
-                $servicearr =  explode(',',$request->get('serviceid'));
+                $originalservicearr =  explode(',',$request->get('serviceid'));
+
+                // Ignore non-default service here as we want to increase the list
+                // of providers at this point
+                $servicearr = [];
+                foreach ($originalservicearr as $serviceId) {
+                    /** @var Service $service */
+                    $service = Service::find($serviceId);
+                    if ($service->isDefaultService()) {
+                        $servicearr[] = $serviceId;
+                    }
+                }
              
                 $users->whereIn('provider_service_maps.service_id', $servicearr);
                 $users->groupBy('users.id','p.avgrate','provider_service_maps.amount','provider_service_maps.type','services.is_default_service')->havingRaw("count(provider_service_maps.provider_id)=".count( $servicearr));
@@ -341,30 +370,23 @@ class CustomerusersController extends Controller
             return response()->json(['message' => $message], 401);
         }
 
-        // echo "change_password";exit;
-        $user = Auth::user();
-        $user_id = $user->id;
+        //$user_id = $user->id;
+        $user_id = $this->getUserIdByLoggedUserIdOrRequest($request);
+        $user = Customeruser::query()->find($user_id);
         $user_password = $user->password;
-        // $user = auth('api')->user()->id;
-        // print_r($user_id);exit;
+       
         $Customeruser = Customeruser::firstOrNew(['id' => $user_id]);
-        // $Customeruser->uuid = $users_uuid;
         
         $current_password = $request->get('old_password');
         $responseCode =  Hash::check($current_password, $user_password);
         // print_r($responseCode);exit;
         if($responseCode > 0){
-
             $new_password = $request->get('new_password');
             $repeat_password = $request->get('confirm_password');
 
             if($new_password == $repeat_password){
-                // echo "same";exit;
-                // $Customerusers = Customeruser::query();
-                // $Customerusers = $Customerusers->where('uuid', 'LIKE', '%'.$users_uuid);
                 $Customeruser->password = bcrypt($new_password);
                 $Customeruser->save();
-
                 $responseCode = $request->get('id') ? 200 : 201;
                 return response()->json(['saved' => true], $responseCode);
             } else{
@@ -377,63 +399,44 @@ class CustomerusersController extends Controller
             $responseCode = $request->get('id') ? 200 : 201;
             return response()->json(['error' => "Please enter correct Current Password or Invalid Authorization"], $responseCode);
         }
-        
-
-        // $responseCode = $request->get('id') ? 200 : 201;
-        // return response()->json(['saved' => true], $responseCode);
     }
 
     //for profile update
     public function profile_update(Request $request)
     {
-
-       
-         $validator = Validator::make($request->all(), [
+        
+        $validator = Validator::make($request->all(), [
             'first_name' => 'required',
             'last_name' => 'required',
             'email' => 'required|email',
             'mobile_number' => 'required|min:9|max:12',
+            'user_id' => 'nullable|integer|exists:users,id',
+            'status' => 'nullable|string|'
         ]);
 
         if($validator->fails()){
             $message = $validator->messages()->all();
             return response()->json(['message' => $message], 401);
         }
-        $user = Auth::user();
-        $user_id = $user->id;
-        // print_r($user_id);exit;
 
-        $count = Customeruser::where('email',$request->get('email'))->where('id','!=', $user_id)->count();
-       
-        $image = $request->input('file_content'); // your base64 encoded
+        $user_id = $this->getUserIdByLoggedUserIdOrRequest($request);   
+        $count = Customeruser::where('email', $request->get('email'))
+        ->where('id','!=', $user_id)->count();
         
+        $image = $request->input('file_content'); // your base64 encoded
 
         if($count==0){
-
             $Customeruser = Customeruser::firstOrNew(['id' => $user_id]);
             $Customeruser->first_name = $request->get('first_name');
             $Customeruser->last_name = $request->get('last_name');
             $Customeruser->email = $request->get('email');
-           // $request->get('profilepic');
-
-           /*  if($image!=''){
-                $type = $request->file_type;
-               
-                $image = str_replace('data:'.$type.';base64,', '', $image);
-              
-                $ext = str_replace('image/','',$type);
-                $image = str_replace(' ', '+', $image);
-                
-                $imageName = time().'.'. $ext ;
-                $destinationPath = \Config::get('const.PROFILE_PATH'); //public_path().'/images/upload/profile/';
-              
-                \File::put( $destinationPath . $imageName, base64_decode($image));
-                $Customeruser->profilepic =$imageName;
-            } */
-            
-
-           
+          
             $Customeruser->mobile_number = $request->get('mobile_number');
+
+            if ($request->user()->isAdminScope() && $request->get('status')) {
+                $Customeruser->status = $request->get('status');   
+            }    
+
             $Customeruser->save();
             $message ='Profile update successfully.';
 
@@ -448,25 +451,24 @@ class CustomerusersController extends Controller
 
     public function profile_view(Request $request)
     {
-      
-        $user = Auth::user();
-        $user_id = $user->id;
-        // print_r($user_id);exit;
-
-        $Customeruser = Customeruser::firstOrNew(['id' => $user_id]);
-        
+        $userId = $this->getUserIdByLoggedUserIdOrRequest($request);       
+        $Customeruser = Customeruser::firstOrNew(['id' => $userId]);
         
         return $Customeruser;
     }
+
+
+    private function getUserIdByLoggedUserIdOrRequest($request)
+    {
+        return $request->get('user_id') && $request->user()->isAdminScope()
+        ?  $request->get('user_id') : Auth::user()->id;
+        
+    }
+
     public function address_view(Request $request)
     {
-
-        $user = Auth::user();
-        $user_id = $user->id;
-        // print_r($user_id);exit;
-
-        $Customeraddress = Useraddress::firstOrNew(['user_id' => $user_id]);
-        
+        $userId = $this->getUserIdByLoggedUserIdOrRequest($request);       
+        $Customeraddress = Useraddress::firstOrNew(['user_id' => $userId]);
         
         return $Customeraddress;
     }
@@ -495,5 +497,23 @@ class CustomerusersController extends Controller
         $Customeruser = Customeruser::withTrashed()->find($request->get('id'));
         $Customeruser->restore();
         return response()->json(['no_content' => true], 200);
+    }
+
+    /**
+     * Restore the specified resource to storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function getReviews(Request $request)
+    {
+        $reviews = [];
+        if ($request->get('role') == 'provider') {
+            $reviews = $this->userbage->getReviewDetails($request->get('user_id'));
+        } else {
+            $reviews = $this->userbage->getReviewsByUser($request->get('user_id'));
+        }
+
+        return response()->json(['data' => $reviews], 200);
     }
 }

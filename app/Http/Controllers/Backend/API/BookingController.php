@@ -346,7 +346,8 @@ class BookingController extends Controller
             'status' => 'nullable|in:' . implode(',', BookingStatusChangeTypes::getAll()),
             'status_change_message' => 'nullable|string',
             'services' => 'nullable|array',
-            'booking_time' => 'nullable|date_format:dmYHis'
+            'booking_time' => 'nullable|date_format:dmYHis',
+            'user_id' =>  'nullable|int'
         ]);
 
         if($validator->fails()){
@@ -355,9 +356,22 @@ class BookingController extends Controller
         }
 
         if ($request->has('status')) {
+            if ($request->has('user_id')) {
+                if (!auth('api')->user()->isAdmin()) {
+                    return response()->json(['message' => 'You do not have permission to perform this action.'], 403);
+                }
+
+                $user = User::find($request->get('user_id'));
+
+                if (!$user) {
+                    return response()->json(['message' => 'Invalid user id received.'], 404);
+                }
+            } else {
+                $user = auth('api')->user();
+            }
             $statusChangeEngine
                 ->setBooking($booking)
-                ->setUser(auth('api')->user())
+                ->setUser($user)
                 ->setStatusChangeParameters([
                     'status' => $request->get('status'),
                     'status_change_message' => $request->has('status_change_message') ? $request->get('status_change_message') : null,

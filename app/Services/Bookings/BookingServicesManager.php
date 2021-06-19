@@ -4,6 +4,7 @@ namespace App\Services\Bookings;
 
 use App\Booking;
 use App\Bookingservice;
+use App\Service;
 use App\Services\Bookings\Builder\BookingserviceBuilder;
 use App\Services\Bookings\Exceptions\BookingServicesExistException;
 use App\Services\Bookings\Exceptions\BookingServicesManagerException;
@@ -72,7 +73,7 @@ class BookingServicesManager
             if (in_array($bookingService->getService()->getId(), $serviceIds)) {
                 $service = $newBookingServices[$bookingService->getService()->getId()];
                 if (!$service->getFinalServiceCost()) {
-                    if (!$service->getFinalNumberOfHours()) {
+                    if ($service->getService()->getServiceType() == Service::SERVICE_TYPE_HOURLY && !$service->getFinalNumberOfHours()) {
                         throw new BookingServicesManagerException('Final number of hours missing for service');
                     }
                     throw new BookingServicesManagerException('Final service cost can not be calculated');

@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class UpdateBookingsTable extends Migration
+class AlterMobileNumberInUsers extends Migration
 {
     /**
      * Run the migrations.
@@ -13,10 +13,7 @@ class UpdateBookingsTable extends Migration
      */
     public function up()
     {
-        Schema::table('bookings', function (Blueprint $table) {
-            $table->integer('event_id')->unsigned()->nullable(true);
-            $table->foreign('event_id')->references('id')->on('events')->onDelete('cascade');
-        });
+        \Illuminate\Support\Facades\DB::statement('ALTER TABLE users MODIFY COLUMN mobile_number VARCHAR(20) DEFAULT NULL');
     }
 
     /**
@@ -26,6 +23,8 @@ class UpdateBookingsTable extends Migration
      */
     public function down()
     {
-
+        Schema::table('users', function (Blueprint $table) {
+            //
+        });
     }
 }

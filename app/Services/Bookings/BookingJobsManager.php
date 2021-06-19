@@ -133,6 +133,7 @@ class BookingJobsManager
             return $bookingJobs;
         }
 
+        // This will have recurring bookings with logical entries to DB as separate booking entity.
         return $this->buildAcceptedBookingJobs($bookings, $bookingList->getFrom(), $bookingList->getTo());
     }
 
@@ -249,10 +250,21 @@ class BookingJobsManager
             $serviceArray = $service->toArray();
             $serviceArray['name'] = $service->getService()->getName();
             $serviceArray['category'] = $service->getService()->getServicecategory();
+            $serviceArray['unit_type'] = $service->getService()->unit_type;
+            $serviceArray['max_hours'] = $service->getService()->getMaxHours();
+            $serviceArray['min_hours'] = $service->getService()->getMinHours();
             $services[] = $serviceArray;
         }
 
         return $services;
+    }
+
+    public function getPrefixRouteName() {
+        if (request()->user()->isAdminScope()) {
+            return 'admin.';
+        }
+
+        return '';
     }
 
     /**
@@ -275,11 +287,13 @@ class BookingJobsManager
     {
         $job = [];
 
+        $prefixRouteName = $this->getPrefixRouteName();
+
         if ($addDetailsUrl) {
             if ($booking->isRecurring() && isset($date['to']) && !is_null($date['to'])) {
-                $job['details_url'] = route('getrecurredbookingdetails', [$booking->getId(), $date['from']->format('dmYHis')]);
+                $job['details_url'] = route($prefixRouteName . 'getrecurredbookingdetails', [$booking->getId(), $date['from']->format('dmYHis')]);
             } else {
-                $job['details_url' ] = route('getbookingdetails', [$booking->getId()]);
+                $job['details_url' ] = route($prefixRouteName .'getbookingdetails', [$booking->getId()]);
             }
         }
 
@@ -297,6 +311,7 @@ class BookingJobsManager
         $job['booking_status'] = $booking->getStatus();
         $job['providers'] = $providerDetails;
         $job['booking_service'] = $services;
+        $job['is_flexible'] = $booking->getIsFlexible();
         $job['booking_review'] = $this->badgeReviewRepo->getreviewbybooking($booking->getId());
         $job['booking_status_name'] = Bookingstatus::getStatusNameById($booking->booking_status_id);
         $job['user'] = $booking->getUserDetails();
@@ -304,6 +319,10 @@ class BookingJobsManager
             $job['address'] = $this->bookingService->getBookingAddress($booking->getId());
             $job['question'] = $this->bookingService->getBookingQuestions($booking->getId());
         }
+
+        $job['booking_postcode'] = $booking->booking_postcode;
+        $job['created_at'] = $booking->created_at;
+
         return $job;
     }
 
@@ -314,6 +333,9 @@ class BookingJobsManager
         foreach ($bookings as $booking) {
             $providerDetails = $this->getProviderDetails($booking, true);
             $services = $this->buildBookingServices($booking);
+            // These dates will ignore recurring bookings that belongs to the parent which has separate logical db
+            // entry which would have been created as a result of rescheduling. This is because the list of bookings
+            // that we received will have those recurring bookings as separate bookings.
             $dates = $this
                 ->bookingEventService
                 ->listBookingDatesBetween($booking, $from, $to);

@@ -2,9 +2,7 @@
 namespace App\Repository;
 use App\Providerservicemaps;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use App\Service;
-use App\Promocodes;
 use Illuminate\Http\Request;
 use App\Servicecategory;
 class ProviderServiceMapRespository{
@@ -15,7 +13,7 @@ class ProviderServiceMapRespository{
       
       if($request->has('data')){
          $data = $request->data;
-         $pid = Auth::user()->id;
+         $pid = $request->get('user_id') && $request->user()->isAdminScope() ? $request->get('user_id') : Auth::id();
          $service_ids = array_column($data,'service_id');
         
          // $service_ids = array_values($service_ids);
@@ -67,7 +65,7 @@ class ProviderServiceMapRespository{
            $pdr=Providerservicemaps::leftJoin('services', function($join){
                   $join->on('services.id', '=', 'provider_service_maps.service_id');
                 })->whereIn('provider_service_maps.service_id',$serviceid)
-                ->where('provider_service_maps.provider_id',$providerid)->whereNotNull('provider_service_maps.amount')->get(['services.service_type','services.is_default_service','provider_service_maps.*']);
+                ->where('provider_service_maps.provider_id',$providerid)->get(['services.service_type','services.is_default_service','provider_service_maps.*']);
            if ($returnArray) {
                return $pdr->toarray();
            }

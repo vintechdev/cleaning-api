@@ -129,7 +129,6 @@ class UseraddressController extends Controller
         $Useraddress = Useraddress::firstOrNew(['id' => $request->get('id')]);
         $Useraddress->id = $request->get('id');
         $Useraddress->address_label = $request->get('address_label');
-        $Useraddress->uuid = $request->get('uuid');
         $Useraddress->user_id = $user_id;
         $Useraddress->type = 'home';//$request->get('type');
         $Useraddress->address_line1 = $request->get('address_line1');
@@ -168,7 +167,7 @@ class UseraddressController extends Controller
         $user = Auth::user();
         $user_id = $user->id;
        
-            $Useraddress = Useraddress::firstOrNew(['uuid' => $uuid]);
+            $Useraddress = Useraddress::firstOrNew(['id' => $uuid]);
             // $Useraddress->type = $request->get('type');
             $Useraddress->address_label = $request->get('address_label');
             $Useraddress->address_line1 = $request->get('address_line1');

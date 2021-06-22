@@ -161,6 +161,7 @@ class PaymentsController extends Controller
         try {
             $associated = $stripeService->associatePaymentMethod($request->get('payment_method_id'), $this->getUser());
         } catch (\Exception $exception) {
+            logger()->error($exception->getMessage());
             return response()->json(['message' => 'Something went wrong while adding card. Please contact administrator'], 500);
         }
 
@@ -194,6 +195,7 @@ class PaymentsController extends Controller
         } catch (InvalidUserException $exception) {
             return response()->json(['message' => 'User is unauthorized to perform this action'], 403);
         } catch (\Exception $exception) {
+            logger()->error($exception->getMessage());
             return response()->json(['message' => 'Something went wrong. Please contact administrator'], 500);
         }
 
@@ -214,6 +216,7 @@ class PaymentsController extends Controller
         } catch (InvalidUserException $exception) {
             return response()->json(['message' => 'User does not have a stripe account'], 404);
         } catch (\Exception $exception) {
+            logger()->error($exception->getMessage());
             return response()->json(['message' => 'Something went wrong. Please contact administrator'], 500);
         }
 
@@ -246,6 +249,7 @@ class PaymentsController extends Controller
         } catch (InvalidUserException $exception) {
             return response()->json(['message' => 'User does not have a stripe account'], 404);
         } catch (\Exception $exception) {
+            logger()->error($exception->getMessage());
             return response()->json(['message' => 'Something went wrong. Please contact administrator'], 500);
         }
 
@@ -278,6 +282,7 @@ class PaymentsController extends Controller
         } catch (InvalidUserException $exception) {
             return response()->json(['message' => 'User does not have a stripe account'], 404);
         } catch (\Exception $exception) {
+            logger()->error($exception->getMessage());
             return response()->json(['message' => 'Something went wrong. Please contact administrator'], 500);
         }
     }

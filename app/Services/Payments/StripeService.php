@@ -331,7 +331,7 @@ class StripeService
                             'requested' => true,
                         ],
                         'card_payments' => [
-                            'required' => true
+                            'requested' => true
                         ]
                     ]
                 ]

@@ -330,7 +330,7 @@ class StripeService
                         'transfers' => [
                             'requested' => true,
                         ],
-                        'card_payment' => [
+                        'card_payments' => [
                             'required' => true
                         ]
                     ]

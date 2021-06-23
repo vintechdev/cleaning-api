@@ -196,7 +196,7 @@ class CustomerusersController extends Controller
     
         $rules = array(
             'postcode' => 'required|numeric',
-            'serviceid'=>'required|string',
+            'serviceid'=>'string',
             'servicecategory'=>'required|numeric',
             'start_time'=>'nullable|string',
             'end_time'=>'nullable|string',

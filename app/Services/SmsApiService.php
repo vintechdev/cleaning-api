@@ -67,19 +67,44 @@ class SmsApiService
 
     public function send()
     {
-        $client = new Client();
-
-        $requestData = [
-            'action' => 'send-sms',
-            'api_key' => $this->smsApiKey,
-            'to' => Str::replaceFirst("+", "", $this->mobileNumber),
-            'from' => $this->smsSenderId,
-            'sms' => urlencode($this->message),
+        $headers = [
+          'Authorization' => 'Bearer '. $this->smsApiKey
         ];
 
-        $request = $client->request('GET', $this->smsApiUrl, ['query' => $requestData]);
+        $client = new Client([
+            'headers' => $headers
+        ]);
 
-        return json_decode($request->getBody(), true);
+
+        $url = $this->smsApiUrl. '?recipient='.  Str::replaceFirst("+", "", $this->mobileNumber);
+        $url .= '&sender_id=' . $this->smsSenderId;
+        $url .= '&message='.  urlencode($this->message);
+
+        try {
+            
+            $request = $client->request('POST', $url);
+
+            if (in_array($request->getStatusCode(), [200, 201])) {
+                return json_decode($request->getBody(), true);
+            }
+
+            return [
+               'status' => 'error',
+               'message' => 'Error while sending message'
+            ];
+
+        } catch (RequestException $e) {
+          
+        } catch (ClientException $e) {
+
+        } catch (\Exception $e) {
+            return [
+               'status' => 'error',
+               'message' => $e->getMessage() 
+            ];
+        }
+
+        return null;
     }
 
 }

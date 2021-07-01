@@ -83,19 +83,21 @@ class SendSmsNotificationService
             }
 
             $phoneNumber = $phoneUtil->format($phoneUtilObject, PhoneNumberFormat::E164);
+            
             $this->smsApiService->setMobileNumber($phoneNumber);
 
             foreach ($smsLogs as $smsLog) {
+
                 $response = $this->smsApiService->setMessage($smsLog->message)->send();
                 $status = 'sent';
 
-                if (isset($response) && $response['code'] !== "ok") {
+                if (empty($response) || ($response && isset($response['status']) && $response['status'] !== 'success')) {
                     $status = "failed";
                 }
 
                 $smsLog->update([
                     'status' =>  $status,
-                    'response' => ($status === 'failed') ? $response : null
+                    'response' => ($status === 'failed') ? $response : $response['data']
                 ]);
             }
         }

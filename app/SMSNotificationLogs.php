@@ -42,7 +42,7 @@ class SMSNotificationLogs extends Model
             'message' => 'New cleaning booking request #{booking-id} for {default-service-name} received. Please login to {provider-site-name} OR PRO {app-name} APP to accept this booking asap.'
         ],
         'booking_status_update' => [
-            'message' => 'Your booking {booking-id} for {default-service-name} updated. New Status: {booking-status} Please login to {provider-site-name} OR PRO {app-name} APP to view booking and customer details.'
+            'message' => 'Your booking #{booking-id} for {default-service-name} updated. New Status: {booking-status} Please login to {provider-site-name} OR PRO {app-name} APP to view booking and customer details.'
         ],
         'booking_time_update' => [
             'title' => 'Booking time updated',
@@ -78,7 +78,7 @@ class SMSNotificationLogs extends Model
 
         $message = str_replace('{provider-site-name}', Config::get('const.PROVIDER_URL'), $message);
         $message = str_replace('{user-site-name}', Config::get('const.USER_URL'), $message);
-        $message = str_replace('{app-name}', Config::get('const.USER_URL'), $message);
+        $message = str_replace('{app-name}', Config::get('const.APP_NAME'), $message);
 
         return $message;
     }

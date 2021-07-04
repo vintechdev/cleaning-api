@@ -149,7 +149,7 @@ class BookingStatusChangeSmsNotificationService extends AbstractBookingNotificat
         $message = SMSNotificationLogs::getMessage('booking_status_update', 'user');
         $message = str_replace('{booking-id}', $this->booking->id, $message);
         $message = str_replace('{default-service-name}', $this->serviceName, $message);
-        $message = str_replace('{booking-status}', $status, $message);
+        $message = str_replace('{booking-status}', strtoupper($status), $message);
 
     
         // TODO: can be change later in repo
@@ -217,7 +217,7 @@ class BookingStatusChangeSmsNotificationService extends AbstractBookingNotificat
         $message = SMSNotificationLogs::getMessage('booking_status_update', 'provider');
         $message = str_replace('{booking-id}', $this->booking->id, $message);
         $message = str_replace('{default-service-name}', $this->serviceName, $message);
-        $message = str_replace('{booking-status}', $status, $message);
+        $message = str_replace('{booking-status}', strtoupper($status), $message);
 
         return $message;
     }

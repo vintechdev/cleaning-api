@@ -23,6 +23,10 @@ class BookingPushNotificationService extends AbstractBookingNotificationService
      * @var Booking
      */
     protected $booking;
+
+    /**
+    * @var BookingServiceRepository
+    */
     protected $bookingservicerepo;
     protected $mailService;
     /**
@@ -36,6 +40,11 @@ class BookingPushNotificationService extends AbstractBookingNotificationService
      */
     private $userNotificationRepo;
 
+    /**
+    * @var string
+    */
+    private $serviceName;
+
     public function __construct(NotificationLogRepository $notificationLogRepository){
         parent::__construct($notificationLogRepository);
         $this->bookingservicerepo = app(BookingServiceRepository::class);
@@ -46,6 +55,7 @@ class BookingPushNotificationService extends AbstractBookingNotificationService
 
     protected function sendNotification(): bool
     {
+        $this->setServiceName();
         $sentUser = $this->sendUserPushNotification();
         $sentProvider = $this->sendPushNotificationToAllProviders();
         if($sentUser || $sentProvider){
@@ -59,6 +69,28 @@ class BookingPushNotificationService extends AbstractBookingNotificationService
     {
         return NotificationLog::NOTIFICATION_TYPE_BOOKING_CREATED_PUSH;
     }
+
+    private function setServiceName()
+    {
+        $data = $this->bookingservicerepo->BookingDetailsforMail($this->booking->id);
+
+        $serviceCollection = collect($data["services"]);
+        $defaultService =  $serviceCollection->where('is_default_service', 1)->first();
+
+        $serviceName = "";
+
+        if (!$defaultService) {
+            $defaultService = $serviceCollection->sortBy('service_id')->first();
+        }
+
+        if ($defaultService) {
+            $serviceName = $defaultService['service_name'];
+        }
+
+
+        $this->serviceName = $serviceName;
+    }
+
 
     public function sendUserPushNotification()
     {
@@ -78,11 +110,17 @@ class BookingPushNotificationService extends AbstractBookingNotificationService
 
         $notificationLog = $this->notificationLogRepo->create($logData);
 
+        $title =  PushNotificationLogs::PUSH_NOTIFICATION_LOG_USER['new_booking']['title'];
+        $message = PushNotificationLogs::PUSH_NOTIFICATION_LOG_USER['new_booking']['message'];
+
+        $title = str_replace('{booking-id}', $this->booking->id, $title);
+        $message = str_replace('{default-service-name}', $this->serviceName, $message);
+
         // TODO: can be change later in repo
         PushNotificationLogs::query()->create([
             'notification_log_id' => $notificationLog->id,
-            'title' => PushNotificationLogs::PUSH_NOTIFICATION_LOG_USER['new_booking']['title'],
-            'message' => PushNotificationLogs::PUSH_NOTIFICATION_LOG_USER['new_booking']['message'],
+            'title' => $title,
+            'message' => $message,
             'status' => PushNotificationLogs::STATUS_UNREAD,
         ]);
 
@@ -102,6 +140,12 @@ class BookingPushNotificationService extends AbstractBookingNotificationService
            return false;
         }
 
+        $title =  PushNotificationLogs::PUSH_NOTIFICATION_LOG_PROVIDER['new_booking']['title'];
+        $message = PushNotificationLogs::PUSH_NOTIFICATION_LOG_PROVIDER['new_booking']['message'];
+
+        $title = str_replace('{booking-id}', $this->booking->id, $title);
+        $message = str_replace('{default-service-name}', $this->serviceName, $message);
+
         $send = false ;
         foreach ($bookingproviders as $k => $provider) {
             $notificationSetting = $this->userNotificationRepo
@@ -119,10 +163,11 @@ class BookingPushNotificationService extends AbstractBookingNotificationService
             ];
 
             $notificationLog = $this->notificationLogRepo->create($logData);
+            
             PushNotificationLogs::query()->create([
                 'notification_log_id' => $notificationLog->id,
-                'title' => PushNotificationLogs::PUSH_NOTIFICATION_LOG_PROVIDER['new_booking']['title'],
-                'message' => PushNotificationLogs::PUSH_NOTIFICATION_LOG_PROVIDER['new_booking']['message'],
+                'title' => $title,
+                'message' => $message,
                 'status' => PushNotificationLogs::STATUS_UNREAD,
             ]);
 

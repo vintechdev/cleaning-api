@@ -20,12 +20,12 @@ class PushNotificationLogs extends Model
 
     const PUSH_NOTIFICATION_LOG_USER = [
         'new_booking' => [
-            'title' => 'New Booking Created',
-            'message' => 'New Booking is created'
+            'title' => 'New booking request received. (#{booking-id})',
+            'message' => 'Your booking request for {default-service-name} received. Click here to view booking details.'
         ],
         'booking_status_update' => [
-            'title' => 'Booking status changed',
-            'message' => 'Booking status has been changed to {statusName}'
+            'title' => 'Booking status changed to {booking-status} (#{booking-id})',
+            'message' => 'Your booking for {default-service-name} updated. New Status: {booking-status} Click here to view booking and provider details.'
         ],
         'booking_time_update' => [
             'title' => 'Booking time updated',
@@ -35,12 +35,12 @@ class PushNotificationLogs extends Model
 
     const PUSH_NOTIFICATION_LOG_PROVIDER = [
         'new_booking' => [
-            'title' => 'New Booking Created',
-            'message' => 'New Booking is created'
+            'title' => 'New booking request received. (#{booking-id})',
+            'message' => 'New booking request for {default-service-name} received. Click here to view booking details and accept this booking.'
         ],
         'booking_status_update' => [
-            'title' => 'Booking status changed',
-            'message' => 'Booking status has been changed to {statusName}'
+            'title' => 'Booking status changed to {booking-status} (#{booking-id})',
+            'message' => 'Your booking for {default-service-name} updated. New Status: {booking-status} Click here to view booking and customer details.'
         ],
         'booking_time_update' => [
             'title' => 'Booking time updated',

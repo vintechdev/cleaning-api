@@ -30,7 +30,7 @@ class Service extends Model
     /**
      * @return int
      */
-    public function getServiceCost(): int
+    public function getServiceCost(): float
     {
         return $this->service_cost;
     }

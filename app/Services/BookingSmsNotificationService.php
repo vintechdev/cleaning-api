@@ -26,6 +26,10 @@ class BookingSmsNotificationService extends AbstractBookingNotificationService
      * @var Booking
      */
     protected $booking;
+
+    /**
+    * @var BookingServiceRepository
+    */
     protected $bookingservicerepo;
     protected $mailService;
     /**
@@ -43,6 +47,11 @@ class BookingSmsNotificationService extends AbstractBookingNotificationService
      */
     private $smsNotificationLogRepo;
 
+     /**
+     * @var string
+     */
+    private $serviceName;
+
     public function __construct(NotificationLogRepository $notificationLogRepository, SmsNotificationLogRepo $smsNotificationLogRepo){
         parent::__construct($notificationLogRepository);
         $this->bookingservicerepo = app(BookingServiceRepository::class);
@@ -58,6 +67,8 @@ class BookingSmsNotificationService extends AbstractBookingNotificationService
             return false;
         }
 
+        $this->setServiceName();
+
         $sentUser = $this->createUserSms();
         $sentProvider = $this->createProviderSms();
         if($sentUser || $sentProvider){
@@ -65,6 +76,27 @@ class BookingSmsNotificationService extends AbstractBookingNotificationService
         }
 
         return false;
+    }
+
+    private function setServiceName()
+    {
+        $data = $this->bookingservicerepo->BookingDetailsforMail($this->booking->id);
+
+        $serviceCollection = collect($data["services"]);
+        $defaultService =  $serviceCollection->where('is_default_service', 1)->first();
+
+        $serviceName = "";
+
+        if (!$defaultService) {
+            $defaultService = $serviceCollection->sortBy('service_id')->first();
+        }
+
+        if ($defaultService) {
+            $serviceName = $defaultService['service_name'];
+        }
+
+
+        $this->serviceName = $serviceName;
     }
 
     protected function getNotificationType(): string
@@ -90,10 +122,14 @@ class BookingSmsNotificationService extends AbstractBookingNotificationService
 
         $notificationLog = $this->notificationLogRepo->create($logData);
 
+        $message = SMSNotificationLogs::getMessage('new_booking', 'user');
+        $message = str_replace('{booking-id}', $this->booking->id, $message);
+        $message = str_replace('{default-service-name}', $this->serviceName, $message);
+
         $this->smsNotificationLogRepo->create([
             'notification_log_id' => $notificationLog->id,
             // TODO: add sms template message
-            'message' => PushNotificationLogs::PUSH_NOTIFICATION_LOG_USER['new_booking']['message'],
+            'message' => $message,
             'status' => SMSNotificationLogs::STATUS_PENDING,
         ]);
 
@@ -113,6 +149,10 @@ class BookingSmsNotificationService extends AbstractBookingNotificationService
            return false;
         }
 
+        $message = $message = SMSNotificationLogs::getMessage('new_booking', 'provider');
+        $message = str_replace('{booking-id}', $this->booking->id, $message);
+        $message = str_replace('{default-service-name}', $this->serviceName, $message);
+
         $send = false ;
         foreach ($bookingproviders as $k => $provider) {
             $notificationSetting = $this->userNotificationRepo
@@ -129,11 +169,11 @@ class BookingSmsNotificationService extends AbstractBookingNotificationService
                 'user_type' => NotificationLog::NOTIFICATION_LOG_USER_TYPE_PROVIDER,
             ];
 
+
             $notificationLog = $this->notificationLogRepo->create($logData);
             $this->smsNotificationLogRepo->create([
                 'notification_log_id' => $notificationLog->id,
-                // TODO: add sms template message
-                'message' => PushNotificationLogs::PUSH_NOTIFICATION_LOG_PROVIDER['new_booking']['message'],
+                'message' => $message,
                 'status' => SMSNotificationLogs::STATUS_PENDING,
             ]);
 

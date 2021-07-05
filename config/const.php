@@ -9,6 +9,8 @@ return [
     'MAIL_FROM_NAME'=>'Cleaning Service',
     'ANDROID_APP_URL' => '',
     'IOS_APP_URL' => '',
-    ]
-
-?>
+    
+    'APP_NAME' => 'Cleaning.com.au',
+    'PROVIDER_URL' => 'https://provider.Cleaning.com.au',
+    'USER_URL' => 'https://app.Cleaning.com.au',
+];

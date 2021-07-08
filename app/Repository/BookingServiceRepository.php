@@ -5,6 +5,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Bookingservice;
 use App\Booking;
+use App\Servicecategory;
+
 class BookingServiceRepository{
 
     public function getServiceDetails($bookingid){
@@ -59,6 +61,16 @@ class BookingServiceRepository{
       $data['services'] = $services;
       return $data;
      
+    }
+
+
+    public function getBookingCategory($bookingId)
+    {
+        return Servicecategory::query()->select(['service_categories.*'])
+        ->join('services','services.category_id', '=', 'service_categories.id')
+        ->join('booking_services','services.id', '=', 'booking_services.service_id')
+        ->where('booking_services.booking_id', $bookingId)
+        ->first(); 
     }
    
   

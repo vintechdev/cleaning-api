@@ -80,21 +80,12 @@ class BookingSmsNotificationService extends AbstractBookingNotificationService
 
     private function setServiceName()
     {
-        $data = $this->bookingservicerepo->BookingDetailsforMail($this->booking->id);
-
-        $serviceCollection = collect($data["services"]);
-        $defaultService =  $serviceCollection->where('is_default_service', 1)->first();
-
+        $category = $this->bookingservicerepo->getBookingCategory($this->booking->id);       
         $serviceName = "";
 
-        if (!$defaultService) {
-            $defaultService = $serviceCollection->sortBy('service_id')->first();
+        if (!empty($category)) {
+            $serviceName = $category->name;
         }
-
-        if ($defaultService) {
-            $serviceName = $defaultService['service_name'];
-        }
-
 
         $this->serviceName = $serviceName;
     }

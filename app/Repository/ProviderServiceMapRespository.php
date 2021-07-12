@@ -5,6 +5,8 @@ use Illuminate\Support\Facades\Auth;
 use App\Service;
 use Illuminate\Http\Request;
 use App\Servicecategory;
+use Illuminate\Support\Facades\DB;
+
 class ProviderServiceMapRespository{
 
    public function save_provider_servicemap(Request $request)
@@ -96,7 +98,48 @@ class ProviderServiceMapRespository{
             return $maps;
         }
 
-       
+       public function getAllServicesForProvider($pid, $categoryId) {
+            $services = Service::where('active',1)->where('category_id', $categoryId)->get()->toArray();
+            $providerServiceMaps = Providerservicemaps::with('service')
+                ->leftJoin('services', function ($join) {
+                    $join->on('services.id', '=', 'provider_service_maps.service_id');
+                })
+                ->where('services.category_id', '=', $categoryId)
+                ->where('provider_id', '=', $pid)->get()->toArray();
+
+            $maps = [];
+
+            $providedServices = array_map(function ($maps) {
+                return $maps['service']['id'];
+            }, $providerServiceMaps);
+
+            foreach ($services as $service) {
+                $key = array_search($service['id'], array_column($providerServiceMaps, 'service_id'));
+
+                if (!in_array($service['id'], $providedServices) ||
+                    !(
+                        $key !== false &&
+                        $service['allow_price_override'] &&
+                        !is_null($providerServiceMaps[$key]['amount'])
+                    )
+                ) {
+                    $maps[$service['id']]['amount'] = $service['service_cost'];
+                    $maps[$service['id']]['type'] = ($service['service_type'] == Service::SERVICE_TYPE_HOURLY) ?
+                        Providerservicemaps::SERVICE_TYPE_HOURLY :
+                        Providerservicemaps::SERVICE_TYPE_ONCEOFF;
+
+                    $maps[$service['id']]['service'] = $service;
+
+                    continue;
+                }
+
+                $maps[$service['id']]['amount'] = $providerServiceMaps[$key]['amount'];
+                $maps[$service['id']]['type'] = $providerServiceMaps[$key]['type'];
+                $maps[$service['id']]['service'] = $service;
+            }
+
+           return $maps;
+       }
        
 }
 

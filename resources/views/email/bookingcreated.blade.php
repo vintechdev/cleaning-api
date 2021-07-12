@@ -50,14 +50,26 @@
        style="width: 100%; border: 1px solid #ddd; font-size:16px; border-collapse: collapse;">
     <tbody>
     <tr style="background-color: #52b68d;">
-        <td style="font-weight:bold; color:white; text-align: center;" colspan="2">Service Details</td>
+        <td style="font-weight:bold; color:white; text-align: center;" colspan="2">{{ $data['service_category_name'] }}</td>
     </tr>
     <?php
     //dd($data['services']);
     if(count($data['services']) > 0){
-    foreach($data['services'] as $key=>$val){ ?>
+    foreach($data['services'] as $key=>$val){ 
+        $hourstr = $val['initial_number_of_hours'];
+        
+        if ($val['service_type'] === 'hourly'){
+            $h = $val['initial_number_of_hours'];
+            $converthours = ['hours' => floor($h), 'mins' => (floor($h * 60) % 60), 'secs' => floor($h * 3600) % 60];
+            $hourstr = (($converthours['hours'] != 0) ? $converthours['hours'] . ' hours ' : '') . (($converthours['mins'] != 0) ? $converthours['mins'] . ' minutes ' : ' ') . (($converthours['secs'] != 0) ? $converthours['secs'] . ' seconds' : '');
+        }  
+
+
+    ?>
     <tr>
-        <td style="width: 70%; border: 1px solid #ddd;"><span>{{ucwords($val['service_name'])}}</span></td>
+        <td style="width: 70%; border: 1px solid #ddd;"><span>{{ucwords($val['service_name'])}}</span>
+            <span style="background-color: #e8f4e6; border-radius: 6px; color: #1d8f0e; padding: 3px 5px; display: inline-block; font-size: 12px;">{{'('.$hourstr.')'}}</span>
+        </td>        
         <td style="width: 30%; border: 1px solid #ddd;"><span>{{Config::get('const.currency').$val['initial_service_cost']}}</span></td>
     </tr>
     <?php } }

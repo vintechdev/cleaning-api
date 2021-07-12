@@ -14,7 +14,7 @@ class BookingServiceRepository{
           $result = Bookingservice::leftJoin('services', function($join){
             $join->on('services.id', '=', 'booking_services.service_id');
           })->where('booking_services.booking_id',$bookingid)
-          ->get(['booking_services.*', 'services.is_default_service','services.name as service_name'])
+          ->get(['booking_services.*', 'services.is_default_service','services.name as service_name', 'services.service_type'])
           ->toArray();
           return $result;
 

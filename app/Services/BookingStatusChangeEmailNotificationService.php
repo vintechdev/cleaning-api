@@ -23,6 +23,11 @@ class BookingStatusChangeEmailNotificationService extends AbstractBookingNotific
     protected $userRepo;
     protected $userbadge;
     protected $bookingrequestprovider;
+
+     /**
+     * @var string
+     */
+    private $serviceName = '';
     
 
     public function __construct(
@@ -50,6 +55,18 @@ class BookingStatusChangeEmailNotificationService extends AbstractBookingNotific
         }else{
             return false;
         }
+    }
+
+    private function setServiceName()
+    {
+        $category = $this->bookingservicerepo->getBookingCategory($this->booking->id);       
+        $serviceName = "";
+
+        if (!empty($category)) {
+            $serviceName = $category->name;
+        }
+
+        $this->serviceName = $serviceName;
     }
 
     /**

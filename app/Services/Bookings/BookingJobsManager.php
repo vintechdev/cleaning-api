@@ -247,6 +247,9 @@ class BookingJobsManager
         $services = [];
         /** @var \App\Bookingservice $service */
         foreach ($booking->getBookingServices() as $service) {
+            if ($service->isRemoved()) {
+                continue;
+            }
             $serviceArray = $service->toArray();
             $serviceArray['name'] = $service->getService()->getName();
             $serviceArray['category'] = $service->getService()->getServicecategory();

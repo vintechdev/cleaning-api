@@ -83,10 +83,12 @@ class BookingserviceBuilder
                 }
             }
 
-            if ($providerservicemaps) {
-                $bookingService
-                    ->setFinalServiceCost($providerservicemaps->getProviderTotal($bookingService->getFinalNumberOfHours()));
-            }
+            $bookingService
+                ->setFinalServiceCost(
+                    $providerservicemaps ?
+                        $providerservicemaps->getProviderTotal($bookingService->getFinalNumberOfHours()) :
+                        $bookingService->getService()->getTotalCost($bookingService->getFinalNumberOfHours())
+                );
         }
 
         return $bookingService;

@@ -91,11 +91,11 @@
 
         $hourstr = $val['initial_number_of_hours'];
         
-        if ($val['service_type'] === 'hourly'){
+       /* if ($val['service_type'] === 'hourly'){
             $h = $val['initial_number_of_hours'];
             $converthours = ['hours' => floor($h), 'mins' => (floor($h * 60) % 60), 'secs' => floor($h * 3600) % 60];
             $hourstr = (($converthours['hours'] != 0) ? $converthours['hours'] . ' hours ' : '') . (($converthours['mins'] != 0) ? $converthours['mins'] . ' minutes ' : ' ') . (($converthours['secs'] != 0) ? $converthours['secs'] . ' seconds' : '');
-        }   
+        } */  
 
     ?>
     <tr>

@@ -256,6 +256,7 @@ class BookingJobsManager
             $serviceArray['unit_type'] = $service->getService()->unit_type;
             $serviceArray['max_hours'] = $service->getService()->getMaxHours();
             $serviceArray['min_hours'] = $service->getService()->getMinHours();
+            $serviceArray['service_type'] = $service->getService()->getServiceType();
             $services[] = $serviceArray;
         }
 

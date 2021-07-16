@@ -56,14 +56,14 @@ class NotificationLogRepository extends AbstractBaseRepository
         ->where('notification_logs.user_type', $request->get('userType', 'user'))
         ->where(function ($query) use ($fromDate) {
             $query->where('push_notification_logs.status', DB::raw("'unread'"));
-            $query->orWhere(function ($q) use ($fromDate) {
+           /* $query->orWhere(function ($q) use ($fromDate) {
                 $q->where('push_notification_logs.updated_at', '>',
                     DB::raw("'".$fromDate . "'"));
                 $q->where('push_notification_logs.status', DB::raw("'read'"));
-            });
+            });*/
         })
-        ->orderBy('push_notification_logs.status','desc')
         ->orderBy('push_notification_logs.created_at', 'DESC')
+        ->orderBy('push_notification_logs.status','desc')
         ->get()
         ->toArray();
     }

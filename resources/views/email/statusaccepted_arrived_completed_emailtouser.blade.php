@@ -15,6 +15,7 @@
     </tr>
 </table>
 
+<?php if (!empty($data['provider_name'])): ?> 
 <h3 style="font-size: 16px; font-weight: bold; color: #3d4852; margin-bottom: 0; text-align: center; background: #f5f5f5; padding: 7px 10px;">
     Provider Details
 </h3>
@@ -90,6 +91,8 @@
         <td style="height: 15px;"></td>
     </tr>
 </table>
+
+<?php endif; ?>
 
 <table cellpadding="5" cellspacing="0" border="1"
        style="width: 100%; border: 1px solid #ddd; font-size:16px; border-collapse: collapse;">

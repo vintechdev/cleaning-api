@@ -247,12 +247,16 @@ class BookingJobsManager
         $services = [];
         /** @var \App\Bookingservice $service */
         foreach ($booking->getBookingServices() as $service) {
+            if ($service->isRemoved()) {
+                continue;
+            }
             $serviceArray = $service->toArray();
             $serviceArray['name'] = $service->getService()->getName();
             $serviceArray['category'] = $service->getService()->getServicecategory();
             $serviceArray['unit_type'] = $service->getService()->unit_type;
             $serviceArray['max_hours'] = $service->getService()->getMaxHours();
             $serviceArray['min_hours'] = $service->getService()->getMinHours();
+            $serviceArray['service_type'] = $service->getService()->getServiceType();
             $services[] = $serviceArray;
         }
 

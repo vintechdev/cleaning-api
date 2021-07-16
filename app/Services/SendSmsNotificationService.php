@@ -54,7 +54,8 @@ class SendSmsNotificationService
         $pendingSms = $this->getAllPendingSms();
 
         if ($pendingSms->count() === 0) {
-            Log::error('No pending available');
+            // Commenting this out as it creates a lot of logs
+            //Log::error('No pending available');
             return;
         }
 

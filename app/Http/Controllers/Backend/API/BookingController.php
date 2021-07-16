@@ -81,7 +81,11 @@ class BookingController extends Controller
        return response()->json(['services'=>$arr]);
     }
 
-    public function getProviderServicesByCategory($userId, $categoryId) {
+    public function getProviderServicesByCategory($userId, $categoryId, Request $request) {
+        if (($request->has('return-all-services') && $request->get('return-all-services') == 1)) {
+            $arr = app(ProviderServiceMapRespository::class)->getAllServicesForProvider($userId, $categoryId);
+            return response()->json(['services'=>$arr]);
+        }
         $arr = app(ProviderServiceMapRespository::class)->GetServicesByProvider($userId, $categoryId);
         return response()->json(['services'=>$arr]);
     }

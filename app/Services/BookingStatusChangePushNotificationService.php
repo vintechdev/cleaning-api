@@ -162,6 +162,8 @@ class BookingStatusChangePushNotificationService extends AbstractBookingNotifica
             Bookingstatus::BOOKING_STATUS_COMPLETED,
             Bookingstatus::BOOKING_STATUS_APPROVED,
             Bookingstatus::BOOKING_STATUS_PENDING,
+            Bookingstatus::BOOKING_STATUS_CANCELLED,
+            Bookingstatus::BOOKING_STATUS_REJECTED
         ])) {
             $bookingProviders = $this->bookingrequestprovider
                 ->getBookingAccptedProvidersDetails($this->booking->getId());

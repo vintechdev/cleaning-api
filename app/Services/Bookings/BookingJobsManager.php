@@ -196,7 +196,7 @@ class BookingJobsManager
     public function changeJobDateTime(Booking $booking, Carbon $newDatetime, User $user, Carbon $recurringDate = null): array
     {
         if ($newDatetime->lessThan(Carbon::now())) {
-            throw new \InvalidArgumentException('Can not change to a data lesser than today\'s');
+            throw new \InvalidArgumentException('Please choose a later time');
         }
 
         $recurringBooking = null;

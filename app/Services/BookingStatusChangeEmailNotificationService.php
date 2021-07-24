@@ -127,6 +127,7 @@ class BookingStatusChangeEmailNotificationService extends AbstractBookingNotific
             $bookingdata['badge'] =  [];
             $bookingdata['avgrate'] =  [];
             $bookingdata['status'] = $status;
+            $bookingdata['service_category_name'] = $this->serviceName;
 
             return $this->mailService->send('email.statusaccepted_arrived_completed_emailtouser', 
             $bookingdata, $bookingdata['userEmail'], $bookingdata['userName'], $subject);
@@ -153,6 +154,7 @@ class BookingStatusChangeEmailNotificationService extends AbstractBookingNotific
             $data['text'] = $text;
             $data['providers_name'] = $provider['provider_first_name'] .' '.  $provider['provider_last_name'];
             $data['status'] = 'cancelled';
+            $bookingdata['service_category_name'] = $this->serviceName;
 
             $res = $this->mailService->send('email.status_accepted_arrived_completed_email_to_provider', $data, $userEmail, $userName, $subject);
 
@@ -179,8 +181,9 @@ class BookingStatusChangeEmailNotificationService extends AbstractBookingNotific
         $bookingdata['text'] = $text;
         $bookingdata['provider_name'] = $providername;
         $bookingdata['badge'] =  [];
-        $bookingdata['avgrate'] =  [];
+        $bookingdata['avgrate'] =  0;
         $bookingdata['status'] = $status;
+        $bookingdata['service_category_name'] = $this->serviceName;
 
         return $this->mailService->send('email.statusaccepted_arrived_completed_emailtouser', 
         $bookingdata, $bookingdata['userEmail'], $bookingdata['userName'], $subject);
@@ -218,6 +221,7 @@ class BookingStatusChangeEmailNotificationService extends AbstractBookingNotific
             $bookingdata['badge'] =  $this->userbadge->getBadgeDetails($bookingproviders[0]['provider_user_id']);
             $bookingdata['avgrate'] =  $this->userbadge->getAvgRating($bookingproviders[0]['provider_user_id']);
             $bookingdata['status'] = $status;
+            $bookingdata['service_category_name'] = $this->serviceName;
 
             $res = $this->mailService->send('email.statusaccepted_arrived_completed_emailtouser', $bookingdata, $bookingdata['userEmail'], $bookingdata['userName'], $subject);
             if($res){
@@ -256,6 +260,7 @@ class BookingStatusChangeEmailNotificationService extends AbstractBookingNotific
                 $data['text'] = $text;
                 $data['providers_name'] = $providername ;
                 $data['status'] = $status;
+                $bookingdata['service_category_name'] = $this->serviceName;
 
                 $res = $this->mailService->send('email.status_accepted_arrived_completed_email_to_provider', $data, $userEmail, $userName, $subject);
                 return true;

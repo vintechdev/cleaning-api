@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Bookingrequestprovider;
+use App\BookingNote;
 
 //TODO: Make this extend AbstractBaseRepository
 class BookingReqestProviderRepository{
@@ -103,5 +104,20 @@ class BookingReqestProviderRepository{
         }
 
         return $requestProviders->first();
+    }
+
+    public function getCancellationReason($bookingId, $statusId, $userId)
+    {
+        $bookingNote = BookingNote::query()
+        ->where('booking_id', $bookingId)
+        ->where('booking_status_id', $statusId)
+        ->where('user_id', $userId)
+        ->get()->first();
+
+        if (!empty($bookingNote)) {
+            return $bookingNote->notes;
+        }
+
+        return '';
     }
 }

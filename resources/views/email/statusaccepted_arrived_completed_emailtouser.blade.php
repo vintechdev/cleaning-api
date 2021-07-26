@@ -87,6 +87,17 @@
             </span>
         </td>
     </tr>
+
+    @if(!empty($data['note'])) 
+       <tr>
+       <b style="color: #3d4852;">Reason:</b>
+          <span style="color: #718096; font-weight: normal;">
+              {{ucwords($data['note'])}}
+          </span>
+    </tr>
+    @endif 
+
+
     <tr>
         <td style="height: 15px;"></td>
     </tr>
@@ -98,7 +109,7 @@
        style="width: 100%; border: 1px solid #ddd; font-size:16px; border-collapse: collapse;">
 <tbody>
     <tr>
-        <td style="background-color: #52b68d; font-weight:bold; color:white" colspan="2">Service Details</td>
+        <td style="background-color: #52b68d; font-weight:bold; color:white; text-align: center;" colspan="2">{{ $data['service_category_name'] }}</td>
     </tr>
 
       <?php 
@@ -114,7 +125,7 @@
             }
             ?>
         <tr>
-            <td style="width: 70%; border: 1px solid #ddd;"><span>{{$val['service_name']}}{{'('.$hour.'h)'}}</span></td>
+            <td style="width: 70%; border: 1px solid #ddd;"><span>{{$val['service_name']}}{{'('.$hour.')'}}</span></td>
             <td  style="width:30%; border: 1px solid #ddd;">{{Config::get('const.currency').$price}}</td>
         </tr>
       <?php } } ?>

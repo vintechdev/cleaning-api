@@ -27,7 +27,7 @@
             </span>
         </td>
     </tr>
-    <tr>
+    <?php /*<tr>
         <td style="border-bottom: 1px solid #ddd;">
             <b style="color: #3d4852;">Email:</b>
             <span style="color: #718096; font-weight: normal;">
@@ -43,7 +43,7 @@
             {{ucwords($data['address']['suburb'])}}, {{ucwords($data['address']['state'])}}, {{$data['address']['postcode']}}
             </span>
         </td>
-    </tr>
+    </tr> */    ?>
     <tr>
         <td style="height: 15px;"></td>
     </tr>

@@ -78,7 +78,7 @@ class BookingStatusChangeEmailNotificationService extends AbstractBookingNotific
     }
     protected function sendEmail(){
 
-        if($this->booking->booking_status_id ==2 || $this->booking->booking_status_id ==3 || $this->booking->booking_status_id ==4){
+        if($this->booking->booking_status_id == 2 || $this->booking->booking_status_id ==3 || $this->booking->booking_status_id ==4){
             $this->sendAccpted_Arrived_Completed_StatusChangeEmail();
             $this->sendProviderEmail();
             return true;
@@ -86,9 +86,10 @@ class BookingStatusChangeEmailNotificationService extends AbstractBookingNotific
             && $this->booking->getUserId() == auth()->user()->id) {
             $providers = $this->bookingrequestprovider->getBookingProvidersData($this->booking->id);
             $user = $this->userRepo->getUserDetails($this->booking->getUserId())[0];
+            $note =  $this->bookingrequestprovider->getCancellationReason($this->booking->id, 5, $this->booking->getUserId());
           
-            $this->emailToUserForCancellation($user, null, true);
-            $this->emailToProvidersForCancellation($providers, $user, false);
+            $this->emailToUserForCancellation($user, null, true, $note);
+            $this->emailToProvidersForCancellation($providers, $user, false, $note);
 
         } else if ($this->booking->booking_status_id == 5 
             && $this->booking->getUserId() !== auth()->user()->id
@@ -98,9 +99,10 @@ class BookingStatusChangeEmailNotificationService extends AbstractBookingNotific
             $provider =  $this->userRepo->getProviderDetails($providerId);
 
             $providers = array($provider);
+            $note =  $this->bookingrequestprovider->getCancellationReason($this->booking->id, 5, $providerId);
 
-            $this->emailToUserForCancellation($user, $provider, false);
-            $this->emailToProvidersForCancellation($providers, $user, true);
+            $this->emailToUserForCancellation($user, $provider, false, $note);
+            $this->emailToProvidersForCancellation($providers, $user, true, $note);
 
         }  else if ($this->booking->booking_status_id == 6) {
             $countPendingProviders = $this->bookingrequestprovider->getCountWithStatuses([
@@ -117,16 +119,26 @@ class BookingStatusChangeEmailNotificationService extends AbstractBookingNotific
             $text = "";
             $providername = null;
             $bookingdata = $this->bookingservicerepo->BookingDetailsforMail($this->booking->id);
+            $bookingproviders = $this->bookingrequestprovider->getBookingProvidersData($this->booking->id);
+            $provider = null;
+            foreach ($bookingproviders as $key => $p) {
+                if ($p['provider_user_id'] == auth()->user()->id) {
+                    $provider = $p;
+                }
+            }
+
             $text =  'Your booking #('. $this->booking->id .') has been REJECTED ';
             $subject =  $text;
             $status = 'rejected';
 
             $subject =  $text;
             $bookingdata['text'] = $text;
-            $bookingdata['provider_name'] = $providername;
-            $bookingdata['badge'] =  [];
-            $bookingdata['avgrate'] =  [];
+            $bookingdata['provider_name'] = ($provider) ? ($provider['provider_first_name']. ' ' . $provider['provider_last_name']) :  $providername;
+            $bookingdata['badge'] = $provider ? $this->userbadge->getBadgeDetails($provider['provider_user_id']): [];
+            $bookingdata['avgrate'] =  $provider ? $this->userbadge->getAvgRating($provider['provider_user_id']) : 3;
             $bookingdata['status'] = $status;
+            $bookingdata['service_category_name'] = $this->serviceName;
+            $bookingdata['note'] = null;
 
             return $this->mailService->send('email.statusaccepted_arrived_completed_emailtouser', 
             $bookingdata, $bookingdata['userEmail'], $bookingdata['userName'], $subject);
@@ -134,7 +146,7 @@ class BookingStatusChangeEmailNotificationService extends AbstractBookingNotific
     }
 
 
-    private function emailToProvidersForCancellation($providers = array(), $user, $cancelledByProvider = false)
+    private function emailToProvidersForCancellation($providers = array(), $user, $cancelledByProvider = false, $note = '')
     {
         foreach ($providers as $key => $provider) {
             $provider = (array) $provider;
@@ -153,6 +165,8 @@ class BookingStatusChangeEmailNotificationService extends AbstractBookingNotific
             $data['text'] = $text;
             $data['providers_name'] = $provider['provider_first_name'] .' '.  $provider['provider_last_name'];
             $data['status'] = 'cancelled';
+            $bookingdata['service_category_name'] = $this->serviceName;
+            $bookingdata['note']= $note;
 
             $res = $this->mailService->send('email.status_accepted_arrived_completed_email_to_provider', $data, $userEmail, $userName, $subject);
 
@@ -160,11 +174,12 @@ class BookingStatusChangeEmailNotificationService extends AbstractBookingNotific
         
     }
 
-    private function emailToUserForCancellation($user, $provider = null, $cancelledByUser = false) {
+    private function emailToUserForCancellation($user, $provider = null, $cancelledByUser = false, $note = '') {
         $text = "";
         $providername = "";
         $bookingdata = $this->bookingservicerepo->BookingDetailsforMail($this->booking->id);
-        
+    
+    
         if ($cancelledByUser) {
             $text =  'You have changed booking #('. $this->booking->id .') status to CANCELLED.';
         } else {
@@ -179,8 +194,10 @@ class BookingStatusChangeEmailNotificationService extends AbstractBookingNotific
         $bookingdata['text'] = $text;
         $bookingdata['provider_name'] = $providername;
         $bookingdata['badge'] =  [];
-        $bookingdata['avgrate'] =  [];
+        $bookingdata['avgrate'] =  0;
         $bookingdata['status'] = $status;
+        $bookingdata['service_category_name'] = $this->serviceName;
+        $bookingdata['note']= $note;
 
         return $this->mailService->send('email.statusaccepted_arrived_completed_emailtouser', 
         $bookingdata, $bookingdata['userEmail'], $bookingdata['userName'], $subject);
@@ -192,6 +209,7 @@ class BookingStatusChangeEmailNotificationService extends AbstractBookingNotific
     { 
         $bookingdata = $this->bookingservicerepo->BookingDetailsforMail($this->booking->id);
         $bookingproviders = $this->bookingrequestprovider->getBookingAccptedProvidersDetails($this->booking->id);
+        $bookingdata['note'] = null;
        
             
         if(in_array($this->booking->getStatus(),[Bookingstatus::BOOKING_STATUS_ACCEPTED,Bookingstatus::BOOKING_STATUS_ARRIVED,Bookingstatus::BOOKING_STATUS_COMPLETED])){
@@ -218,6 +236,7 @@ class BookingStatusChangeEmailNotificationService extends AbstractBookingNotific
             $bookingdata['badge'] =  $this->userbadge->getBadgeDetails($bookingproviders[0]['provider_user_id']);
             $bookingdata['avgrate'] =  $this->userbadge->getAvgRating($bookingproviders[0]['provider_user_id']);
             $bookingdata['status'] = $status;
+            $bookingdata['service_category_name'] = $this->serviceName;
 
             $res = $this->mailService->send('email.statusaccepted_arrived_completed_emailtouser', $bookingdata, $bookingdata['userEmail'], $bookingdata['userName'], $subject);
             if($res){
@@ -256,6 +275,8 @@ class BookingStatusChangeEmailNotificationService extends AbstractBookingNotific
                 $data['text'] = $text;
                 $data['providers_name'] = $providername ;
                 $data['status'] = $status;
+                $data['note'] = null;
+                $data['service_category_name'] = $this->serviceName;
 
                 $res = $this->mailService->send('email.status_accepted_arrived_completed_email_to_provider', $data, $userEmail, $userName, $subject);
                 return true;

@@ -87,6 +87,17 @@
             </span>
         </td>
     </tr>
+
+    @if(!empty($data['note'])) 
+       <tr>
+       <b style="color: #3d4852;">Reason:</b>
+          <span style="color: #718096; font-weight: normal;">
+              {{ucwords($data['note'])}}
+          </span>
+    </tr>
+    @endif 
+
+
     <tr>
         <td style="height: 15px;"></td>
     </tr>

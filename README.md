@@ -8,10 +8,11 @@ Snap shot of the MySql DB can be used to create the baseline that should contain
 
 ## Code deployment
 There are 4 code bases including this repo as follows:
-      - https://bitbucket.org/cleaningmarketplace/api-backend/src/master/
-      - https://bitbucket.org/cleaningmarketplace/user-portal/src/master/
-      - https://bitbucket.org/cleaningmarketplace/provider-portal/src/master/
-      - https://bitbucket.org/cleaningmarketplace/admin-portal/src/master/
+
+- https://bitbucket.org/cleaningmarketplace/api-backend/src/master/
+- https://bitbucket.org/cleaningmarketplace/user-portal/src/master/
+- https://bitbucket.org/cleaningmarketplace/provider-portal/src/master/
+- https://bitbucket.org/cleaningmarketplace/admin-portal/src/master/
 
 Once the DB has been built, api backend is the first one that needs to be deployed to the environment of choice that runs PHP >= 7, followed by the portals.
 

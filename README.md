@@ -25,6 +25,7 @@ Once the DB has been built, api backend is the first one that needs to be deploy
    - php artisan key:generate
    - php artisan cache:clear
    - php artisan config:clear
+   
    **The above commands except that to generate key have to be run after every releases too**.
 
 # SMS Requirement

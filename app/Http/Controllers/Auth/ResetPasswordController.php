@@ -142,7 +142,7 @@ class ResetPasswordController extends Controller
                 'message' => 'This password reset token is invalid.'
             ], 404);
 
-        $user = User::where('email', $passwordReset->email)->first();
+        $user = User::where('email', $request->email)->first();
         if (!$user)
             return response()->json([
                 'message' => "We can't find a user with that e-mail address."

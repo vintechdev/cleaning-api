@@ -60,9 +60,13 @@ class UserRepository
     }
 
     //get completed booking statitics
-    public function getdashboardstatistics()
+    public function getdashboardstatistics($userId = null)
     {
         $query = Bookingrequestprovider::join('bookings', 'booking_id', '=', 'bookings.id');
+        
+        if ($userId) {
+         $query->where('provider_user_id', $userId);
+        }
 
         $query1 = clone $query;
         $query2 = clone $query;

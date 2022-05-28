@@ -66,8 +66,14 @@ class BookingController extends Controller
         $this->userrepo = $userrepo;
     }
     public function getdashboardstatistics()
-    {
-       $data =  $this->userrepo->getdashboardstatistics();
+    { 
+       $userId = null;
+       
+       if (auth()->check()) {
+         $userId = Auth::user()->id;
+       }
+        
+       $data =  $this->userrepo->getdashboardstatistics($userId);
        return response()->json($data);
     }
 

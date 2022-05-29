@@ -419,7 +419,14 @@ class BookingService
                         ->with('bookingServices')
                         ->with('bookingServices.service')
                         ->with('bookingServices.service.servicecategory')
-                        ->whereIn('bookings.booking_status_id',[2,3,4])->get()
+                        ->whereIn('bookings.booking_status_id',[2,3,4])
+                        ->whereExists(function($query) use ($user_id) {
+                            $query->select(DB::raw(1))
+                            ->from("booking_request_providers")
+                            ->where("booking_request_providers.booking_id", "=", "bookings.id")
+                            ->where("provider_user_id", $user_id);
+                        })
+                        ->get()
                         ->map(function($bookings) use ($type){
                             if($type=='unread'){
                                 $bookings->setRelation('bookingchat', $bookings->bookingchat->where('isread',0)->take(1));

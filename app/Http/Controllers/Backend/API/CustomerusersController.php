@@ -189,7 +189,7 @@ class CustomerusersController extends Controller
         }
 
 
-        $Customerusers = $Customerusers->paginate(20);
+        $Customerusers = $Customerusers->paginate(10000);
         return (new CustomeruserCollection($Customerusers));
     }
     public function getallprovider(Request $request){

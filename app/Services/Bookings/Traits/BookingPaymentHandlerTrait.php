@@ -44,7 +44,7 @@ trait BookingPaymentHandlerTrait
             ->setPayee($provider)
             ->setTransferFeePercentage($serviceFeePercentage)
             // TODO: Update payment description
-            ->setPaymentDescription('Booking id:' . $booking->getId());
+            ->setPaymentDescription('CleaningAU:' . $booking->getId());
 
         try {
             if (!$this

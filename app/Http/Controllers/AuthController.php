@@ -285,14 +285,18 @@ class AuthController extends Controller
             if (!$user) {
                 $this->incrementLoginAttempts($request);
                 // return an error response
-                return response()->json(['message' => 'Email or Password is incorrect!!'], 401);
+                return response()->json(['message' => 'Email or Password is incorrect!'], 401);
             }
 
             if (!$user->hasRole($request->scope)) {
                 $this->incrementLoginAttempts($request);
-                return response()->json(['message' => 'You are not authorized!!'], 401);
+                return response()->json(['message' => 'You are not authorised!!'], 401);
             }
-
+            
+           if ($user->status == 'blocked' || $user->status == 'inactive') {
+                $this->incrementLoginAttempts($request);
+                return response()->json(['message' => 'You are not authorised. Please contact support!'], 401);
+            }
 
             if (!Hash::check($login_password, $user->password)) {
                 $this->incrementLoginAttempts($request);

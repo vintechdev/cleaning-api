@@ -174,7 +174,9 @@ class StripeService
         }
 
         $cvcPass = isset($paymentMethod['card']['checks']['cvc_check']) &&
-            $paymentMethod['card']['checks']['cvc_check'] === 'pass';
+            ($paymentMethod['card']['checks']['cvc_check'] === 'pass' ||
+            $paymentMethod['card']['checks']['cvc_check'] === 'unavailable' ||
+            $paymentMethod['card']['checks']['cvc_check'] === 'unchecked');
 
         $expMonth = str_pad(
             $paymentMethod['card']['exp_month'],

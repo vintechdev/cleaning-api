@@ -411,10 +411,15 @@ class BookingService
         $user_id = $user->id;
        
         if(in_array('provider', $user->getScopes())){
-                    $arr = Booking::has('bookingchat', '>' , 0)->with(array('bookingrequestprovider' => function($query) use ($user_id){
-                            $query->where('provider_user_id',$user_id)->whereIn('status',['accepted','arrived','completed']);
-                        },'bookingchat'=>function($query){
-                            $query->orderBy('created_at', 'desc');
+            $arr = Booking::query()
+                        ->with(array('bookingrequestprovider' => function($query) use ($user_id){
+                            $query->where('provider_user_id',$user_id)
+                             ->whereIn('status',['accepted','arrived','completed']);
+                        }
+                        ,'bookingchat'=>function($query) use ($user_id) {
+                            $query
+                            ->orderBy('chats.created_at', 'desc')
+                            ->whereRaw("(chats.sender_id = $user_id OR chats.receiver_id = $user_id)");
                         },'users','bookingrequestprovider.users'))
                         ->with('bookingServices')
                         ->with('bookingServices.service')
@@ -424,7 +429,14 @@ class BookingService
                             $query->select(DB::raw(1))
                             ->from("booking_request_providers")
                             ->where("booking_request_providers.booking_id", "=", "bookings.id")
-                            ->where("provider_user_id", $user_id);
+                            ->where("provider_user_id", $user_id)
+                            ->whereIn('status',['accepted','arrived','completed']);
+                        })
+                        ->whereExists(function($query) use ($user_id) {
+                            $query->select(DB::raw(1))
+                                ->from("chats")
+                                ->where("chats.booking_id", "=", "bookings.id")
+                                ->whereRaw("(chats.sender_id = $user_id OR chats.receiver_id = $user_id)");
                         })
                         ->get()
                         ->map(function($bookings) use ($type){

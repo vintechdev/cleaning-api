@@ -417,9 +417,7 @@ class BookingService
                              ->whereIn('status',['accepted','arrived','completed']);
                         }
                         ,'bookingchat'=>function($query) use ($user_id) {
-                            $query
-                            ->orderBy('chats.created_at', 'desc')
-                            ->whereRaw("(chats.sender_id = $user_id OR chats.receiver_id = $user_id)");
+                            $query->orderBy('chats.created_at', 'desc');
                         },'users','bookingrequestprovider.users'))
                         ->with('bookingServices')
                         ->with('bookingServices.service')
@@ -429,14 +427,12 @@ class BookingService
                             $query->select(DB::raw(1))
                             ->from("booking_request_providers")
                             ->where("booking_request_providers.booking_id", "=", "bookings.id")
-                            ->where("provider_user_id", $user_id)
-                            ->whereIn('status',['accepted','arrived','completed']);
+                            ->where("provider_user_id", $user_id);
                         })
-                        ->whereExists(function($query) use ($user_id) {
+                        ->whereExists(function($query) use ($user_id, $type) {
                             $query->select(DB::raw(1))
                                 ->from("chats")
-                                ->where("chats.booking_id", "=", "bookings.id")
-                                ->whereRaw("(chats.sender_id = $user_id OR chats.receiver_id = $user_id)");
+                                ->where("chats.booking_id", "=", "bookings.id");
                         })
                         ->get()
                         ->map(function($bookings) use ($type){
